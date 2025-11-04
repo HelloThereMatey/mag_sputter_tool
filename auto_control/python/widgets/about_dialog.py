@@ -47,7 +47,7 @@ class AboutDialog(QDialog):
         <p><b>Magnetron Sputtering System Control Software</b></p>
                            
         <p><i>By James Bishop</i></p>
-        <p>Github: <a href="https://github.com/username/repo">https://github.com/username/repo</a></p>
+        <p>Github: <a href="https://github.com/HelloThereMatey">https://github.com/HelloThereMatey</a></p>
 
         <p>This software provides automated control and monitoring for a vacuum magnetron 
         sputtering system. Built on a Raspberry Pi 5 with Arduino Mega 2560 R3 hardware 
@@ -95,7 +95,7 @@ class AboutDialog(QDialog):
         
         <p><b>Documentation:</b> See <code>docs/</code> folder for SOP, technical manual, 
         and software documentation.</p>
-        <p>Link to repository: <a href="https://github.com/username/repo">https://github.com/username/repo</a></p>
+        <p>Link to repository: <a href="https://github.com/HelloThereMatey/mag_sputter_tool">https://github.com/HelloThereMatey/mag_sputter_tool</a></p>
         """)
         layout.addWidget(about_text)
         
