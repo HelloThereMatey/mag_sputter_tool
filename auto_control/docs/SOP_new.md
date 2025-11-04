@@ -83,27 +83,32 @@ The sputter system uses a custom software running on low-cost hardware. A raspbe
 
 ### Launching the Control Application
 
+***Note that the bluetooth keyboard will need a 5 seconds to wake up and connect after you push some buttons on it before input from it will show up on computer. It also needs to be charged occaisonally.***
+
 1. **Start the Application**
    - Locate the **Sputter Control** desktop icon. It has a sun image icon :sunny:.
    - Double-click to launch the Python-based control application.
    - This will launch a terminal window that should be positioned on the large screen. This window shows running messages that details the system operation and is useful for debug.
-   - **Login** with your user account or create new account on the login window that shows first.
-   - Main control window will then open. Drag this window onto the small screen (touch-screen) and double click the top bar to expand the GUI window to fill the screen.
-   - You can use touch to activate the buttons on the GUI.
+   - A user account login window will show first prior to displaying the GUI.
+   - **Login** with your user account or create new account & then login.
+   - Main control window will then open. Drag this window onto the small screen (touch-screen) and double click the top title bar to expand the GUI window to fill the small screen.
+   - You can use touch on the small screen to activate buttons on the GUI or keep using mouse.
 
-3. **Check System State Display**
+2. **Check System State Display**
    - Observe the **System State** indicator in the control window
    - Current system status will be displayed (e.g., "Vented", "pumping", "High Vacuum")
-   - All sensor readings (pressures, door status, water flow) should update automatically.
+   - All sensor readings (pressures, door status, water flow) should update automatically, these are connected to the interlock indicators (circles red/green in the INTERLOCKS box).
    - There are 3 interlocks that need to show True state (green indicator on GUI). These show the state of the water switch, rod home switch and the door switch. These are True when water flowing, load-lock rod is in home position & the chamber door is closed respectively.
 
-4. **Verify Automated Procedure Buttons**
+3. **Verify Automated Procedure Buttons**
    - Five main procedure buttons should be visible and enabled (not greyed out):
      - 🌊 **PUMP** - Start pump-down sequence
      - 💨 **VENT** - Vent chamber to atmosphere
      - 📦 **LOAD/UNLOAD** - Load-lock operation
      - 🔬 **SPUTTER** - Enter sputtering mode
      - 🏠 **STAND BY** - Return system to default state or standby state. This should be used at end of session to put system into low-power stand-by state.
+
+These automated procedure buttons (as well as the shutter buttons, Ion gauge & chamber light) are the only operable buttons when the GUI is running in "Normal" mode. Normal is the only mode accessible by a level 1 user account.
 
 #### BOOT TROUBLESHOOTING
 
@@ -118,20 +123,24 @@ If the GUI displays with red indications for all three interlocks and the valve 
 
 ## 📥 Loading Samples and Targets
 
+- Vent chamber if necessary. This is done by pressing the "VENT" button on the GUI. Follow all directions that show in message windows such as ensuring that the door clamps are not closed prior to venting.
+- Wait for the vent procedure to complete. Vent gas injection should stop automatically after the chamber door opens. Observe terminal output for procedure details.
+
 ### Starting from Vented Chamber State
 
 #### Target Installation and Sample Loading
 
 1. **Install Sputter Targets** (if not already in place)
-   - Ensure targets are clean and properly aligned
-   - Secure target with **4 Phillips head screws**
-   - Secure outer electrode of gun with **3 hex key screws**
-   - Target installation is demonstrated during training
+   - Ensure targets are clean and properly aligned.
+   - Secure target with **4 Phillips head screws** as shown in training.
+   - Secure outer electrode of gun with **3 circular head hex key screws**.
+   - Target installation is demonstrated during training.
+   - Remember that heat removal by water cooling is essential and targets must be flat (on back surface) and have good contact with the copper gun plate.
 
 2. **Load Sample and Sample Stage**
-   - Place sample on sample stage holder
-   - Position stage appropriately for deposition geometry
-   - Verify sample is secure
+   - Place sample on sample stage holder (take holder out and do sample prep on clean foil surfaces).
+   - Position stage on central pllar or on the load-lock rod.
+   - Verify samples are secure. Vacuum compatible double-sided copper tape or SEM mount adhesive should be used. Don't use non-vacuum compatible tape.
 
 #### Door Closure and Clamp Procedure
 
@@ -140,26 +149,19 @@ If the GUI displays with red indications for all three interlocks and the valve 
 3. **Close and Seal Chamber Door**
    - Close door carefully, ensuring O-ring is clean and properly seated
    - Tighten **both door clamps**:
-     - One clamp is a standard threaded closure
-     - One clamp is a **nut requiring T-key with hex socket** (tool should be near instrument frame)
-   - **Both clamps must be fully tightened** before starting pump-down
+   - The clamps are simple nuts on bolts. **a T-key with hex socket tool** for the task is hanging nearby from a ribbon.
+   - **Both clamps should be tightened to close the gap between sealing surface and door o-ring** before starting pump-down. They don't need to be tightened excessively.
 
-4. **Door Clamp Adjustment During Pump-Down**
-   - ⚠️ **Important:** Once chamber pressure begins dropping, **loosen clamps slightly**
-   - This prevents over-compression of the O-ring
-   - If chamber pressure does **not** drop when pump-down starts:
+4. **Initiate Pump-Down**
+
+   - Click/press the **PUMP** button
+   - Monitor pressure readings on display and/or the Vacuum gauge controller.
+   - If chamber pressure does **not** drop within 5s or so when pump-down starts:
      - **Chamber is leaking!**
-     - Re-tighten clamps to improve door seal
-     - Check O-ring condition
-
-5. **Initiate Pump-Down**
-
-   ⚠️ **IMPORTANT:** Verify everything is correct in chamber before pumping. Once PUMP button is pressed, wait for sequence to complete. Initial pump-down from atmosphere takes **>10 minutes**.
-
-   - Click the **PUMP** button
-   - Monitor pressure readings on display
-   - Chamber should progress through: Atmospheric → Rough Pump → Medium Vacuum → High Vacuum
-   - Wait for pump procedure to complete (indicated by system state change)
+     - Tighten further the upper and/or lower clamps to improve door seal.
+     - If the chamber pressure does not start dropping within 30s the software will abort the pumpdown procedure in order to protect the pump.
+   - Wait for pump procedure to complete, observe terminal output for details of what is occurring at each step of the pump-dowb procedure. Pump-down should take system all the way to the high vacuum state before completing.
+   - If Ion guage turns itself off, you can turn it on/off at will by pressing the button.
 
 ---
 
@@ -169,93 +171,103 @@ If the chamber is already under vacuum, use the **Load-Lock** system to introduc
 
 #### Load-Lock Sample Loading Procedure
 
-1. **Initiate Load-Lock Sequence**
-   - Click **LOAD/UNLOAD** button
+1. **Vent Load-lock**
+   - Click **VENT Load-lock** button
    - System will automatically:
-     - Close gate valve (if open)
      - Vent load-lock chamber
-     - Wait for load-lock to reach atmospheric pressure
+     - Wait for load-lock to reach atmospheric pressure.
+     - Stop venting.
 
-2. **Wait for Load-Lock Ready**
-   - Dialog box will appear: **"Load-Lock Ready - Load/Remove Sample"**
-   - Small load-lock door can now be opened
-   - Load-lock is at atmospheric pressure
-
-3. **Load Sample onto Load-Lock Rod**
+2. **Load Sample onto Load-Lock Rod**
    - Open small load-lock door
    - Attach sample stage to load-lock rod bayonet fitting
    - Close load-lock door
-   - Click **Continue** in dialog box
 
-4. **Automated Load-Lock Pump-Down**
+3. **Load/Unload Procedure**
+   - Click **LOAD/UNLOAD** button
    - System will automatically:
-     - Evacuate load-lock chamber
-     - Wait for pressure equalization with main chamber
-     - Open gate valve between load-lock and main chamber
+     - Evacuate load-lock chamber if it is vented.
+     - Open gate valve between load-lock and main chamber once the pressure in both chambers is similar.
+     - A dialog box will appear and remain in place during your operation of the load-lock rod.
+     - Move the load-lock rod into the main chamber and get the sample stage onto the central shaft.
+     - Retract the load-lock rod to home position.
+  ⚠️ **CRITICAL:** Rod must be fully retracted to home position before continuing.
+     - Click **Load-unload finished or cancel** button in the dialog box when complete.
+     - This will close the gate valve automatically and complete the load-lock sequence.
+     - Click "PUMP" button again to return system to high vacuum state in order to proceed to sputter mode.
 
-5. **Position Sample in Chamber**
-   - Dialog box will appear: **"Load-Lock Evacuated - Transfer Sample"**
-   - Use load-lock rod to move sample stage into main chamber
-   - **Adjust Z-position nuts** (see Figure 1 below) to align stage with central shaft
-   - Rotate stage onto shaft and secure with bayonet fitting
-   - Carefully retract load-lock rod to home position
-   - Click **Continue** when complete
+#### Load-Lock Z-Position Adjustment & Chamber Illumination
 
-6. **System Completion**
-   - Gate valve will close automatically
-   - Load-lock sequence completes
-   - System returns to high vacuum state with sample loaded
+   <figure style="display:flex;gap:08px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/nutz.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:4px">(a) Load-lock Z-position adjustment nuts. Hold rod up/down to release pressure on nuts, then adjust nuts to change rod height. Adjusting these during loading/unloading is necessary.</figcaption>
+      </div>
+      <div style="flex:1;margin:0">
+         <img src="pics/light.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Chamber light has a switch and is also operated by the GUI. Switch shown at right in "on" position (LED lighted red). Both switch and button must be on for light to operate. Stage rotation power supply shown at bottom right.</figcaption>
+      </div>
+   </figure>
 
-#### Load-Lock Z-Position Adjustment
-
-![Load-Lock Z-Position Adjustment Nuts](pics/loadlock_z_adjustment.png)
-
-**Figure 1:** Load-lock Z-position adjustment nuts. Hold rod up/down to release pressure on nuts, then adjust nuts to change rod height. This adjustment must be done:
-- **First:** To align stage with central shaft during loading
-- **Second:** To relieve pressure on bayonet fitting for rotation and rod removal
+- Use Z-position adjustment nuts on load-lock rod to set proper height for sample stage during loading/unloading.
+- Chamber light should turn on automatically during load-lock operation. If not, manually turn it on using the button on the GUI.
+- ⚠️ **Turn off after use** - do not leave light on during sputtering.
 
 #### Sample Stage Rotation (Optional)
 
 If uniform coating is desired, enable stage rotation:
 
-- Turn on **DC power supply** in constant voltage mode
+- Turn on the **DC variable power supply** that is connected to the stage rotation motor.
+- This is located on the shelf underneath the touchscreen, shown above in right image.
+- Use constant voltage mode
 - Adjust voltage knob: **0-6V** to set rotation speed
 - **Recommended during deposition:** 4V
 - **Absolute maximum:** 12V
-- ⚠️ **Turn off power supply when rotation not in use**
-
-#### Chamber Illumination
-
-- Turn on **chamber light** switch if visibility needed for setup
-- ⚠️ **Turn off after use** - do not leave on during deposition
+- ⚠️ **Turn off power supply when rotation not in use** This component is not linked to the software in any way and must be manually controlled.
 
 ---
 
 ## 🔬 Deposition Procedure (DC Sputtering)
 
-### Pre-Deposition Pump-Down
+### Starting from High Vacuum State
 
-⚠️ **Recommendation:** If pumping from atmosphere, wait **at least 1 hour** before deposition
+- Pump system to high vacuum state if not already there by pressing **PUMP** button.
+- Wait for pump procedure to complete and system to reach high vacuum.
+- It is recomended to reach at least < 6 x 10⁻5 Torr before proceeding to sputtering.
+- System base pressure appears to be around 1.5 x 10⁻5 Torr at the moment.
 
-- **Target vacuum level:** High 10⁻⁶ mbar range (for oxidizable metals)
-- Monitor ion gauge reading to verify high vacuum achieved
+### SPUTTER MODE
 
-### Process Gas Introduction
+0. **Enter Sputter Mode**
+   - Click **SPUTTER** button on main control window
+   - System will enter sputtering mode
+   - ***This will turn on the interlock that provides mains power to the DC & RF supplies that power the sputter guns.***
+   - The power supplies cannot be turned on outside of sputter mode due to the safety interlock.
+   - System state display will update to "Sputter Mode"
+   - ***Sputter mode will drop the TMP speed to 60% and maintain it at this level by turning it on and off as needed.***
+  
+1. **Set Gas Flow**
+   - Gas flow setpoint is set by simply clicking the gas flow setpoint indicator button for the MFC/s that you wish to use. See the figure below.
+   - Click inside one of the colored boxes shown below to bring up the set gas flow setpoint dialog. Set the setpoint using the dialog.
+   - Allow 5s or so for the indicators on the GUI to update to display the correct setpoint and flow readings.
+   - If setpoint shows yet the measured flow never reaches setpoint, the gas cylinder for that gas may be empty.
 
-1. **Start Gas Flow**
-   - Click **SET GAS** button (or use MFC dialog from Tools menu)
-   - Gas flow controller interface will open
+   <figure style="display:flex;gap:12px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/gas_setpoint.png" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Click inside the colored box to bring up the set gas flow setpoint dialog.</figcaption>
+      </div>
 
 2. **Chamber Flush** (Optional but Recommended)
-   - Set Argon flow to **100-200 sccm** for 5-10 minutes
-   - This helps remove remaining impurities
-   - Monitor chamber pressure during flush
+   - Set Argon flow to **100-200 sccm** for 1 - 10 minutes
+   - This helps remove remaining residual air and water vapor from chamber.
+   - Monitor chamber pressure during flush.
 
 3. **Set Sputtering Gas Flow**
    - Reduce Argon flow to sputtering conditions
-   - **Typical DC metal sputtering:** 20-50 sccm Ar
-   - **Target chamber pressure:** 1-3 × 10⁻³ mbar
-   - Wait for pressure to stabilize
+   - **Typical DC metal sputtering:** 20-100 sccm Ar
+   - **Target chamber pressure:** 1-7 × 10⁻³ mbar
+   - Wait for pressure to stabilize.
 
 ### DC Sputtering Operation
 
@@ -268,7 +280,7 @@ If uniform coating is desired, enable stage rotation:
    - Turn on **DC power supply** for the gun(s) being used
    - Set **power setpoint**:
      - **Typical range:** 30-100 W
-     - **Absolute maximum:** 150 W
+     - **Absolute maximum:** 300 W
 
 3. **Start Deposition Monitor**
    - Launch **MaxTec deposition monitor** for target material

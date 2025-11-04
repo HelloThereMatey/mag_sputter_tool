@@ -1,0 +1,1087 @@
+<!DOCTYPE html><html><head>
+      <title>SOP_new</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\Little Cat\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.20\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script></head><body for="html-export">
+    
+    
+      <div class="crossnote markdown-preview  ">
+      <div>
+<style>
+p {font-size: 14px}
+li {font-size: 14px}
+figcaption {font-size: 14px}
+table {font-size: 13px}
+math, .math {font-size: 14px}
+code, pre {font-size: 13px}
+
+```
+/* Force continuous layout */
+@media print {
+@page {
+  size: A4 portrait;
+  margin: 0.05in 0.1in;
+  height: auto}
+}
+```
+
+</style>
+<h1 id="magnetron-sputtering-system---standard-operating-procedure-sop">Magnetron Sputtering System - Standard Operating Procedure (SOP) </h1>
+<p><strong>Document Version:</strong> 2.0<br>
+<strong>Last Updated:</strong> October 20, 2025<br>
+<strong>Control System:</strong> Python-Based Automated Control<br>
+<strong>Hardware Platform:</strong> Arduino Mega 2560 R3</p>
+<hr>
+<h2 id="table-of-contents">Table of Contents </h2>
+<ol start="0">
+<li><a href="#system-overview">System Overview</a></li>
+<li><a href="#system-startup-procedure">System Startup Procedure</a></li>
+<li><a href="#loading-samples-and-targets">Loading Samples and Targets</a></li>
+<li><a href="#deposition-procedure-dc-sputtering">Deposition Procedure (DC Sputtering)</a></li>
+<li><a href="#system-shutdown">System Shutdown</a></li>
+<li><a href="#load-lock-operation">Load-Lock Operation</a></li>
+<li><a href="#load-lock-practice-procedure">Load-Lock Practice Procedure</a></li>
+<li><a href="#safety-guidelines">Safety Guidelines</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+<hr>
+<h2 id="system-overview">System Overview </h2>
+<p>The sputter system uses a custom software running on low-cost hardware. A raspberry Pi 5 runs the software (written in python) and interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components...</p>
+<h2 id="-system-startup-procedure">🚀 System Startup Procedure </h2>
+<h3 id="prerequisites">Prerequisites </h3>
+<ul>
+<li>
+<p>✅ System power is ON</p>
+<ul>
+<li>If system is in unpowered state turn on the power. There is a single power line that supplies the system on wall at right labelled "SPUTTER SYSTEM POWER".</li>
+<li>The DC and RF power supplies for sputtering are powered separately as shown in the figure below. Turn this on too.</li>
+</ul>
+ <figure style="display:flex;gap:12px;align-items:flex-start">
+    <div style="flex:1;margin:0">
+       <img src="pics/main_power.jpg" alt="Image 1" style="width:94%;height:auto;display:block;border:0">
+       <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Main power for system.</figcaption>
+    </div>
+    <div style="flex:1;margin:0">
+       <img src="pics/supplies_power.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+       <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) This one supplies power to the DC &amp; RF supplies. Here it is shown in the "on" position.</figcaption>
+    </div>
+ </figure>
+</li>
+<li>
+<p>✅ Raspberry Pi has booted to desktop.</p>
+<ul>
+<li>When the power for the system is switched on, the RPi5 will auto-boot. Both screens should turn on.</li>
+<li>If it does not boot, the RPi5 can be turned on by the power button on its case.</li>
+<li>If the touch-screen is blank but the larger screen shows content after booting, unplugging &amp; re-plugging the HDMI out from the RPi to the small screen should fix this.</li>
+</ul>
+</li>
+<li>
+<p>✅ Arduino controller is connected via USB. This should be the case.</p>
+</li>
+<li>
+<p>⚠️ If control program is already running, skip to step 3</p>
+</li>
+</ul>
+<h3 id="launching-the-control-application">Launching the Control Application </h3>
+<p><em><strong>Note that the bluetooth keyboard will need a 5 seconds to wake up and connect after you push some buttons on it before input from it will show up on computer. It also needs to be charged occaisonally.</strong></em></p>
+<ol>
+<li>
+<p><strong>Start the Application</strong></p>
+<ul>
+<li>Locate the <strong>Sputter Control</strong> desktop icon. It has a sun image icon ☀️.</li>
+<li>Double-click to launch the Python-based control application.</li>
+<li>This will launch a terminal window that should be positioned on the large screen. This window shows running messages that details the system operation and is useful for debug.</li>
+<li>A user account login window will show first prior to displaying the GUI.</li>
+<li><strong>Login</strong> with your user account or create new account &amp; then login.</li>
+<li>Main control window will then open. Drag this window onto the small screen (touch-screen) and double click the top title bar to expand the GUI window to fill the small screen.</li>
+<li>You can use touch on the small screen to activate buttons on the GUI or keep using mouse.</li>
+</ul>
+</li>
+<li>
+<p><strong>Check System State Display</strong></p>
+<ul>
+<li>Observe the <strong>System State</strong> indicator in the control window</li>
+<li>Current system status will be displayed (e.g., "Vented", "pumping", "High Vacuum")</li>
+<li>All sensor readings (pressures, door status, water flow) should update automatically, these are connected to the interlock indicators (circles red/green in the INTERLOCKS box).</li>
+<li>There are 3 interlocks that need to show True state (green indicator on GUI). These show the state of the water switch, rod home switch and the door switch. These are True when water flowing, load-lock rod is in home position &amp; the chamber door is closed respectively.</li>
+</ul>
+</li>
+<li>
+<p><strong>Verify Automated Procedure Buttons</strong></p>
+<ul>
+<li>Five main procedure buttons should be visible and enabled (not greyed out):
+<ul>
+<li>🌊 <strong>PUMP</strong> - Start pump-down sequence</li>
+<li>💨 <strong>VENT</strong> - Vent chamber to atmosphere</li>
+<li>📦 <strong>LOAD/UNLOAD</strong> - Load-lock operation</li>
+<li>🔬 <strong>SPUTTER</strong> - Enter sputtering mode</li>
+<li>🏠 <strong>STAND BY</strong> - Return system to default state or standby state. This should be used at end of session to put system into low-power stand-by state.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>These automated procedure buttons (as well as the shutter buttons, Ion gauge &amp; chamber light) are the only operable buttons when the GUI is running in "Normal" mode. Normal is the only mode accessible by a level 1 user account.</p>
+<h4 id="boot-troubleshooting">BOOT TROUBLESHOOTING </h4>
+<p>If the GUI displays with red indications for all three interlocks and the valve buttons display greyed out, it is likely that the arduino has failed to connect to RPi5.</p>
+<p><strong>Verify Arduino Connection</strong></p>
+<ul>
+<li>Check USB cable between arduino &amp; RPi5. Ensure that the arduino shows LED on indicator.</li>
+<li>Remove and replace USB cable to reset the connection.</li>
+</ul>
+<hr>
+<h2 id="-loading-samples-and-targets">📥 Loading Samples and Targets </h2>
+<ul>
+<li>Vent chamber if necessary. This is done by pressing the "VENT" button on the GUI. Follow all directions that show in message windows such as ensuring that the door clamps are not closed prior to venting.</li>
+<li>Wait for the vent procedure to complete. Vent gas injection should stop automatically after the chamber door opens. Observe terminal output for procedure details.</li>
+</ul>
+<h3 id="starting-from-vented-chamber-state">Starting from Vented Chamber State </h3>
+<h4 id="target-installation-and-sample-loading">Target Installation and Sample Loading </h4>
+<ol>
+<li>
+<p><strong>Install Sputter Targets</strong> (if not already in place)</p>
+<ul>
+<li>Ensure targets are clean and properly aligned.</li>
+<li>Secure target with <strong>4 Phillips head screws</strong> as shown in training.</li>
+<li>Secure outer electrode of gun with <strong>3 circular head hex key screws</strong>.</li>
+<li>Target installation is demonstrated during training.</li>
+<li>Remember that heat removal by water cooling is essential and targets must be flat (on back surface) and have good contact with the copper gun plate.</li>
+</ul>
+</li>
+<li>
+<p><strong>Load Sample and Sample Stage</strong></p>
+<ul>
+<li>Place sample on sample stage holder (take holder out and do sample prep on clean foil surfaces).</li>
+<li>Position stage on central pllar or on the load-lock rod.</li>
+<li>Verify samples are secure. Vacuum compatible double-sided copper tape or SEM mount adhesive should be used. Don't use non-vacuum compatible tape.</li>
+</ul>
+</li>
+</ol>
+<h4 id="door-closure-and-clamp-procedure">Door Closure and Clamp Procedure </h4>
+<p>⚠️ <strong>CRITICAL:</strong> Proper door sealing is essential for vacuum integrity</p>
+<ol start="3">
+<li>
+<p><strong>Close and Seal Chamber Door</strong></p>
+<ul>
+<li>Close door carefully, ensuring O-ring is clean and properly seated</li>
+<li>Tighten <strong>both door clamps</strong>:</li>
+<li>The clamps are simple nuts on bolts. <strong>a T-key with hex socket tool</strong> for the task is hanging nearby from a ribbon.</li>
+<li><strong>Both clamps should be tightened to close the gap between sealing surface and door o-ring</strong> before starting pump-down. They don't need to be tightened excessively.</li>
+</ul>
+</li>
+<li>
+<p><strong>Initiate Pump-Down</strong></p>
+<ul>
+<li>Click/press the <strong>PUMP</strong> button</li>
+<li>Monitor pressure readings on display and/or the Vacuum gauge controller.</li>
+<li>If chamber pressure does <strong>not</strong> drop within 5s or so when pump-down starts:
+<ul>
+<li><strong>Chamber is leaking!</strong></li>
+<li>Tighten further the upper and/or lower clamps to improve door seal.</li>
+<li>If the chamber pressure does not start dropping within 30s the software will abort the pumpdown procedure in order to protect the pump.</li>
+</ul>
+</li>
+<li>Wait for pump procedure to complete, observe terminal output for details of what is occurring at each step of the pump-dowb procedure. Pump-down should take system all the way to the high vacuum state before completing.</li>
+<li>If Ion guage turns itself off, you can turn it on/off at will by pressing the button.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="starting-from-pumped-chamber-state">Starting from Pumped Chamber State </h3>
+<p>If the chamber is already under vacuum, use the <strong>Load-Lock</strong> system to introduce samples without venting the main chamber.</p>
+<h4 id="load-lock-sample-loading-procedure">Load-Lock Sample Loading Procedure </h4>
+<ol>
+<li>
+<p><strong>Vent Load-lock</strong></p>
+<ul>
+<li>Click <strong>VENT Load-lock</strong> button</li>
+<li>System will automatically:
+<ul>
+<li>Vent load-lock chamber</li>
+<li>Wait for load-lock to reach atmospheric pressure.</li>
+<li>Stop venting.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Load Sample onto Load-Lock Rod</strong></p>
+<ul>
+<li>Open small load-lock door</li>
+<li>Attach sample stage to load-lock rod bayonet fitting</li>
+<li>Close load-lock door</li>
+</ul>
+</li>
+<li>
+<p><strong>Load/Unload Procedure</strong></p>
+<ul>
+<li>Click <strong>LOAD/UNLOAD</strong> button</li>
+<li>System will automatically:
+<ul>
+<li>Evacuate load-lock chamber if it is vented.</li>
+<li>Open gate valve between load-lock and main chamber once the pressure in both chambers is similar.</li>
+<li>A dialog box will appear and remain in place during your operation of the load-lock rod.</li>
+<li>Move the load-lock rod into the main chamber and get the sample stage onto the central shaft.</li>
+<li>Retract the load-lock rod to home position.<br>
+⚠️ <strong>CRITICAL:</strong> Rod must be fully retracted to home position before continuing.</li>
+<li>Click <strong>Load-unload finished or cancel</strong> button in the dialog box when complete.</li>
+<li>This will close the gate valve automatically and complete the load-lock sequence.</li>
+<li>Click "PUMP" button again to return system to high vacuum state in order to proceed to sputter mode.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="load-lock-z-position-adjustment--chamber-illumination">Load-Lock Z-Position Adjustment &amp; Chamber Illumination </h4>
+   <figure style="display:flex;gap:08px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/nutz.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:4px">(a) Load-lock Z-position adjustment nuts. Hold rod up/down to release pressure on nuts, then adjust nuts to change rod height. Adjusting these during loading/unloading is necessary.</figcaption>
+      </div>
+      <div style="flex:1;margin:0">
+         <img src="pics/light.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Chamber light has a switch and is also operated by the GUI. Switch shown at right in "on" position (LED lighted red). Both switch and button must be on for light to operate. Stage rotation power supply shown at bottom right.</figcaption>
+      </div>
+   </figure>
+<ul>
+<li>Use Z-position adjustment nuts on load-lock rod to set proper height for sample stage during loading/unloading.</li>
+<li>Chamber light should turn on automatically during load-lock operation. If not, manually turn it on using the button on the GUI.</li>
+<li>⚠️ <strong>Turn off after use</strong> - do not leave light on during sputtering.</li>
+</ul>
+<h4 id="sample-stage-rotation-optional">Sample Stage Rotation (Optional) </h4>
+<p>If uniform coating is desired, enable stage rotation:</p>
+<ul>
+<li>Turn on the <strong>DC variable power supply</strong> that is connected to the stage rotation motor.</li>
+<li>This is located on the shelf underneath the touchscreen, shown above in right image.</li>
+<li>Use constant voltage mode</li>
+<li>Adjust voltage knob: <strong>0-6V</strong> to set rotation speed</li>
+<li><strong>Recommended during deposition:</strong> 4V</li>
+<li><strong>Absolute maximum:</strong> 12V</li>
+<li>⚠️ <strong>Turn off power supply when rotation not in use</strong> This component is not linked to the software in any way and must be manually controlled.</li>
+</ul>
+<hr>
+<h2 id="-deposition-procedure-dc-sputtering">🔬 Deposition Procedure (DC Sputtering) </h2>
+<h3 id="starting-from-high-vacuum-state">Starting from High Vacuum State </h3>
+<ul>
+<li>Pump system to high vacuum state if not already there by pressing <strong>PUMP</strong> button.</li>
+<li>Wait for pump procedure to complete and system to reach high vacuum.</li>
+<li>It is recomended to reach at least &lt; 6 x 10⁻5 Torr before proceeding to sputtering.</li>
+<li>System base pressure appears to be around 1.5 x 10⁻5 Torr at the moment.</li>
+</ul>
+<h3 id="sputter-mode">SPUTTER MODE </h3>
+<ol start="0">
+<li>
+<p><strong>Enter Sputter Mode</strong></p>
+<ul>
+<li>Click <strong>SPUTTER</strong> button on main control window</li>
+<li>System will enter sputtering mode</li>
+<li><em><strong>This will turn on the interlock that provides mains power to the DC &amp; RF supplies that power the sputter guns.</strong></em></li>
+<li>The power supplies cannot be turned on outside of sputter mode due to the safety interlock.</li>
+<li>System state display will update to "Sputter Mode"</li>
+<li><em><strong>Sputter mode will drop the TMP speed to 60% and maintain it at this level by turning it on and off as needed.</strong></em></li>
+</ul>
+</li>
+<li>
+<p><strong>Set Gas Flow</strong></p>
+<ul>
+<li>Gas flow setpoint is set by simply clicking the gas flow setpoint indicator button for the MFC/s that you wish to use. See the figure below.</li>
+<li>Click inside one of the colored boxes shown below to bring up the set gas flow setpoint dialog. Set the setpoint using the dialog.</li>
+<li>Allow 5s or so for the indicators on the GUI to update to display the correct setpoint and flow readings.</li>
+<li>If setpoint shows yet the measured flow never reaches setpoint, the gas cylinder for that gas may be empty.</li>
+</ul>
+<figure style="display:flex;gap:12px;align-items:flex-start">
+   <div style="flex:1;margin:0">
+      <img src="pics/gas_setpoint.png" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+      <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Click inside the colored box to bring up the set gas flow setpoint dialog.</figcaption>
+   </div>
+</figure></li>
+<li>
+<p><strong>Chamber Flush</strong> (Optional but Recommended)</p>
+<ul>
+<li>Set Argon flow to <strong>100-200 sccm</strong> for 1 - 10 minutes</li>
+<li>This helps remove remaining residual air and water vapor from chamber.</li>
+<li>Monitor chamber pressure during flush.</li>
+</ul>
+</li>
+<li>
+<p><strong>Set Sputtering Gas Flow</strong></p>
+<ul>
+<li>Reduce Argon flow to sputtering conditions</li>
+<li><strong>Typical DC metal sputtering:</strong> 20-100 sccm Ar</li>
+<li><strong>Target chamber pressure:</strong> 1-7 × 10⁻³ mbar</li>
+<li>Wait for pressure to stabilize.</li>
+</ul>
+</li>
+</ol>
+<h3 id="dc-sputtering-operation">DC Sputtering Operation </h3>
+<ol>
+<li>
+<p><strong>Verify Electrical Connections</strong></p>
+<ul>
+<li>✅ Electrical cable between gun and DC power supply is connected</li>
+<li>✅ Grounding cables are properly connected</li>
+<li>✅ All connections are secure</li>
+</ul>
+</li>
+<li>
+<p><strong>Power Supply Setup</strong></p>
+<ul>
+<li>Turn on <strong>DC power supply</strong> for the gun(s) being used</li>
+<li>Set <strong>power setpoint</strong>:
+<ul>
+<li><strong>Typical range:</strong> 30-100 W</li>
+<li><strong>Absolute maximum:</strong> 300 W</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Start Deposition Monitor</strong></p>
+<ul>
+<li>Launch <strong>MaxTec deposition monitor</strong> for target material</li>
+<li>Verify monitor is reading and calibrated</li>
+<li>Reference: <code>MaxTec_FilmMonitor.pdf</code> (Section 10.6 for tooling factor calibration)</li>
+</ul>
+</li>
+<li>
+<p><strong>Ignite Plasma</strong></p>
+<ul>
+<li>Press <strong>Start</strong> on DC power supply to apply power</li>
+<li>Plasma should ignite on gun - you will see characteristic glow</li>
+<li>Close <strong>front window shutter</strong> to prevent window coating</li>
+<li>Verify deposition monitor shows:
+<ul>
+<li>Non-zero deposition rate</li>
+<li>Increasing thickness reading</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Begin Sample Deposition</strong></p>
+<ul>
+<li>Open <strong>gun shutter</strong> to start deposition on sample</li>
+<li>⏱️ <strong>Restart MaxTec monitor</strong> simultaneously for accurate thickness reading</li>
+<li>Monitor deposition rate and thickness</li>
+</ul>
+</li>
+<li>
+<p><strong>Run to Desired Thickness</strong></p>
+<ul>
+<li>Continue sputtering until target thickness achieved</li>
+<li>Typical rates vary by material and power (refer to training or previous logs)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="-system-shutdown">🛑 System Shutdown </h2>
+<h3 id="post-deposition-procedure">Post-Deposition Procedure </h3>
+<ol>
+<li>
+<p><strong>Terminate Sputtering</strong></p>
+<ul>
+<li>Turn off <strong>DC power supply/s</strong></li>
+<li>Turn off <strong>breaker switch</strong> at back of power supply</li>
+<li>Allow plasma to extinguish completely</li>
+</ul>
+</li>
+<li>
+<p><strong>Stop Gas Flow</strong></p>
+<ul>
+<li>Click <strong>SET GAS</strong> button and set all flows to 0 sccm</li>
+<li>OR close MFC dialog (flows will automatically stop)</li>
+<li>Verify gas flow stops on MFC display</li>
+</ul>
+</li>
+<li>
+<p><strong>Remove Sample via Load-Lock</strong></p>
+<ul>
+<li>Click <strong>LOAD/UNLOAD</strong> button</li>
+<li>Follow load-lock procedure in reverse:
+<ul>
+<li>System vents load-lock</li>
+<li>Open small door when dialog appears</li>
+<li>Use rod to retrieve sample stage from chamber</li>
+<li>Remove sample from stage</li>
+<li><strong>Leave sample stage inside load-lock for next user</strong></li>
+<li>Close load-lock door</li>
+<li>Click Continue</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Re-Evacuate Load-Lock</strong></p>
+<ul>
+<li>Click <strong>LOAD/UNLOAD</strong> again to evacuate load-lock</li>
+<li>System will pump down load-lock automatically</li>
+</ul>
+</li>
+<li>
+<p><strong>Return System to High Vacuum</strong></p>
+<ul>
+<li>Click <strong>PUMP</strong> button to return system to stable high vacuum state</li>
+<li>Final system state should show:
+<ul>
+<li>✅ Roughing pump ON (green)</li>
+<li>✅ Rough valve OPEN (green)</li>
+<li>✅ Turbo pump ON &amp; ~100% speed (green)</li>
+<li>✅ Gate valve CLOSED (red - correct)</li>
+<li>✅ All other valves CLOSED (red - correct)</li>
+<li>✅ Ion gauge ON (green - if high vacuum achieved)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="final-checks">Final Checks </h3>
+<ol start="6">
+<li>
+<p><strong>Verify Equipment Status</strong></p>
+<ul>
+<li>❌ All DC/RF sputter supplies are <strong>OFF</strong></li>
+<li>❌ DC supply for stage rotation is <strong>OFF</strong></li>
+<li>❌ Chamber light is <strong>OFF</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>Update Target Labels</strong></p>
+<ul>
+<li>If targets were changed, update <strong>sticky note labels</strong> on chamber door</li>
+<li>Write material name and installation date</li>
+</ul>
+</li>
+<li>
+<p><strong>Complete Instrument Logbook</strong></p>
+<ul>
+<li>Record session information:
+<ul>
+<li>Date and time</li>
+<li>User name</li>
+<li>Target material(s)</li>
+<li>Process parameters (power, pressure, gas flow)</li>
+<li>Deposition time and estimated thickness</li>
+<li>Any issues or anomalies</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Leave System in Standby</strong></p>
+<ul>
+<li>System can be left in high vacuum state for next user</li>
+<li>Do <strong>not</strong> close control application unless instructed</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="-load-lock-operation">🔄 Load-Lock Operation </h2>
+<h3 id="load-lock-rod-control">Load-Lock Rod Control </h3>
+<p>The load-lock rod extends into the main chamber through a gate valve to position samples.</p>
+<p><strong>Key Components:</strong></p>
+<ul>
+<li><strong>Bayonet fitting</strong> - Quick-connect mount for sample stage</li>
+<li><strong>Z-position adjustment nuts</strong> - Control vertical position of rod end</li>
+<li><strong>Gate valve</strong> - Separates load-lock from main chamber</li>
+</ul>
+<h3 id="load-lock-procedure-summary">Load-Lock Procedure Summary </h3>
+<p><strong>Loading Sample:</strong></p>
+<ol>
+<li>LOAD/UNLOAD → vent load-lock → open small door</li>
+<li>Attach stage to rod → close door → Continue</li>
+<li>System pumps load-lock → opens gate valve automatically</li>
+<li>Adjust Z-nuts → position stage in chamber → detach rod → retract rod → Continue</li>
+</ol>
+<p><strong>Removing Sample:</strong></p>
+<ol>
+<li>LOAD/UNLOAD → gate valve opens → dialog appears</li>
+<li>Extend rod → adjust Z-nuts → attach to stage → retract to home → Continue</li>
+<li>System closes gate valve → vents load-lock</li>
+<li>Open small door → remove stage → close door → Continue (re-evacuates load-lock)</li>
+</ol>
+<hr>
+<h2 id="-load-lock-practice-procedure">🎓 Load-Lock Practice Procedure </h2>
+<p>⚠️ <strong>Important:</strong> The load-lock can be difficult to master initially. <strong>Practice with the chamber vented and door open</strong> until confident you can operate it blind (door closed, at vacuum).</p>
+<p><strong>If sample stage is dropped inside chamber during attempted load-lock use, the chamber must be vented to retrieve it!</strong></p>
+<h3 id="setup-for-practice">Setup for Practice </h3>
+<ol>
+<li>
+<p><strong>Prepare System for Practice</strong></p>
+<ul>
+<li>Use automated procedures:
+<ul>
+<li>Click <strong>VENT</strong> to vent main chamber (if not already vented)</li>
+<li>Click <strong>LOAD/UNLOAD</strong> to vent load-lock</li>
+<li>Wait for both to reach atmospheric pressure</li>
+</ul>
+</li>
+<li>Ensure load-lock rod is in <strong>home position</strong> (fully retracted)</li>
+</ul>
+</li>
+<li>
+<p><strong>Open Chambers</strong></p>
+<ul>
+<li>Open main chamber door</li>
+<li>Open small load-lock door</li>
+<li>Verify rod is retracted</li>
+</ul>
+</li>
+</ol>
+<h3 id="manual-gate-valve-control-for-practice">Manual Gate Valve Control for Practice </h3>
+<ol start="3">
+<li>
+<p><strong>Access Manual Control Mode</strong></p>
+<ul>
+<li>On main control window, select <strong>Tools → Manual Control</strong></li>
+<li>Manual control interface will open</li>
+</ul>
+<p>⚠️ <strong>CAUTION:</strong> Manual mode allows all valves to be operated manually. Opening the wrong valve could cause serious damage to the system! <strong>We will ONLY use this to open the load-lock gate valve manually</strong></p>
+</li>
+<li>
+<p><strong>Manually Open Gate Valve</strong></p>
+<p>⚠️ <strong>CRITICAL WARNING:</strong> It is possible to close the gate valve while the load-lock rod is extended through it into the chamber. <strong>This would destroy the gate valve mechanism!</strong></p>
+<p><strong>Before touching gate valve button, ALWAYS verify rod is in home position!</strong></p>
+<ul>
+<li>Confirm load-lock rod is fully retracted to home position</li>
+<li>Click <strong>Load-Lock Gate Valve</strong> button to open valve</li>
+</ul>
+</li>
+</ol>
+<h3 id="practice-loading">Practice Loading </h3>
+<ol start="5">
+<li>
+<p><strong>Practice Sample Stage Loading</strong></p>
+<ul>
+<li>With main door <strong>open</strong> and gate valve <strong>open</strong>, practice:
+<ul>
+<li>Extending rod into chamber</li>
+<li>Adjusting <strong>Z-position nuts</strong> to align stage with central shaft</li>
+<li>Rotating stage onto shaft (bayonet fitting)</li>
+<li>Adjusting nuts again to relieve pressure on fitting</li>
+<li>Rotating rod 90° to release from stage</li>
+<li>Retracting rod without pulling stage off shaft</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Practice Unloading</strong></p>
+<ul>
+<li>Reverse the sequence:
+<ul>
+<li>Adjust Z-nuts for proper height</li>
+<li>Engage bayonet fitting with stage</li>
+<li>Rotate to lock</li>
+<li>Retract rod with stage attached</li>
+<li>Return to home position</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="cleanup-after-practice">Cleanup After Practice </h3>
+<ol start="7">
+<li>
+<p><strong>Close Manual Mode</strong></p>
+<ul>
+<li>When stage is loaded and rod is at home position</li>
+<li><strong>Close gate valve</strong> (rod MUST be home!)</li>
+<li>Close Manual control window</li>
+</ul>
+</li>
+<li>
+<p><strong>Return to Normal Operation</strong></p>
+<ul>
+<li>Return to main control window</li>
+<li>System returns to automated control</li>
+<li>Close main chamber door when ready</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="️-safety-guidelines">⚠️ Safety Guidelines </h2>
+<h3 id="general-safety">General Safety </h3>
+<ul>
+<li>🚫 <strong>Never open main chamber door while system is under vacuum</strong></li>
+<li>🚫 <strong>Never force any valve or mechanical component</strong></li>
+<li>🚫 <strong>Do not operate system without proper training</strong></li>
+<li>⚠️ <strong>Always wear appropriate PPE</strong> (safety glasses, gloves when handling samples)</li>
+<li>⚠️ <strong>High voltage present</strong> when DC/RF supplies are active</li>
+<li>⚠️ <strong>Hot surfaces</strong> - allow targets and chamber to cool before handling</li>
+</ul>
+<h3 id="pressure-safety">Pressure Safety </h3>
+<ul>
+<li>✅ Always verify chamber is <strong>vented</strong> before opening door</li>
+<li>✅ Monitor pressure readings during all operations</li>
+<li>⚠️ Sudden pressure loss may indicate leak or valve malfunction</li>
+<li>⚠️ Inability to reach high vacuum may indicate O-ring or seal issue</li>
+</ul>
+<h3 id="electrical-safety">Electrical Safety </h3>
+<ul>
+<li>🔌 Verify all electrical connections before applying power</li>
+<li>⚠️ <strong>DC supplies can deliver high currents</strong> - ensure proper grounding</li>
+<li>⚠️ RF supplies generate high frequency radiation - keep clear</li>
+<li>🚫 Do not modify electrical connections without supervision</li>
+</ul>
+<h3 id="gas-safety">Gas Safety </h3>
+<ul>
+<li>💨 Process gases (Ar, O₂, etc.) displace oxygen - ensure adequate ventilation</li>
+<li>✅ Verify gas flow rates before starting deposition</li>
+<li>⚠️ High gas flows can cause rapid pressure rise</li>
+<li>🚫 Never exceed recommended maximum gas flow rates (200 sccm Ar max for flush)</li>
+</ul>
+<h3 id="mechanical-safety">Mechanical Safety </h3>
+<ul>
+<li>⚠️ Load-lock rod can be pinched in gate valve - always verify home position</li>
+<li>⚠️ Stage rotation motor has exposed moving parts - keep clear</li>
+<li>⚠️ Door clamps must be properly tightened before pump-down</li>
+<li>🚫 Do not operate load-lock if rod binding or sticking</li>
+</ul>
+<hr>
+<h2 id="-troubleshooting">🔧 Troubleshooting </h2>
+<h3 id="common-issues-and-solutions">Common Issues and Solutions </h3>
+<h4 id="chamber-wont-pump-down">Chamber Won't Pump Down </h4>
+<p><strong>Symptoms:</strong> Pressure remains high after PUMP procedure starts</p>
+<p><strong>Possible Causes:</strong></p>
+<ul>
+<li>Door clamps not tight enough</li>
+<li>O-ring dirty or damaged</li>
+<li>Valve stuck open</li>
+<li>Rough pump failure</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Check door clamps - tighten if needed</li>
+<li>Vent chamber and inspect O-ring</li>
+<li>Verify all valves show correct state in control program</li>
+<li>Check rough pump power and operation</li>
+<li>Contact staff if problem persists</li>
+</ol>
+<h4 id="gate-valve-wont-open">Gate Valve Won't Open </h4>
+<p><strong>Symptoms:</strong> Load-lock procedure fails, gate valve remains closed</p>
+<p><strong>Possible Causes:</strong></p>
+<ul>
+<li>Pressure difference too high between chambers</li>
+<li>Valve actuator failure</li>
+<li>Safety interlock preventing operation</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Verify load-lock has fully evacuated (check pressure reading)</li>
+<li>Wait longer for pressure equalization</li>
+<li>Check safety status in control program</li>
+<li>Restart load-lock procedure</li>
+<li>Contact staff if valve remains stuck</li>
+</ol>
+<h4 id="plasma-wont-ignite">Plasma Won't Ignite </h4>
+<p><strong>Symptoms:</strong> No plasma glow when DC power applied</p>
+<p><strong>Possible Causes:</strong></p>
+<ul>
+<li>Chamber pressure too low or too high</li>
+<li>Target not properly grounded</li>
+<li>Power supply malfunction</li>
+<li>Gas flow not established</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Verify chamber pressure is in range (1-3 × 10⁻³ mbar)</li>
+<li>Check gas flow is active (20-50 sccm Ar)</li>
+<li>Verify target and electrode connections</li>
+<li>Check DC power supply settings and operation</li>
+<li>Try increasing pressure slightly (more gas flow)</li>
+<li>Contact staff if plasma still won't ignite</li>
+</ol>
+<h4 id="sample-stage-dropped-in-chamber">Sample Stage Dropped in Chamber </h4>
+<p><strong>Symptoms:</strong> Stage fell off shaft during load-lock operation</p>
+<p><strong>Impact:</strong> ⚠️ <strong>Chamber must be vented to retrieve stage</strong></p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Click <strong>VENT</strong> button to vent chamber safely</li>
+<li>Open main chamber door when fully vented</li>
+<li>Retrieve sample stage carefully</li>
+<li>Inspect stage and bayonet fitting for damage</li>
+<li>Practice load-lock operation with door open before retrying</li>
+<li>Inform staff of incident</li>
+</ol>
+<h4 id="control-program-unresponsive">Control Program Unresponsive </h4>
+<p><strong>Symptoms:</strong> Buttons greyed out, no response to clicks</p>
+<p><strong>Possible Causes:</strong></p>
+<ul>
+<li>Procedure already running (must complete first)</li>
+<li>Arduino connection lost</li>
+<li>Application frozen</li>
+</ul>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Check if automated procedure is running (wait for completion)</li>
+<li>Check Arduino connection status indicator</li>
+<li>Verify USB cable is connected</li>
+<li>Close and restart application if frozen</li>
+<li>Reboot PC if problem persists</li>
+<li>Contact staff for assistance</li>
+</ol>
+<h4 id="memoryperformance-issues-plotter-window">Memory/Performance Issues (Plotter Window) </h4>
+<p><strong>Symptoms:</strong> Application slow, high memory usage, plotter window lag</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Close plotter window if not needed</li>
+<li>Restart application if memory usage high</li>
+<li>Ensure psutil is installed for memory monitoring</li>
+<li>Memory monitoring will auto-reset at 80% threshold</li>
+<li>Check system RAM if issues persist</li>
+</ol>
+<hr>
+<h2 id="-pre-use-checklist">📋 Pre-Use Checklist </h2>
+<p>Before each deposition session, verify:</p>
+<ul>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Received proper training on system operation</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Reviewed this SOP document</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> System power is ON and stable</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Control application connects successfully</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> All required materials and samples prepared</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Target material installed correctly (if changed)</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> O-ring and door seal are clean</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> PPE (safety glasses, gloves) available</li>
+<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Instrument logbook available for recording session</li>
+</ul>
+<hr>
+<h2 id="-emergency-contacts">📞 Emergency Contacts </h2>
+<p><strong>For system malfunctions or emergencies:</strong></p>
+<ul>
+<li>Contact supervising staff immediately</li>
+<li>Do not attempt repairs without authorization</li>
+<li>Document issue in instrument logbook</li>
+</ul>
+<p><strong>After-hours emergencies:</strong></p>
+<ul>
+<li>Follow facility emergency procedures</li>
+<li>Contact facility management</li>
+</ul>
+<hr>
+<h2 id="-revision-history">📝 Revision History </h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Author</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>(Original)</td>
+<td>-</td>
+<td>Original LabVIEW-based SOP</td>
+</tr>
+<tr>
+<td>2.0</td>
+<td>October 2025</td>
+<td>System Team</td>
+<td>Updated for Python-based control system, added detailed procedures, icons, and formatting</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><strong>End of Standard Operating Procedure</strong></p>
+<p><em>This document should be reviewed and updated annually or when significant system changes occur.</em></p>
+</div>
+      </div>
+      <div class="md-sidebar-toc">
+<div class="md-toc">
+<details style="padding:0;;padding-left:0px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#magnetron-sputtering-system---standard-operating-procedure-sop" class="md-toc-link"><p>Magnetron Sputtering System - Standard Operating Procedure (SOP)</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#table-of-contents" class="md-toc-link">
+            <p>Table of Contents</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#system-overview" class="md-toc-link">
+            <p>System Overview</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-system-startup-procedure" class="md-toc-link"><p>🚀 System Startup Procedure</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#prerequisites" class="md-toc-link">
+            <p>Prerequisites</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#launching-the-control-application" class="md-toc-link"><p>Launching the Control Application</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#boot-troubleshooting" class="md-toc-link">
+            <p>BOOT TROUBLESHOOTING</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-loading-samples-and-targets" class="md-toc-link"><p>📥 Loading Samples and Targets</p>
+</a>
+          </summary>
+        <div>
+          <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#starting-from-vented-chamber-state" class="md-toc-link"><p>Starting from Vented Chamber State</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#target-installation-and-sample-loading" class="md-toc-link">
+            <p>Target Installation and Sample Loading</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#door-closure-and-clamp-procedure" class="md-toc-link">
+            <p>Door Closure and Clamp Procedure</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#starting-from-pumped-chamber-state" class="md-toc-link"><p>Starting from Pumped Chamber State</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#load-lock-sample-loading-procedure" class="md-toc-link">
+            <p>Load-Lock Sample Loading Procedure</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#load-lock-z-position-adjustment--chamber-illumination" class="md-toc-link">
+            <p>Load-Lock Z-Position Adjustment &amp; Chamber Illumination</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#sample-stage-rotation-optional" class="md-toc-link">
+            <p>Sample Stage Rotation (Optional)</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-deposition-procedure-dc-sputtering" class="md-toc-link"><p>🔬 Deposition Procedure (DC Sputtering)</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#starting-from-high-vacuum-state" class="md-toc-link">
+            <p>Starting from High Vacuum State</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#sputter-mode" class="md-toc-link">
+            <p>SPUTTER MODE</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#dc-sputtering-operation" class="md-toc-link">
+            <p>DC Sputtering Operation</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-system-shutdown" class="md-toc-link"><p>🛑 System Shutdown</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#post-deposition-procedure" class="md-toc-link">
+            <p>Post-Deposition Procedure</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#final-checks" class="md-toc-link">
+            <p>Final Checks</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-load-lock-operation" class="md-toc-link"><p>🔄 Load-Lock Operation</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#load-lock-rod-control" class="md-toc-link">
+            <p>Load-Lock Rod Control</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#load-lock-procedure-summary" class="md-toc-link">
+            <p>Load-Lock Procedure Summary</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-load-lock-practice-procedure" class="md-toc-link"><p>🎓 Load-Lock Practice Procedure</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#setup-for-practice" class="md-toc-link">
+            <p>Setup for Practice</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#manual-gate-valve-control-for-practice" class="md-toc-link">
+            <p>Manual Gate Valve Control for Practice</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#practice-loading" class="md-toc-link">
+            <p>Practice Loading</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#cleanup-after-practice" class="md-toc-link">
+            <p>Cleanup After Practice</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#️-safety-guidelines" class="md-toc-link"><p>⚠️ Safety Guidelines</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#general-safety" class="md-toc-link">
+            <p>General Safety</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#pressure-safety" class="md-toc-link">
+            <p>Pressure Safety</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#electrical-safety" class="md-toc-link">
+            <p>Electrical Safety</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gas-safety" class="md-toc-link">
+            <p>Gas Safety</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#mechanical-safety" class="md-toc-link">
+            <p>Mechanical Safety</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#-troubleshooting" class="md-toc-link"><p>🔧 Troubleshooting</p>
+</a>
+          </summary>
+        <div>
+          <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#common-issues-and-solutions" class="md-toc-link"><p>Common Issues and Solutions</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#chamber-wont-pump-down" class="md-toc-link">
+            <p>Chamber Won't Pump Down</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gate-valve-wont-open" class="md-toc-link">
+            <p>Gate Valve Won't Open</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#plasma-wont-ignite" class="md-toc-link">
+            <p>Plasma Won't Ignite</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#sample-stage-dropped-in-chamber" class="md-toc-link">
+            <p>Sample Stage Dropped in Chamber</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#control-program-unresponsive" class="md-toc-link">
+            <p>Control Program Unresponsive</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#memoryperformance-issues-plotter-window" class="md-toc-link">
+            <p>Memory/Performance Issues (Plotter Window)</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#-pre-use-checklist" class="md-toc-link">
+            <p>📋 Pre-Use Checklist</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#-emergency-contacts" class="md-toc-link">
+            <p>📞 Emergency Contacts</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#-revision-history" class="md-toc-link">
+            <p>📝 Revision History</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+</div>
+</div>
+      <a id="sidebar-toc-btn">≡</a>
+    
+    
+    
+    
+    
+    
+<script>
+document.body.setAttribute('html-show-sidebar-toc', true)
+var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
+sidebarTOCBtn.addEventListener('click', function(event) {
+  event.stopPropagation()
+  if (document.body.hasAttribute('html-show-sidebar-toc')) {
+    document.body.removeAttribute('html-show-sidebar-toc')
+  } else {
+    document.body.setAttribute('html-show-sidebar-toc', true)
+  }
+})
+</script>
+      
+  
+    </body></html>
