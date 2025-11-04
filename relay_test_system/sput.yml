@@ -1,0 +1,21 @@
+name: sput
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - plotly
+  - jupyter
+  - ipython
+  - pytest
+  - PyYAML
+  - pip:
+    - pyserial
+    - cryptography
+    - alicat
+    - PyQt5

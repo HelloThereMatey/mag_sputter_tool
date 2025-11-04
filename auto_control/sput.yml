@@ -1,0 +1,139 @@
+name: sput
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - plotly
+  - jupyter
+  - ipython
+  - pytest
+  - PyYAML
+  - pip:
+    - pyserial
+    - cryptography
+    - alicat
+    - PyQt5
+
+# Runtime app configuration for auto_control backend
+serial:
+  baud: 9600
+  preferred_ports: [/dev/ttyACM0, /dev/ttyUSB3]
+
+relays:
+  btnPumpScroll: 44
+  btnPumpTurbo: 37
+  btnValveBacking: 23
+  btnValveTurboGate: 27
+  btnValveRough: 25
+  btnValveLoadLockGate: 28
+  btnValveLoadLockRough: 26
+  btnValveVent: 24
+  btnValveLoadLockVent: 36
+
+  btnValveGas1: 29
+  btnValveGas2: 30
+  btnValveGas3: 31
+  btnShutter1: 32
+  btnShutter2: 33
+  btnLightBulb: 34
+  btnIonGauge: 35
+  btnMainsPower: 22 # CRITICAL SAFETY - controls mains power interlock
+  btnSpare1: 46
+  btnSpareRelay: 48
+
+# Interlock digital inputs: Door(45), Water(47), Rod(49), Spare(51)
+# Hardware: Internal pull-ups enabled, switches connect to ground when active
+# Logic: Arduino inverts readings (LOW=safe becomes true), Python receives true=safe, false=unsafe
+inputs:
+  water_switch: 45
+  rod_switch: 47
+  door_switch: 49
+  spare_switch: 51
+  digital_labels: [Water, Rod, Door, Spare]
+
+analog:
+  channels:
+    - {label: Load-lock (Torr), pin: A1, scale: 1.0, offset: 0.0}
+    - {label: Chamber (Torr), pin: A2, scale: 1.0, offset: 0.0}
+    - {label: Ion Gauge (Torr), pin: A3, scale: 1.0, offset: 0.0}
+    - {label: Turbo Spin (%), pin: A4, scale: 25, offset: -12.5}  # 0.5 - 4.5 V maps to 0-100%
+
+# Default firmware mapping for Arduino Mega (matching relay_controller.ino)
+relay_pins:
+  - 22 # Mains power (relay 1) - CRITICAL SAFETY
+  - 23 
+  - 24
+  - 25
+  - 26
+  - 36
+  - 28
+  - 29
+  - 30
+  - 31
+  - 32
+  - 33
+  - 34
+  - 35
+  - 27
+  - 37
+  - 38
+  - 39
+  - 40
+  - 41
+  - 44  # Scroll pump (relay 21)
+  - 46  # Spare relay (relay 22)
+  - 48  # Spare relay (relay 23)
+
+# Gas flow control configuration for Alicat MFCs
+gas_control:
+  # Global settings
+  auto_reconnect: true
+  reconnect_interval: 5.0  # seconds
+  read_interval: 3.0  # seconds between MFC readings (reduced frequency to prevent command conflicts)
+  
+  # MFC configurations
+  mfcs:
+    Ar:  # Argon MFC (Gas Valve 1)
+      unit_id: 'A'  # Alicat unit ID
+      serial_port: '/dev/ttyUSB0'  # Windows: COMx, Linux: /dev/ttyUSBx
+      baudrate: 19200  # Optional: Serial baud rate (default: 19200)
+      max_flow: 200.0  # Maximum flow rate in sccm
+      gas_type: 'Ar'  # Gas type for Alicat (must match Alicat gas list)
+      enabled: true
+      relay_button: 'btnValveGas1'  # Associated gas valve button
+
+    N2:  # Nitrogen MFC (Gas Valve 2)
+      unit_id: 'B'
+      serial_port: '/dev/ttyUSB0'
+      baudrate: 19200  # Optional: can be omitted if using default
+      max_flow: 100.0
+      gas_type: 'N2'
+      enabled: true
+      relay_button: 'btnValveGas2'
+
+    O2:  # Oxygen MFC (Gas Valve 3)
+      unit_id: 'C'
+      serial_port: '/dev/ttyUSB0'
+      baudrate: 19200  # Optional: Serial baud rate (default: 19200)
+      max_flow: 100.0  # Maximum flow rate in sccm
+      gas_type: 'O2'  # Gas type for Alicat (must match Alicat gas list)
+      enabled: true
+      relay_button: 'btnValveGas3'
+  
+  # Safety limits
+  safety:
+    max_individual_flow: 200.0  # sccm - max for any single MFC
+    max_total_flow: 400.0  # sccm - max total across all MFCs
+    min_pressure_for_flow: 1e-3  # Torr - min chamber pressure to allow gas flow
+
+  # Default flow rates for sputter procedure (optional)
+  sputter_flows:
+    Ar: 20.0  # sccm - default Argon flow for sputtering
+    # O2: 5.0  # sccm - default oxygen flow (uncomment if needed)
+    # N2: 0.0  # sccm - default nitrogen flow (uncomment if needed)

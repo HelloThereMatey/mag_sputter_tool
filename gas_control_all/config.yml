@@ -1,0 +1,62 @@
+# Gas Flow Control Configuration Example
+# Add this section to your sput.yml file
+
+# Gas flow control configuration for Alicat MFCs
+gas_control:
+  # Global settings
+  auto_reconnect: true
+  reconnect_interval: 5.0  # seconds
+  read_interval: 1.0  # seconds between MFC readings
+  
+  # MFC configurations
+  mfcs:
+    Ar:  # Argon MFC (Gas Valve 1)
+      unit_id: 'A'  # Alicat unit ID
+      serial_port: '/dev/ttyUSB0'  # Windows: COMx, Linux: /dev/ttyUSBx
+      baudrate: 19200  # Optional: Serial baud rate (default: 19200)
+      max_flow: 200.0  # Maximum flow rate in sccm
+      gas_type: 'Ar'  # Gas type for Alicat (must match Alicat gas list)
+      enabled: true
+      relay_button: 'btnValveGas1'  # Associated gas valve button
+
+    N2:  # Nitrogen MFC (Gas Valve 2)
+      unit_id: 'B'
+      serial_port: '/dev/ttyUSB0'
+      baudrate: 19200  # Optional: can be omitted if using default
+      max_flow: 100.0
+      gas_type: 'N2'
+      enabled: true
+      relay_button: 'btnValveGas2'
+
+    O2:  # Oxygen MFC (Gas Valve 3)
+      unit_id: 'C'
+      serial_port: '/dev/ttyUSB0'
+      baudrate: 19200  # Optional: Serial baud rate (default: 19200)
+      max_flow: 100.0  # Maximum flow rate in sccm
+      gas_type: 'O2'  # Gas type for Alicat (must match Alicat gas list)
+      enabled: true
+      relay_button: 'btnValveGas3'
+  
+  # Safety limits
+  safety:
+    max_individual_flow: 200.0  # sccm - max for any single MFC
+    max_total_flow: 400.0  # sccm - max total across all MFCs
+    min_pressure_for_flow: 1e-3  # Torr - min chamber pressure to allow gas flow
+
+  # Default flow rates for sputter procedure (optional)
+  sputter_flows:
+    Ar: 20.0  # sccm - default Argon flow for sputtering
+    # O2: 5.0  # sccm - default oxygen flow (uncomment if needed)
+    # N2: 0.0  # sccm - default nitrogen flow (uncomment if needed)
+
+  
+  # Safety limits
+  safety:
+    max_individual_flow: 200.0  # sccm - max for any single MFC
+    max_total_flow: 400.0  # sccm - max total across all MFCs
+    max_oxygen_percentage: 30.0  # % - max O2 as percentage of total flow
+    min_pressure_for_flow: 1e-3  # Torr - min chamber pressure to allow gas flow
+    emergency_stop_flow: 1000.0  # sccm - emergency stop threshold
+    
+  # Default recipes directory
+  recipes_dir: "./gas_recipes"

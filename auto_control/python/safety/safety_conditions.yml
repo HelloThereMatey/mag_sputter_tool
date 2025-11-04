@@ -1,0 +1,597 @@
+# Safety Conditions for Sputter Control System
+# This file defines all safety interlocks and operational conditions
+# for the vacuum system controls
+
+# Pressure thresholds (in volts from 0-5V analog inputs)
+pressure_thresholds:
+  # Vacuum level safety thresholds (in volts from pressure gauge outputs)
+  #These are the voltage levels on the AI2 (ai_volts[1]) coming from the chamber pirani.
+  
+  chamber_high_vacuum: 0.7        # ~8e-5 Torr equivalent voltage
+  chamber_medium_vacuum: 2.0      # ~1e-3 Torr equivalent voltage  
+  chamber_atmospheric: 3.1        # Near atmospheric pressure voltage (lowered to match real gauge readings)
+  # Ion gauge state threshold: ai_volts[2] <= ion_gauge_on_threshold -> gauge considered ON
+  ion_gauge_on_threshold: 4.2     # Ion gauge reads <= 4.2 V when ON, >4.2 V when OFF
+  
+  loadlock_rough_vacuum: 1.4      # Load-lock rough vacuum threshold voltage
+  loadlock_atmospheric: 2.7  # Load-lock near atmospheric pressure voltage
+  
+  ion_gauge_max_safe: 0.8         # Maximum safe voltage for ion gauge operation
+
+analog_input_scaling_factors:
+  chamber: 1.0                     # Chamber gauge scaling factor
+  loadlock: 1.0                    # Load-lock gauge scaling factor
+  ion_gauge: 1.0                   # Ion gauge scaling factor
+  turbo_spin: 25.0                 # Turbo spin gauge scaling factor
+
+analog_input_offsets:
+  chamber: 0.0                     # Chamber gauge scaling factor
+  loadlock: 0.0                    # Load-lock gauge scaling factor
+  ion_gauge: 0.0                   # Ion gauge scaling factor
+  turbo_spin: -12.5                 # Turbo spin gauge scaling factor
+
+# Digital input definitions for safety interlocks
+# Hardware: Internal pull-ups enabled, active-low logic (switches connect to ground)
+# Software: Arduino inverts readings, so Python receives true=safe, false=unsafe
+digital_interlocks:
+  water_flow_interlock:
+    input: 0                       # Digital input array index 0 (Arduino pin 45 - Water)
+    safe_state: true               # Switch closed (LOW at pin, inverted to true) = safe
+    description: "Cooling water must be flowing (switch to ground)"
+
+  arm_home_interlock:
+    input: 1                       # Digital input array index 1 (Arduino pin 47 - Arm Home)
+    safe_state: true               # Switch closed (LOW at pin, inverted to true) = safe
+    description: "Load-lock arm must be in home position (switch to ground)"
+
+  door_interlock:
+    input: 2                       # Digital input array index 2 (Arduino pin 49 - Door)
+    safe_state: true               # Switch closed (LOW at pin, inverted to true) = safe
+    description: "Chamber door must be closed (switch to ground)"
+    
+  # spare_interlock:
+  #   input: 3                       # Digital input array index 3 (Arduino pin 51 - Rod)
+  #   safe_state: true               # Switch closed (LOW at pin, inverted to true) = safe
+  #   description: "Not used currently (spare interlock)"
+
+# Safety conditions for each button/relay operation.These must be satisfied to allow the relay action.
+button_safety_conditions:
+  
+  # Pump Controls
+  btnPumpTurbo:
+    required_conditions:
+      - "ai_volts[1] < pressure_thresholds['chamber_medium_vacuum']"  # Chamber roughed down
+      - "relay_state['btnPumpScroll'] == True"                       # Scroll pump running
+      - "digital_inputs[0] == True"                                  # Water flow OK
+    forbidden_conditions:
+      - "relay_state['btnValveVent'] == True"                        # Vent valve must be closed
+    confirmation_required: false
+    error_message: "Cannot start turbo pump: chamber pressure too high, scroll pump not running, or water flow insufficient"
+    
+  btnPumpScroll:
+    required_conditions:
+      - "digital_inputs[0] == True"                                   # Water flow OK
+      - "digital_inputs[1] == True"                                   # Arm home OK  
+    forbidden_conditions: []
+    confirmation_required: false
+    error_message: "Cannot start scroll pump: water flow insufficient"
+    
+  # Valve Controls - Backing/Roughing
+  btnValveBacking:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (no restrictions on closing)
+        - "relay_state.get('btnValveBacking', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when scroll pump running and interlocks satisfied
+        - "relay_state.get('btnValveBacking', False) == False"  # Currently closed, trying to open
+        - "digital_inputs[0] == True"                          # Water flow OK
+        - "digital_inputs[2] == True"                          # Door closed OK
+        - "relay_state['btnPumpScroll'] == True"               # Scroll pump running
+    forbidden_conditions: []
+    confirmation_required: false
+    error_message: "Cannot open backing valve: scroll pump not running, water flow issue, or door not closed"
+    
+  btnValveRough:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveRough', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when safety conditions satisfied
+        - "relay_state.get('btnValveRough', False) == False"  # Currently closed, trying to open
+        - "digital_inputs[0] == True"                                   # Water flow OK
+        - "digital_inputs[2] == True"                                   # Door closed OK
+        - "relay_state['btnPumpScroll'] == True"                       # Scroll pump running
+    forbidden_conditions:
+      - "relay_state['btnPumpTurbo'] == True"                        # Turbo pump off
+    confirmation_required: false
+    error_message: "Cannot open rough valve: scroll pump not running or turbo pump still on"
+    
+  # Gate Valves
+  btnValveTurboGate:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveTurboGate', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when safety conditions satisfied
+        - "relay_state.get('btnValveTurboGate', False) == False"  # Currently closed, trying to open
+        - "digital_inputs[0] == True"                                   # Water flow OK
+        - "digital_inputs[2] == True"                                   # Door closed OK
+        - "ai_volts[1] < pressure_thresholds['chamber_medium_vacuum']"   # Chamber already roughed down
+        - "ai_volts[3] <= 3.7"   # Turbo spin < 80% or so
+        - "relay_state['btnValveBacking'] == True"
+        - "relay_state['btnPumpScroll'] == True"
+      - # Group 3: Allow opening only when safety conditions satisfied
+        - "relay_state.get('btnValveTurboGate', False) == False"  # Currently closed, trying to open
+        - "digital_inputs[0] == True"                                   # Water flow OK
+        - "digital_inputs[2] == True"                                   # Door closed OK
+        - "ai_volts[1] > pressure_thresholds['chamber_medium_vacuum']"   # Chamber already roughed down
+        - "relay_state['btnValveBacking'] == True" # Gotta have backing valve to scroll open
+        - "ai_volts[3] <= 1.7"   # Turbo spin < 30% or so
+        - "relay_state['btnPumpScroll'] == True"
+    forbidden_conditions:
+      - "relay_state['btnValveVent'] == True"
+    confirmation_required: false
+    error_message: "Cannot open turbo gate valve: vacuum insufficient or venting active or scroll inactive or turbo spin above 80%.\
+      \n If turbo spin is above 80%, please wait for it to slow down below 80% and then try again."
+
+  btnValveLoadLockGate:
+    # Allow either (both chambers under vacuum) OR (both chambers vented)
+    required_conditions:           
+      -  # Group 1: both chambers under vacuum
+        - "digital_inputs[1] == True" # Load-lock arm must be in home position
+        - "ai_volts[1] < pressure_thresholds['chamber_medium_vacuum']"
+        - "ai_volts[0] < pressure_thresholds['loadlock_rough_vacuum']"
+      -  # Group 2: both chambers vented (vent valves open)
+        - "ai_volts[1] > pressure_thresholds['chamber_atmospheric']"
+        - "ai_volts[0] > pressure_thresholds['loadlock_atmospheric']"
+        - "digital_inputs[1] == True" # Load-lock arm must be in home position
+    forbidden_conditions: 
+      - "digital_inputs[1] == False" # Load-lock arm must be in home position
+      - "ion_gauge_on == True" # Cannot open if ion gauge on
+      - "relay_state['btnValveVent'] == True" # Cannot open if venting main chamber
+      - "relay_state['btnValveLoadLockVent'] == True" # Cannot open if venting load-lock
+      - "relay_state['btnValveLoadLockRough'] == True" # Cannot open if roughing load-lock
+      - "relay_state['btnPumpTurbo'] == True" # Cannot open if turbo pump running
+      - "relay_state['btnValveRough'] == True" # Cannot open if chamber rough valve open
+    confirmation_required: false
+    error_message: "Cannot operate load-lock gate valve: arm not in home position, vacuum insufficient, or system not in safe state"
+    
+  # Load-Lock Controls
+  btnValveLoadLockRough:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveLoadLockRough', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when safety conditions satisfied
+        - "relay_state.get('btnValveLoadLockRough', False) == False"  # Currently closed, trying to open
+        - "relay_state['btnValveLoadLockGate'] == False"               # Gate valve closed
+        - "relay_state['btnPumpScroll'] == True"                      # Scroll pump running
+        - "relay_state['btnValveBacking'] == False"  # Backing valve to turbo must be closed
+    forbidden_conditions: 
+      - "relay_state['btnValveBacking'] == True" # Don't open if backing valve to turbo open
+      - "relay_state['btnPumpTurbo'] == True" # Don't open if turbo pump running
+      - "ion_gauge_on == True" # Cannot open if ion gauge on
+      - "relay_state['btnValveLoadLockVent'] == True" # Cannot open if venting load-lock
+      - "relay_state['btnValveRough'] == True" # Cannot open if chamber rough valve open
+    confirmation_required: false
+    error_message: "Cannot open load-lock rough valve: safety conditions not met."
+    
+  btnValveLoadLockVent:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveLoadLockVent', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when safety conditions satisfied
+        - "relay_state.get('btnValveLoadLockVent', False) == False"  # Currently closed, trying to open
+        - "relay_state['btnValveLoadLockGate'] == False"               # Gate valve closed
+        - "relay_state['btnValveLoadLockRough'] == False"              # Rough valve closed
+    forbidden_conditions: 
+      - "relay_state['btnValveLoadLockRough'] == True"
+      - "relay_state['btnValveLoadLockGate'] == True"
+    confirmation_required: true
+    confirmation_message: "This will vent the load-lock to atmosphere. Continue?"
+    error_message: "Cannot vent load-lock: gate valve or rough valve still open"
+    
+  # Main Chamber Vent
+  btnValveVent:
+    required_conditions:
+      # Allow closing (when currently open) with minimal restrictions OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing for safety)
+        - "relay_state.get('btnValveVent', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening during vent procedure (pushButton_3)
+        - "relay_state.get('btnValveVent', False) == False"  # Currently closed, trying to open
+        - "current_procedure == 'pushButton_3'"  # Vent procedure must be active
+      - # Group 3: Normal safety conditions for opening
+        - "relay_state.get('btnValveVent', False) == False"  # Currently closed, trying to open
+        - "relay_state['btnPumpTurbo'] == False"                      # Turbo pump off
+        - "ai_volts[3] <= 3.05"   # Turbo spin < 65% (ai_volts[3] <= 3.05)
+    forbidden_conditions: 
+      - "relay_state['btnValveRough'] == True"
+      - "relay_state['btnValveLoadLockGate'] == True"  # Load-lock gate must be closed
+    confirmation_required: true
+    confirmation_message: "This will vent the main chamber to atmosphere. This cannot be undone quickly. Continue?"
+    error_message: "Cannot vent chamber: turbo pump running, gate valve open, or insufficient permissions"
+    
+  # Gas Controls
+  btnValveGas1:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveGas1', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when in sputter mode
+        - "relay_state.get('btnValveGas1', False) == False"  # Currently closed, trying to open
+        - "system_status == 'sputter'"                                 # Manual or Override mode
+    forbidden_conditions:
+      - "relay_state['btnValveVent'] == True"                       # Not while venting
+    confirmation_required: false
+    error_message: "Cannot open gas valve 1: vacuum too high, insufficient permissions, or venting in progress"
+    
+  btnValveGas2:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveGas2', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when in sputter mode
+        - "relay_state.get('btnValveGas2', False) == False"  # Currently closed, trying to open
+        - "system_status == 'sputter'"
+    forbidden_conditions:
+      - "relay_state['btnValveVent'] == True"                       # Not while venting
+    confirmation_required: false
+    error_message: "Cannot open gas valve 2: vacuum too high, insufficient permissions, or venting in progress"
+    
+  btnValveGas3:
+    required_conditions:
+      # Allow closing (when currently open) OR opening with safety checks
+      - # Group 1: Allow closing when valve is currently open (minimal restrictions on closing)
+        - "relay_state.get('btnValveGas3', False) == True"  # Currently open, allow closing
+      - # Group 2: Allow opening only when in sputter mode
+        - "relay_state.get('btnValveGas3', False) == False"  # Currently closed, trying to open
+        - "system_status == 'sputter'"                                 # Manual or Override modes
+    forbidden_conditions:
+      - "relay_state['btnValveVent'] == True"                       # Not while venting
+    confirmation_required: false
+    error_message: "Cannot open gas valve 3: vacuum too high, insufficient permissions, or venting in progress"
+    
+  # Shutter Controls
+  btnShutter1:
+    required_conditions: []                  # Operate shutters at any time
+    forbidden_conditions: []
+    confirmation_required: false
+    error_message: ""
+    
+  btnShutter2:
+    required_conditions: []                         # Operate shutters at any time
+    forbidden_conditions: []
+    confirmation_required: false
+    error_message: ""
+    
+  # Ion Gauge
+  btnIonGauge:
+    required_conditions:
+      - "system_status in ['high_vacuum', 'mid_vacuum', 'pumping']"  # Only in high vacuum or sputter modes
+      - "ai_volts[1] < pressure_thresholds['ion_gauge_max_safe']"   # Safe pressure for ion gauge
+      - "relay_state['btnValveTurboGate'] == True"  # Turbo gate must be open
+      - "relay_state['btnPumpScroll'] == True"  # Scroll must be running
+    forbidden_conditions:
+      - "relay_state['btnValveVent'] == True"                       # Vent valve must be closed
+      - "relay_state['btnValveGas1'] == True"                       # No gas injection
+      - "relay_state['btnValveGas2'] == True"                       # No gas injection  
+      - "relay_state['btnValveGas3'] == True"                       # No gas injection
+
+    confirmation_required: false
+    error_message: "Cannot activate ion gauge: pressure too high (will damage filament) or other safety condition not satisfied."
+
+  # Mains Power Control - SPECIAL HANDLING FOR ON vs OFF
+  btnMainsPower:
+    required_conditions: 
+      # Allow turning OFF mains power regardless of procedure state (safety first!)
+      # BUT require sputter procedure to turn it ON
+      - # Group 1: Allow turning OFF when currently ON (safety shutdown)
+        - "relay_state.get('btnMainsPower', False) == True"  # Currently ON, allow turning OFF
+      - # Group 2: Allow turning ON only during sputter procedure
+        - "relay_state.get('btnMainsPower', False) == False"  # Currently OFF, trying to turn ON
+        - "current_procedure == 'pushButton_6'"               # Sputter procedure must be active
+        - "digital_inputs[0] == True"                         # Water flow OK
+        - "digital_inputs[1] == True"                         # Rod/Arm in home position
+        - "digital_inputs[2] == True"                         # Door closed
+    forbidden_conditions: []
+    confirmation_required: false
+    confirmation_message: ""
+    error_message: "Mains power can only be turned ON during sputter procedure (pushButton_6) with all safety interlocks satisfied. Can always be turned OFF for safety."
+
+  # Chamber Light Bulb Control
+  btnLightBulb:
+    required_conditions: []                                          # Can operate at any time
+    forbidden_conditions: []
+    confirmation_required: false
+    error_message: ""
+
+  # Spare Relay for Future Upgrades
+  btnSpareRelay:
+    required_conditions: []                                          # No restrictions for spare relay
+    forbidden_conditions: []
+    confirmation_required: false
+    error_message: ""
+
+# Mode-based operational restrictions
+mode_restrictions:
+  Normal:
+    # In Normal mode, only automatic procedures are allowed and shutter operation also allowed.
+    allowed_buttons:  # Empty list means no manual controls allowed
+      - "btnShutter1"
+      - "btnShutter2"
+      - "btnIonGauge"
+      - "btnLightBulb"
+      # Note: btnValveTurboGate is NOT in this list - it's handled via procedure exception in app.py
+    description: "Normal mode: automatic procedures only. Shutter and light bulb operation allowed."
+    
+  Manual:
+    # Manual mode allows most controls but with the safety checks needing to be satisfied.
+    forbidden_buttons: []  # All buttons allowed, but safety conditions still apply
+    extra_safety_conditions:
+      - "digital_inputs[0] == True"  # Door must be closed for any manual operation
+      - "digital_inputs[0] == True"  # Water flow must be OK for any manual operation
+      - "digital_inputs[1] == True"  # Arm must be in home position for any manual operation
+    description: "Manual mode: manual controls allowed with standard safety checks"
+    
+  Override:
+    # Override mode allows all controls (safety conditions still apply)
+    forbidden_buttons: []
+    override_confirmations: true  # Extra confirmations for dangerous operations
+    description: "Override mode: all controls available with confirmations"
+
+# Emergency stop conditions
+emergency_conditions:
+  # Conditions that immediately shut down all operations
+  emergency_stop:
+    condition: "digital_inputs[0] == False"  # Water flow lost (index 0 = Water, pin 45)
+    action: "sputter"
+    message: "EMERGENCY: Water flow lost - all pumps stopped"
+  
+  # CRITICAL: Mains power safety shutdown
+  mains_power_safety:
+    condition: "relay_state['btnMainsPower'] == True and (digital_inputs[0] == False or digital_inputs[1] == False or digital_inputs[2] == False)"
+    action: "emergency_mains_shutdown"
+    message: "CRITICAL SAFETY: Mains power disabled due to interlock violation - Water, Rod, or Door interlock failed"
+
+# Automatic procedure safety checks
+automatic_procedures:
+  pump_procedure:
+    description: "Automatic pump-down sequence"
+    safety_checks:
+      - "digital_inputs[0] == True"   # Door closed
+      - "digital_inputs[1] == True"   # Water flow OK
+      - "digital_inputs[2] == True"   # Rod in safe position
+    sets_system_state: "pumping"     # Sets system to pumping state when started
+    completion_state: "high_vacuum"       # Sets system to high_vacuum when completed
+    
+  vent_procedure:
+    description: "Automatic vent sequence"
+    safety_checks:
+      - "digital_inputs[0] == True"   # Door closed
+      - "digital_inputs[1] == True"   # Water flow OK
+      - "digital_inputs[2] == True"   # Rod in safe position
+    sets_system_state: "venting"     # Sets system to venting state when started
+    completion_state: "vented"       # Sets system to vented when completed
+    
+  sputter_procedure:
+    description: "Automatic sputter sequence"
+    safety_checks:
+      - "ai_volts[1] < pressure_thresholds['chamber_high_vacuum']"  # Chamber at high vacuum
+      - "relay_state.get('btnValveBacking', False) == True"  # Backing valve must be open
+      - "relay_state.get('btnValveTurboGate', False) == True"  # Turbo gate must be open
+      - "relay_state.get('btnPumpTurbo', False) == True"  # Turbo pump must be on
+      - "digital_inputs[0] == True"   # Door closed
+      - "digital_inputs[1] == True"   # Water flow OK
+      - "digital_inputs[2] == True"   # Rod in safe position
+    sets_system_state: "sputter"  # Sets system to sputtering state when started
+    completion_state: "high_vacuum"       # Returns to high_vacuum state when completed
+    
+  vent_loadlock_procedure:
+    description: "Load-lock vent sequence"
+    safety_checks:
+      - "digital_inputs[0] == True"   # Door closed
+      - "digital_inputs[1] == True"   # Water flow 
+    sets_system_state: "loadlock_venting"
+    completion_state: "previous"     # Returns to previous state
+    
+  load_unload_procedure:
+    description: "Load/unload sequence"
+    safety_checks:
+      - "ai_volts[1] < pressure_thresholds['chamber_high_vacuum']"  # Chamber at high vacuum
+      - "digital_inputs[0] == True"   # Door closed
+      - "digital_inputs[1] == True"   # Water flow OK
+      - "digital_inputs[2] == True"   # Rod in safe position
+    sets_system_state: "load_unload"
+    completion_state: "high_vacuum"       # Returns to high_vacuum state
+
+# System status definitions
+system_status:
+  # Possible system states
+  states:
+    vented:
+      conditions: [
+        "ai_volts[1] > pressure_thresholds['chamber_atmospheric']",  # Chamber near atm
+        "current_procedure != 'pushButton_2'",  # Not actively pumping
+        "relay_state.get('btnValveTurboGate', False) == False", #Turbo gate closed
+      ]
+      description: "System is vented to atmosphere"
+      allowed_procedures: ["pump_procedure", "vent_procedure", "vent_loadlock_procedure"]
+      color: "orange"  # UI color indicator
+      
+    pumping:
+      # Only when pump procedure is actively running
+      conditions: [
+        "current_procedure == 'pushButton_2'",  # Pump procedure running
+        "ai_volts[1] >= pressure_thresholds['chamber_high_vacuum']",  # Pressure still dropping
+        "digital_inputs[0] == True",   # Door closed
+        "digital_inputs[1] == True",   # Water flow OK
+        "relay_state.get('btnValveVent', False) == False"  # Vent valve closed
+      ]
+      description: "System is currently pumping down"
+      allowed_procedures: ["pump_procedure", "vent_procedure"]
+      color: "yellow"
+
+    mid_vacuum:
+      conditions: [
+        "ai_volts[1] < pressure_thresholds['chamber_medium_vacuum']",
+        "ai_volts[1] > pressure_thresholds['chamber_high_vacuum']",
+        "digital_inputs[0] == True",   # Door closed
+        "relay_state.get('btnPumpScroll', False) == True",  # Scroll pump running
+        "current_procedure != 'pushButton_2'",  # Not actively pumping
+        "current_procedure != 'pushButton_3'"   # Not actively venting
+      ]
+      description: "System is at medium vacuum, sputter pressure range."
+      allowed_procedures: ["pump_procedure", "vent_procedure", "vent_loadlock_procedure", "load_unload_procedure"]
+      color: "green"
+      
+    high_vacuum:
+      conditions: [
+        "ai_volts[1] < pressure_thresholds['chamber_high_vacuum']",
+        # Required pumps/valves/on-state
+        "relay_state.get('btnPumpScroll', False) == True",
+        "relay_state.get('btnPumpTurbo', False) == True",
+        "relay_state.get('btnValveBacking', False) == True",
+        "relay_state.get('btnValveTurboGate', False) == True",
+        # Ion gauge should be on for true high vacuum operations, but make it optional
+        # "relay_state.get('btnIonGauge', False) == True",  # Optional - comment out if not always required
+        # Door must be closed
+        "digital_inputs[0] == True",
+        "digital_inputs[1] == True",  # Water flow OK
+        "digital_inputs[2] == True",  # Rod in safe position
+        # Ensure venting/roughing and other gas/loadlock valves are closed
+        "relay_state.get('btnValveVent', False) == False",
+        "relay_state.get('btnValveRough', False) == False",
+        "relay_state.get('btnValveLoadLockVent', False) == False",
+        "relay_state.get('btnValveLoadLockRough', False) == False",
+        "relay_state.get('btnValveLoadLockGate', False) == False",
+        # Ensure gas valves are closed (no gas injection) - shutters can be open/closed in high vacuum
+        "relay_state.get('btnValveGas1', False) == False",
+        "relay_state.get('btnValveGas2', False) == False",
+        "relay_state.get('btnValveGas3', False) == False",
+        # Shutters can be open or closed in high vacuum mode - remove these restrictions
+        # "relay_state.get('btnShutter1', False) == False",  # Shutters allowed in high vacuum
+        # "relay_state.get('btnShutter2', False) == False",  # Shutters allowed in high vacuum
+        # Not actively running procedures
+        "current_procedure != 'pushButton_2'",  # Not pumping
+        "current_procedure != 'pushButton_3'",  # Not venting
+        "current_procedure != 'pushButton_4'"   # Not sputtering
+      ]
+      description: "System is at high vacuum (ready for operations)"
+      allowed_procedures: ["vent_procedure", "sputter_procedure", "load_unload_procedure", "vent_loadlock_procedure"]
+      color: "green"
+      
+    venting:
+      conditions: [
+        "current_procedure == 'pushButton_3'",  # Vent procedure running
+        "relay_state.get('btnValveVent', False) == True",
+        "relay_state.get('btnValveRough', False) == False",
+        "relay_state.get('btnValveTurboGate', False) == False",
+        "relay_state.get('btnPumpTurbo', False) == False"
+      ]
+      description: "System is currently venting"
+      allowed_procedures: ["pump_procedure", "vent_procedure"]  # No other procedures allowed while venting
+      color: "red"
+      
+    sputter:
+      conditions: [
+        "current_procedure == 'pushButton_6'",  # Sputter procedure running
+        "ai_volts[1] < pressure_thresholds['chamber_high_vacuum']",
+        "relay_state.get('btnPumpTurbo', False) == True",
+        "relay_state.get('btnValveTurboGate', False) == True",
+        "digital_inputs[0] == True",  # Door closed
+        "digital_inputs[1] == True",  # Water flow OK
+        "digital_inputs[2] == True"   # Rod in safe position
+      ]
+      description: "Sputter procedure in progress"
+      allowed_procedures: ["pump_procedure", "vent_procedure"]  # No other procedures allowed while sputtering
+      color: "blue"
+      
+    loadlock_venting:
+      conditions: [
+        "current_procedure == 'pushButton_4'",  # Load-lock vent procedure running
+        "relay_state.get('btnValveLoadLockVent', False) == True",
+        "relay_state.get('btnValveLoadLockGate', False) == False"
+      ]
+      description: "Load-lock is venting"
+      allowed_procedures: ["pump_procedure", "vent_procedure"]  # Can still pump main chamber
+      color: "purple"
+      
+    load_unload:
+      conditions: [
+        "current_procedure == 'pushButton_5'",  # Load/unload procedure running
+        "relay_state.get('btnValveLoadLockGate', False) == True",
+        "ai_volts[1] < pressure_thresholds['chamber_high_vacuum']",
+        "digital_inputs[0] == True"  # Door closed
+      ]
+      description: "Load/unload operation in progress"
+      allowed_procedures: []
+      color: "cyan"
+      
+    error:
+      conditions: [
+        "digital_inputs[0] == False or digital_inputs[1] == False or digital_inputs[2] == False"
+      ]
+      description: "System in error state"
+      allowed_procedures: ["vent_procedure"]  # Only venting allowed in error
+      color: "red"
+    
+    standby:
+      conditions: [
+        "relay_state.get('btnPumpScroll', False) == False",
+        "relay_state.get('btnPumpTurbo', False) == False", 
+        "relay_state.get('btnValveBacking', False) == False",
+        "relay_state.get('btnValveTurboGate', False) == False",
+        "relay_state.get('btnValveRough', False) == False",
+        "relay_state.get('btnValveVent', False) == False",
+        "relay_state.get('btnValveLoadLockRough', False) == False",
+        "relay_state.get('btnValveLoadLockVent', False) == False",
+        "relay_state.get('btnValveLoadLockGate', False) == False",
+        "relay_state.get('btnValveGas1', False) == False",
+        "relay_state.get('btnValveGas2', False) == False",
+        "relay_state.get('btnValveGas3', False) == False",
+        "relay_state.get('btnShutter1', False) == False",
+        "relay_state.get('btnShutter2', False) == False",
+        "relay_state.get('btnIonGauge', False) == False",
+        "current_procedure == None"  # No procedure running
+      ]
+      description: "System is in standby mode"
+      allowed_procedures: ["pump_procedure", "vent_procedure", "vent_loadlock_procedure"]
+      color: "grey"
+    
+    default:
+      conditions: [
+        "relay_state.get('btnPumpScroll', False) == True",
+        "relay_state.get('btnPumpTurbo', False) == False",
+        "relay_state.get('btnValveBacking', False) == False",
+        "relay_state.get('btnValveTurboGate', False) == False",
+        "relay_state.get('btnValveRough', False) == False",
+        "relay_state.get('btnValveVent', False) == False",
+        "relay_state.get('btnValveLoadLockRough', False) == False",
+        "relay_state.get('btnValveLoadLockVent', False) == False",
+        "relay_state.get('btnValveLoadLockGate', False) == False",
+        "relay_state.get('btnValveGas1', False) == False",
+        "relay_state.get('btnValveGas2', False) == False",
+        "relay_state.get('btnValveGas3', False) == False",
+        "relay_state.get('btnShutter1', False) == False",
+        "relay_state.get('btnShutter2', False) == False",
+        "relay_state.get('btnIonGauge', False) == False",
+        "current_procedure == None"  # No procedure running
+      ]
+      description: "Default (idle) system state."
+      allowed_procedures: ["pump_procedure", "vent_procedure", "vent_loadlock_procedure", "load_unload_procedure"]
+      color: "grey"
+  
+  # Initial state when system starts
+  initial_state: "vented"
+  
+  # State transition rules
+  transitions:
+    vented_to_pumping: "pump_procedure"
+    pumping_to_high_vacuum: "pump_procedure_completion"
+    high_vacuum_to_venting: "vent_procedure"
+    venting_to_vented: "vent_procedure_completion"
+    high_vacuum_to_sputter: "sputter_procedure"
+    sputter_to_high_vacuum: "sputter_procedure_completion"
+    high_vacuum_to_load_unload: "load_unload_procedure"
+    load_unload_to_high_vacuum: "load_unload_procedure_completion"
