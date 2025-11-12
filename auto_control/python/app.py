@@ -122,6 +122,9 @@ class AutoControlWindow(QMainWindow):
         # System status tracking
         self.system_status = "vented"  # Current system state
         self.previous_system_status = None  # For state transitions
+        
+        # Ion gauge auto-toggle safety control
+        self.ion_gauge_auto_toggle_enabled = True  # Controls automatic ion gauge safety logic
 
         # Relay map: objectName -> controller RELAY index (1-based)
         # YAML relays use Arduino pin numbers. Translate to RELAY_n using relay_pins order.
@@ -287,6 +290,16 @@ class AutoControlWindow(QMainWindow):
             # Add logbook action
             logbook_action = tools_menu.addAction('Logbook')
             logbook_action.triggered.connect(self.open_logbook)
+            
+            # Add separator
+            tools_menu.addSeparator()
+            
+            # Add ion gauge auto-toggle menu item (checkable)
+            self.ion_gauge_auto_toggle_action = tools_menu.addAction('Ion Gauge Auto-Toggle')
+            self.ion_gauge_auto_toggle_action.setCheckable(True)
+            self.ion_gauge_auto_toggle_action.setChecked(True)  # Enabled by default
+            self.ion_gauge_auto_toggle_action.triggered.connect(self._on_ion_gauge_auto_toggle_changed)
+            self.ion_gauge_auto_toggle_action.setStatusTip("Enable/disable automatic ion gauge toggle safety logic")
             
             # Add system state management action
             try:
@@ -724,27 +737,38 @@ class AutoControlWindow(QMainWindow):
                 pass
             
             # Safety check: Turn off ion gauge if it's on but not in high vacuum state
-            try:
-                if (hasattr(self.safety_controller, 'is_ion_gauge_on') and 
-                    self.safety_controller.is_ion_gauge_on() and 
-                    self.system_status not in ['high_vacuum', 'pumping']):
-                    
-                    print(f"DEBUG: Ion gauge is ON but system state is '{self.system_status}' (not high_vacuum) - turning off ion gauge for safety")
-                    
-                    # Import the toggle function from auto_procedures
-                    try:
-                        from .auto_procedures import toggle_ion_gauge
-                    except ImportError:
-                        from auto_procedures import toggle_ion_gauge
-                    
-                    # Turn off ion gauge safely
-                    if toggle_ion_gauge(False, self.arduino, self.safety_controller, self.relay_map):
-                        print("DEBUG: Ion gauge turned off successfully for safety")
-                    else:
-                        print("DEBUG: Warning - failed to turn off ion gauge")
+            # ONLY if auto-toggle is enabled (can be disabled via Tools menu)
+            if self.ion_gauge_auto_toggle_enabled:
+                try:
+                    if (hasattr(self.safety_controller, 'is_ion_gauge_on') and 
+                        self.safety_controller.is_ion_gauge_on() and 
+                        self.system_status not in ['high_vacuum', 'pumping']):
                         
-            except Exception as e:
-                print(f"DEBUG: Error in ion gauge safety check: {e}")
+                        print(f"DEBUG: Ion gauge is ON but system state is '{self.system_status}' (not high_vacuum) - turning off ion gauge for safety")
+                        
+                        # Import the toggle function from auto_procedures
+                        try:
+                            from .auto_procedures import toggle_ion_gauge
+                        except ImportError:
+                            from auto_procedures import toggle_ion_gauge
+                        
+                        # Turn off ion gauge safely
+                        if toggle_ion_gauge(False, self.arduino, self.safety_controller, self.relay_map):
+                            print("DEBUG: Ion gauge turned off successfully for safety")
+                        else:
+                            print("DEBUG: Warning - failed to turn off ion gauge")
+                            
+                except Exception as e:
+                    print(f"DEBUG: Error in ion gauge safety check: {e}")
+            else:
+                # Auto-toggle is disabled - log this for debugging
+                try:
+                    if (hasattr(self.safety_controller, 'is_ion_gauge_on') and 
+                        self.safety_controller.is_ion_gauge_on() and 
+                        self.system_status not in ['high_vacuum', 'pumping']):
+                        print(f"DEBUG: Ion gauge auto-toggle DISABLED - not turning off ion gauge (manual control only)")
+                except Exception:
+                    pass
                 
         except Exception as e:
             print(f"❌ Error updating safety state: {e}")
@@ -2878,6 +2902,18 @@ class AutoControlWindow(QMainWindow):
         """Handle recorder window destruction (backup cleanup)."""
         print("📊 Recorder window destroyed signal - clearing reference")
         self._recorder_window = None
+
+    def _on_ion_gauge_auto_toggle_changed(self) -> None:
+        """Handle ion gauge auto-toggle menu item state change."""
+        new_state = self.ion_gauge_auto_toggle_action.isChecked()
+        self.ion_gauge_auto_toggle_enabled = new_state
+        
+        status_msg = "✅ Ion Gauge Auto-Toggle ENABLED" if new_state else "⛔ Ion Gauge Auto-Toggle DISABLED"
+        print(status_msg)
+        
+        # Show status in a temporary status bar message if available
+        if hasattr(self, 'statusbar') and self.statusbar():
+            self.statusbar().showMessage(status_msg, 3000)  # Show for 3 seconds
 
     def _setup_procedure_menu(self, procedure_menu) -> None:
         """Set up the Run Procedure menu with all available auto procedures."""

@@ -452,3 +452,151 @@ class UserAccountManager(SecurePasswordManager):
             
         except Exception as e:
             return False, f"Error changing password: {e}"
+    
+    # ==================== RFID Card Integration ====================
+    
+    def enroll_rfid_card(self, username: str, card_id: str) -> Tuple[bool, str]:
+        """
+        Enroll an RFID card for a user.
+        
+        Args:
+            username: Username to enroll card for
+            card_id: RFID card ID (e.g., "08:5C:D1:4C")
+        
+        Returns:
+            (success, message) tuple
+        """
+        try:
+            # Load users
+            users = self._load_users()
+            if users is None:
+                return False, "Failed to load user database."
+            
+            # Check if user exists
+            username_lower = username.lower()
+            if username_lower not in users:
+                return False, f"User '{username}' not found."
+            
+            # Check if card is already registered to another user
+            for u_name, u_data in users.items():
+                if u_data.get('rfid_card_id') == card_id and u_name != username_lower:
+                    return False, f"Card already registered to user '{u_data['username']}'."
+            
+            # Enroll card
+            users[username_lower]['rfid_card_id'] = card_id
+            users[username_lower]['rfid_enrolled_date'] = datetime.now().isoformat()
+            
+            # Save users
+            if self._save_users(users):
+                return True, f"RFID card '{card_id}' enrolled for user '{username}'."
+            else:
+                return False, "Failed to save user database."
+            
+        except Exception as e:
+            return False, f"Error enrolling RFID card: {e}"
+    
+    def authenticate_by_rfid(self, card_id: str) -> Tuple[bool, Optional[Dict], str]:
+        """
+        Authenticate a user by RFID card ID.
+        
+        Args:
+            card_id: RFID card ID to look up
+        
+        Returns:
+            (success, user_info, message) tuple
+        """
+        try:
+            # Load users
+            users = self._load_users()
+            if users is None:
+                return False, None, "Failed to load user database."
+            
+            # Find user with matching RFID card
+            for username_lower, user in users.items():
+                if user.get('rfid_card_id') == card_id:
+                    # Update login statistics
+                    user['last_login'] = datetime.now().isoformat()
+                    user['login_count'] = user.get('login_count', 0) + 1
+                    user['last_login_method'] = 'rfid_card'
+                    
+                    # Save updated stats
+                    self._save_users(users)
+                    
+                    # Return user info
+                    user_info = {
+                        'username': user['username'],
+                        'admin_level': user['admin_level'],
+                        'level_name': self.LEVEL_NAMES[user['admin_level']],
+                        'last_login': user['last_login'],
+                        'login_count': user['login_count'],
+                        'rfid_card_id': card_id
+                    }
+                    
+                    return True, user_info, f"Welcome, {user['username']}!"
+            
+            return False, None, "Card not registered. Please log in with username/password."
+            
+        except Exception as e:
+            return False, None, f"RFID authentication error: {e}"
+    
+    def remove_rfid_card(self, username: str) -> Tuple[bool, str]:
+        """
+        Remove RFID card enrollment for a user.
+        
+        Args:
+            username: Username to remove card from
+        
+        Returns:
+            (success, message) tuple
+        """
+        try:
+            # Load users
+            users = self._load_users()
+            if users is None:
+                return False, "Failed to load user database."
+            
+            # Check if user exists
+            username_lower = username.lower()
+            if username_lower not in users:
+                return False, f"User '{username}' not found."
+            
+            # Check if user has RFID card
+            if 'rfid_card_id' not in users[username_lower]:
+                return False, f"User '{username}' has no RFID card enrolled."
+            
+            # Remove card
+            card_id = users[username_lower].pop('rfid_card_id', None)
+            users[username_lower].pop('rfid_enrolled_date', None)
+            
+            # Save users
+            if self._save_users(users):
+                return True, f"RFID card '{card_id}' removed from user '{username}'."
+            else:
+                return False, "Failed to save user database."
+            
+        except Exception as e:
+            return False, f"Error removing RFID card: {e}"
+    
+    def get_rfid_card_id(self, username: str) -> Optional[str]:
+        """
+        Get the RFID card ID for a user (if enrolled).
+        
+        Args:
+            username: Username to look up
+        
+        Returns:
+            Card ID string or None if not enrolled
+        """
+        try:
+            users = self._load_users()
+            if users is None:
+                return None
+            
+            username_lower = username.lower()
+            if username_lower not in users:
+                return None
+            
+            return users[username_lower].get('rfid_card_id')
+            
+        except Exception:
+            return None
