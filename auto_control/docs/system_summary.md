@@ -30,11 +30,13 @@ code, pre {font-size: 13px}
 
 # Magnetron Sputter Thin Film Deposition System - Project Summary
 
+**Date:** October 2025
+
 ## Hardware Architecture
 
-The magnetron sputtering system was built from component parts assembled in-house, combining commercial vacuum equipment with custom electronic controls. Many parts are old, some new. Thin-film deposition results with teh system are as good as our new commercial tools. System built over 2015 - 2020 by Geoff Mcredie at UTS. Later Rebuilt by James Bishop over 2023 - 2025.
+The magnetron sputtering system was built from component parts assembled in-house, combining commercial vacuum equipment with custom electronic controls. Many parts are old, some new. Thin-film deposition results with the system are as good as our new commercial tools. System built over 2015 - 2020 by Geoff Mcredie at UTS. Later Rebuilt by James Bishop over 2023 - 2025.
 
-Most recent updates involved rebuilding the sputter guns and the vacuum system, replacing pumps and gate valves. New safety system implemented to prevent sputter gun power supplies being energized when this could present a hazard.
+Recent updates involved rebuilding the sputter guns and the vacuum system, replacing pumps and gate valves. New safety system implemented to prevent sputter gun power supplies being energized when this could present a hazard. New safety system also prevents damage to system components & reduces wear on pumps. User authentication system added to restrict and monitor system usage.
 
 #### Control Software Upgrade
 
@@ -42,7 +44,7 @@ The old LABVIEW based control software was replaced with a new open-source contr
 
 The software controls all system components, interfacing with power supplies, vacuum gauge controllers and thin-film deposition monitor. Safety interlock switches are used to detect state of hardware such as water flow, chamber door state and load-lock rod, power supply energy etc. and are used by the system safety module to prevent hazards. Valves and pumps are operated via relays and pneumatic solenoid switches.
 
-A user interfaces with a GUI which can be operated via touch. RFID card reader is used for User Account Control to restrict usage to authorized lab users at UTS and for logging to monitor system usage.
+A user interfaces with system via GUI which can be operated via touch. RFID card reader is used for User Account Control to restrict usage to authorized lab users at UTS and for logging to monitor system usage.
 
 ![Sputter system](./pics/sputter_tool.jpg)
 
@@ -62,12 +64,12 @@ The vacuum system consists of three primary pump stages enabling evacuation from
 
    <figure style="display:flex;gap:12px;align-items:flex-start">
       <div style="flex:1;margin:0">
-         <img src="pics/main_power.jpg" alt="Image 1" style="width:94%;height:auto;display:block;border:0">
-         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Main power for system.</figcaption>
+         <img src="pics/pumps.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Vacuum pumps: scroll pre-vacuum pump (PVP) & turbomolecular pump (TMP).</figcaption>
       </div>
       <div style="flex:1;margin:0">
-         <img src="pics/supplies_power.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
-         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) This one supplies power to the DC & RF supplies. Here it is shown in the "on" position.</figcaption>
+         <img src="pics/power_supps2.jpg" alt="Image 2" style="width:70%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) DC & RF power supplies to drive sputter deposition.</figcaption>
       </div>
    </figure>
 
@@ -82,7 +84,7 @@ The vacuum system consists of three primary pump stages enabling evacuation from
 
 ### Power supplies
 
-These drive the sputter process.
+These drive the sputter process for thin-film deposition.
 
 - 2 x 600 W Advanced Energy pulsed DC supplies.
 - 1 x 500 W Advanced Energy 13.56 MHz RF supply.
@@ -94,10 +96,10 @@ These drive the sputter process.
 ### Electronic Control Hardware
 
 - **Raspberry Pi 5**: Python/PyQt5 GUI, automated procedures, user authentication, data logging
-- **Arduino Mega 2560 R3**: 23 relay outputs, 4 digital inputs (interlocks), 4 analog inputs (pressure/speed), 9600 baud serial
+- **Arduino Mega 2560 R3**: controls system hardware via 23 relay outputs, 4 digital inputs (interlocks), 4 analog inputs (pressure/speed), 9600 baud serial
 - **Displays**: 7-inch touch screen (primary) and large monitor with keyboard/mouse
 - **Pressure Gauge Controllers**: Multi-channel analog readout for Pirani and ion gauges
-- **Deposition Monitor**: Quartz crystal microbalance (QCM) thickness/rate monitoring
+- **Deposition Monitor**: Quartz crystal microbalance (QCM) thickness/rate monitor.
 - **RFID Reader**: Raspberry Pi Pico with I2C RFID module for card-based user authentication
 
 ### System Integration
@@ -107,16 +109,30 @@ All hardware subsystems communicate through the Raspberry Pi 5, which acts as th
 ```
 Raspberry Pi 5 (Supervisory Control)
 ├─ Arduino Mega (Serial 9600 baud)
-│  ├─ 23 Relay Outputs
+│  ├─ 23 Digital Outputs
 │  ├─ 4 Digital Inputs
 │  └─ 4 Analog Inputs
 ├─ Pressure Gauge Controllers (Serial)
 ├─ Alicat MFC Controllers (Serial)
 ├─ Deposition Monitor (Serial)
+├─ Power Supplies (Digital and analog I/O)
 ├─ RFID Reader (USB Serial)
+│  ├─ Raspberry Pi Pico (Custom Firmware)
 ├─ Touch-Screen Display (HDMI + USB)
 └─ Large Monitor Display (HDMI + USB)
 ```
+
+   <figure style="display:flex;gap:4px;align-items:flex-start">
+      <div style="flex:2;margin:0">
+         <img src="pics/elec_hardware.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Electronics hardware.</figcaption>
+      </div>
+      <div style="flex:2.7;margin:0">
+         <img src="pics/Electronics_Control_Box.png" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Internals of electronic control box.</figcaption>
+      </div>
+   </figure>
+
 
 ### Power Distribution
 
@@ -129,7 +145,7 @@ Raspberry Pi 5 (Supervisory Control)
 
 ## Software Architecture
 
-The control software replaced legacy LabVIEW systems with an open-source stack combining Python backend with C++ firmware, providing modern, maintainable automation and safety interlocks.
+The control software replaced an old LabVIEW based control software stack (running on a Windows PC) with an open-source stack combining Python backend with C++ firmware using low-cost hardware (Raspberry Pi 5 & Arduino Mega).
 
 ### Core Control Stack
 
@@ -143,6 +159,12 @@ The control software replaced legacy LabVIEW systems with an open-source stack c
 - **Primary Controls**: Automated procedure buttons (pump-down, vent, sputter, load-unlock) with real-time pressure plotting
 - **Secondary Display**: Large monitor with keyboard/mouse for detailed monitoring and configuration
 - **Status Indicators**: Real-time pressure, pump speed, system state, and safety interlock visualization
+
+![pics/screen2.png](pics/touchscreen.png)
+**Above:** Primary touch-screen GUI for system control.
+
+![pics/screen2.png](pics/screen2.png)
+**Above:** GUI windows on secondary screen include terminal logging, analog readout with plotting & recording capabilities and a logbook widget.
 
 ### Automated Procedures
 
