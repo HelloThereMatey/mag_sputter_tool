@@ -494,7 +494,7 @@ def pump_procedure(arduino: ArduinoController,
     safety_config = safety.safety_config
     chamber_medium_vacuum = safety_config.get('pressure_thresholds', {}).get('chamber_medium_vacuum', 2.0)
     # Default wait times
-    chamber_wait_time = 600  # seconds to wait for chamber to reach medium vacuum
+    chamber_wait_time = 1500  # seconds to wait for chamber to reach medium vacuum
     
     print("🚀 Starting pump procedure...")
     # Ensure system is in the default starting configuration before pumping
