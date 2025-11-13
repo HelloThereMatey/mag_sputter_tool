@@ -595,7 +595,7 @@ def pump_procedure(arduino: ArduinoController,
         print("⚠️ Continuing pump procedure despite pressure check error")
 
     # Step 4: Wait until chamber pressure < chamber_medium_vacuum
-    print(f"⏳ Step 4: Waiting for chamber pressure to drop below {chamber_medium_vacuum} V")
+    print(f"⏳ Step 4: Waiting for chamber pressure to drop below {chamber_medium_vacuum} V.\nMaximum wait time: {chamber_wait_time} seconds")
     # Wait for chamber to reach medium vacuum
     if not wait_for_analog_condition(
         arduino=arduino,
