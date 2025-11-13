@@ -1,6 +1,6 @@
 ---
 html:
-  embed_local_images: false
+  embed_local_images: true
   embed_svg: true
   offline: true
   toc: true
@@ -46,7 +46,7 @@ The software controls all system components, interfacing with power supplies, va
 
 A user interfaces with system via GUI which can be operated via touch. RFID card reader is used for User Account Control to restrict usage to authorized lab users at UTS and for logging to monitor system usage.
 
-![Sputter system](./auto_control/docs/pics/sputter_tool.jpg)
+![Sputter system](./auto_control/docs/pics/small/sputter_tool.jpg)
 
 ### Vacuum System
 
@@ -64,11 +64,11 @@ The vacuum system consists of three primary pump stages enabling evacuation from
 
    <figure style="display:flex;gap:4px;align-items:flex-start">
       <div style="flex:1;margin:0">
-         <img src="./auto_control/docs/pics/pumps.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <img src="./auto_control/docs/pics/small/pumps.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
          <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Vacuum pumps: scroll pre-vacuum pump (PVP) & turbomolecular pump (TMP).</figcaption>
       </div>
       <div style="flex:1;margin:0">
-         <img src="./auto_control/docs/pics/power_supps2.jpg" alt="Image 2" style="width:70%;height:auto;display:block;border:0">
+         <img src="./auto_control/docs/pics/small/power_supps2.jpg" alt="Image 2" style="width:70%;height:auto;display:block;border:0">
          <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) DC & RF power supplies to drive sputter deposition.</figcaption>
       </div>
    </figure>
@@ -124,11 +124,11 @@ Raspberry Pi 5 (Supervisory Control)
 
    <figure style="display:flex;gap:4px;align-items:flex-start">
       <div style="flex:2;margin:0">
-         <img src="./auto_control/docs/pics/elec_hardware.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <img src="./auto_control/docs/pics/small/elec_hardware.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
          <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Electronics hardware.</figcaption>
       </div>
       <div style="flex:2.7;margin:0">
-         <img src="./auto_control/docs/pics/Electronics_Control_Box.png" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <img src="./auto_control/docs/pics/small/Electronics_Control_Box.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
          <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Internals of electronic control box.</figcaption>
       </div>
    </figure>
@@ -160,10 +160,10 @@ The control software replaced an old LabVIEW based control software stack (runni
 - **Secondary Display**: Large monitor with keyboard/mouse for detailed monitoring and configuration
 - **Status Indicators**: Real-time pressure, pump speed, system state, and safety interlock visualization
 
-![pics/screen2.png](./auto_control/docs/pics/touchscreen.png)
+![pics/screen2.png](./auto_control/docs/pics/small/touchscreen.jpg)
 **Above:** Primary touch-screen GUI for system control.
 
-![pics/screen2.png](./auto_control/docs/pics/screen2.png)
+![pics/screen2.png](./auto_control/docs/pics/small/screen2.jpg)
 **Above:** GUI windows on secondary screen include terminal logging, analog readout with plotting & recording capabilities and a logbook widget.
 
 ### Automated Procedures
