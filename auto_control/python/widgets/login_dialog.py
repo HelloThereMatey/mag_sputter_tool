@@ -5,6 +5,7 @@ Provides initial authentication before main GUI launch.
 Supports user login, new account creation, and RFID card authentication.
 """
 
+from typing import Optional
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QMessageBox, QCheckBox, QGroupBox, QFormLayout,
                              QTabWidget, QWidget)
@@ -105,62 +106,76 @@ class LoginDialog(QDialog):
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
         
-        subtitle = QLabel("User Authentication Required")
+        subtitle = QLabel("RFID Card Authentication")
         subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setStyleSheet("QLabel { font-size: 12pt; font-weight: bold; }")
         layout.addWidget(subtitle)
         
-        layout.addSpacing(10)
+        layout.addSpacing(20)
         
         # RFID Status
         self.rfid_status_label = QLabel("🔍 Initializing RFID reader...")
         self.rfid_status_label.setAlignment(Qt.AlignCenter)
-        self.rfid_status_label.setStyleSheet("QLabel { color: blue; font-size: 11px; }")
+        self.rfid_status_label.setStyleSheet("QLabel { color: blue; font-size: 14px; font-weight: bold; }")
         layout.addWidget(self.rfid_status_label)
         
         layout.addSpacing(10)
         
-        # Login form
-        form_group = QGroupBox("Login")
-        form_layout = QFormLayout()
+        # RFID Card Status
+        card_status_group = QGroupBox("Card Status")
+        card_layout = QVBoxLayout()
         
-        self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Enter username or present RFID card")
-        self.username_input.returnPressed.connect(self._on_login)
-        form_layout.addRow("Username:", self.username_input)
+        instruction_label = QLabel("Please present your RFID card to the reader")
+        instruction_label.setAlignment(Qt.AlignCenter)
+        instruction_label.setStyleSheet("QLabel { font-size: 11pt; color: #34495e; }")
+        card_layout.addWidget(instruction_label)
         
-        self.password_input = QLineEdit()
-        self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setPlaceholderText("Enter password (or skip with RFID)")
-        self.password_input.returnPressed.connect(self._on_login)
-        form_layout.addRow("Password:", self.password_input)
-        
-        # RFID Card Status in Login Section
         self.rfid_card_label = QLabel("No card detected")
-        self.rfid_card_label.setStyleSheet("QLabel { color: gray; }")
-        form_layout.addRow("RFID Card:", self.rfid_card_label)
+        self.rfid_card_label.setAlignment(Qt.AlignCenter)
+        self.rfid_card_label.setStyleSheet("QLabel { color: gray; font-size: 14pt; font-weight: bold; padding: 10px; }")
+        card_layout.addWidget(self.rfid_card_label)
         
-        self.remember_checkbox = QCheckBox("Remember username")
-        form_layout.addRow("", self.remember_checkbox)
+        card_status_group.setLayout(card_layout)
+        layout.addWidget(card_status_group)
         
-        form_group.setLayout(form_layout)
-        layout.addWidget(form_group)
-        
-        layout.addSpacing(10)
+        layout.addSpacing(20)
         
         # Buttons
         button_layout = QHBoxLayout()
         
-        self.login_button = QPushButton("Login")
-        self.login_button.clicked.connect(self._on_login)
-        self.login_button.setDefault(True)
-        button_layout.addWidget(self.login_button)
-        
-        self.create_account_button = QPushButton("Create Account")
+        self.create_account_button = QPushButton("Create New Account")
         self.create_account_button.clicked.connect(self._on_create_account)
+        self.create_account_button.setStyleSheet("""
+            QPushButton {
+                font-size: 11pt;
+                padding: 10px 20px;
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+        """)
         button_layout.addWidget(self.create_account_button)
         
-        self.cancel_button = QPushButton("Exit")
+        self.cancel_button = QPushButton("Exit Application")
         self.cancel_button.clicked.connect(self._on_cancel)
+        self.cancel_button.setStyleSheet("""
+            QPushButton {
+                font-size: 11pt;
+                padding: 10px 20px;
+                background-color: #95a5a6;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #7f8c8d;
+            }
+        """)
         button_layout.addWidget(self.cancel_button)
         
         layout.addLayout(button_layout)
@@ -168,11 +183,8 @@ class LoginDialog(QDialog):
         # Status label
         self.status_label = QLabel("")
         self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("QLabel { color: red; }")
+        self.status_label.setStyleSheet("QLabel { color: red; font-size: 10pt; }")
         layout.addWidget(self.status_label)
-        
-        # Load remembered username
-        self._load_remembered_username()
     
     def _show_first_time_setup(self):
         """Show first-time setup dialog to create master password and first admin."""
@@ -288,49 +300,38 @@ class LoginDialog(QDialog):
             
             break
         
-        # Create administrator account (no master password needed for user creation)
+        # For first admin, we need a card - show enrollment dialog immediately
+        QMessageBox.information(self, "RFID Card Required",
+                              f"Administrator account requires RFID card enrollment.\n\n"
+                              "Please present your RFID card to the reader...")
+        
+        # Wait for card
+        self.current_enrollment_username = username
+        self.rfid_detected_card = None
+        
+        # Create enrollment dialog
+        card_id = self._wait_for_card_enrollment(username, is_first_admin=True)
+        
+        if not card_id:
+            QMessageBox.critical(self, "Error", "RFID card enrollment is required to create administrator account.")
+            return False
+        
+        # Create administrator account with card (no password)
         success, message = self.user_manager.create_user(
-            username, password, UserAccountManager.LEVEL_ADMINISTRATOR, "system"
+            username, card_id, UserAccountManager.LEVEL_ADMINISTRATOR, "system"
         )
         
         if success:
             QMessageBox.information(self, "Success",
                                   f"Administrator account '{username}' created.\n\n"
-                                  "You can now log in with this account.")
+                                  "You can now use your RFID card to log in.")
             return True
         else:
             QMessageBox.critical(self, "Error", f"Failed to create administrator:\n{message}")
             return False
     
-    def _on_login(self):
-        """Handle login button click."""
-        username = self.username_input.text().strip()
-        password = self.password_input.text()
-        
-        if not username or not password:
-            self.status_label.setText("Please enter username and password")
-            return
-        
-        # Authenticate (no master password required)
-        success, user_info, message = self.user_manager.authenticate_user(username, password)
-        
-        if success:
-            self.authenticated_user = user_info
-            # Master password no longer needed for login
-            self.master_password = None
-            
-            # Save username if remember is checked
-            if self.remember_checkbox.isChecked():
-                self._save_remembered_username(username)
-            
-            self.accept()
-        else:
-            self.status_label.setText(message)
-            self.password_input.clear()
-            self.password_input.setFocus()
-    
     def _on_create_account(self):
-        """Handle create account button click."""
+        """Handle create account button click - RFID card enrollment is mandatory."""
         from PyQt5.QtWidgets import QInputDialog
         
         # Get username
@@ -344,131 +345,136 @@ class LoginDialog(QDialog):
         
         username = username.strip()
         
-        # Get password
-        password, ok = QInputDialog.getText(
-            self, "Create Password",
-            "Enter password:",
-            QLineEdit.Password
+        # Show RFID enrollment requirement
+        QMessageBox.information(
+            self, "RFID Card Required",
+            f"Creating account '{username}'.\n\n"
+            "RFID card enrollment is REQUIRED to complete account creation.\n\n"
+            "Please present your RFID card to the reader..."
         )
         
-        if not ok or not password:
+        # Wait for card enrollment
+        card_id = self._wait_for_card_enrollment(username, is_first_admin=False)
+        
+        if not card_id:
+            QMessageBox.warning(
+                self, "Account Creation Cancelled",
+                "RFID card enrollment is required to create an account.\n\n"
+                "Account creation cancelled."
+            )
             return
         
-        # Confirm password
-        confirm, ok = QInputDialog.getText(
-            self, "Confirm Password",
-            "Confirm password:",
-            QLineEdit.Password
-        )
-        
-        if not ok:
-            return
-        
-        if password != confirm:
-            QMessageBox.warning(self, "Password Mismatch",
-                              "Passwords do not match. Please try again.")
-            return
-        
-        # Create account with Level 1 (Operator) permissions
+        # Create account with Level 1 (Operator) permissions and enrolled card
         success, message = self.user_manager.create_user(
             username, 
-            password, 
+            card_id,  # RFID card ID instead of password
             UserAccountManager.LEVEL_OPERATOR,  # Default to Level 1
             "self-registration"
         )
         
         if success:
-            # Show enrollment prompt
-            reply = QMessageBox.question(
-                self, "RFID Card Enrollment",
+            QMessageBox.information(
+                self, "Account Created",
                 f"Account '{username}' created successfully!\n\n"
                 f"Permission Level: {UserAccountManager.LEVEL_NAMES[UserAccountManager.LEVEL_OPERATOR]}\n\n"
-                "Would you like to enroll an RFID card for quick login?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.Yes
+                f"Your RFID card has been enrolled.\n"
+                "You can now log in by presenting your card."
             )
-            
-            if reply == QMessageBox.Yes and self.rfid_enabled:
-                self._enroll_rfid_for_user(username)
-            else:
-                QMessageBox.information(self, "Account Ready",
-                                      f"You can now log in with your new account.")
-                # Auto-fill the username field
-                self.username_input.setText(username)
-                self.password_input.clear()
-                self.password_input.setFocus()
         else:
             QMessageBox.critical(self, "Account Creation Failed",
                                f"Failed to create account:\n{message}")
     
-    def _enroll_rfid_for_user(self, username: str) -> None:
+    def _wait_for_card_enrollment(self, username: str, is_first_admin: bool = False) -> Optional[str]:
         """
-        Enroll an RFID card for a newly created user.
+        Wait for RFID card to be presented for enrollment.
         
         Args:
             username: Username to enroll card for
+            is_first_admin: If True, this is for first-time admin setup
+            
+        Returns:
+            Card ID if detected, None if cancelled/timeout
         """
         self.current_enrollment_username = username
         self.rfid_detected_card = None
         
-        # Show enrollment dialog
-        reply = QMessageBox.information(
-            self, "RFID Enrollment",
-            f"Ready to enroll RFID card for user '{username}'.\n\n"
-            "Please present your RFID card to the reader now...\n\n"
-            "The dialog will automatically close when the card is detected.",
-            QMessageBox.Ok | QMessageBox.Cancel
-        )
+        # Create a non-blocking dialog for enrollment
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QProgressBar
+        from PyQt5.QtCore import Qt
         
-        if reply == QMessageBox.Cancel:
-            self.current_enrollment_username = None
-            QMessageBox.information(self, "Enrollment Cancelled",
-                                  f"RFID enrollment cancelled.\n\n"
-                                  "You can enroll a card later from the settings menu.")
-            self.username_input.setText(username)
-            self.password_input.clear()
-            return
+        enrollment_dialog = QDialog(self)
+        enrollment_dialog.setWindowTitle("RFID Enrollment")
+        enrollment_dialog.setModal(True)
+        enrollment_dialog.setFixedSize(400, 200)
         
-        # Wait for card detection with timeout
+        layout = QVBoxLayout()
+        
+        title_label = QLabel(f"Enrolling RFID card for user '{username}'")
+        title_label.setStyleSheet("font-weight: bold; font-size: 12pt;")
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+        
+        instruction_label = QLabel("Please present your RFID card to the reader now...")
+        instruction_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(instruction_label)
+        
+        status_label = QLabel("Waiting for card...")
+        status_label.setAlignment(Qt.AlignCenter)
+        status_label.setStyleSheet("color: blue;")
+        layout.addWidget(status_label)
+        
+        # Progress bar for timeout
+        progress = QProgressBar()
+        progress.setMaximum(30)  # 30 seconds
+        progress.setValue(30)
+        layout.addWidget(progress)
+        
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(enrollment_dialog.reject)
+        layout.addWidget(cancel_button)
+        
+        enrollment_dialog.setLayout(layout)
+        
+        # Timer for checking card detection and timeout
         enrollment_timer = QTimer()
         timeout_counter = [30]  # 30 seconds timeout
+        detected_card = [None]  # Store detected card ID
         
         def check_card():
             if self.rfid_detected_card:
-                # Card detected - enroll it
-                card_id = self.rfid_detected_card
+                # Card detected - store it and close dialog
+                detected_card[0] = self.rfid_detected_card
                 enrollment_timer.stop()
+                enrollment_dialog.accept()
                 self.current_enrollment_username = None
                 self.rfid_detected_card = None
-                
-                success, msg = self.user_manager.enroll_rfid_card(username, card_id)
-                
-                if success:
-                    QMessageBox.information(self, "Enrollment Success",
-                                          f"RFID card '{card_id}' enrolled successfully!\n\n"
-                                          f"User '{username}' can now use this card to log in.")
-                    self.username_input.setText(username)
-                    self.password_input.clear()
-                else:
-                    QMessageBox.warning(self, "Enrollment Failed",
-                                      f"Failed to enroll card:\n{msg}")
-                    self.username_input.setText(username)
-                    self.password_input.clear()
             
             elif timeout_counter[0] <= 0:
                 # Timeout
                 enrollment_timer.stop()
+                enrollment_dialog.reject()
                 self.current_enrollment_username = None
-                QMessageBox.warning(self, "Enrollment Timeout",
-                                  "No card detected within 30 seconds.\n\n"
-                                  "You can enroll a card later.")
-                self.username_input.setText(username)
-                self.password_input.clear()
             else:
                 timeout_counter[0] -= 1
+                progress.setValue(timeout_counter[0])
+                status_label.setText(f"Waiting for card... ({timeout_counter[0]}s remaining)")
         
         enrollment_timer.timeout.connect(check_card)
         enrollment_timer.start(1000)  # Check every second
+        
+        # Show dialog (non-blocking internally because of timer)
+        result = enrollment_dialog.exec()
+        
+        # Clean up
+        enrollment_timer.stop()
+        self.current_enrollment_username = None
+        self.rfid_detected_card = None
+        
+        # Return card ID if successful, None if cancelled/timeout
+        if result == QDialog.Accepted and detected_card[0]:
+            return detected_card[0]
+        else:
+            return None
     
     def _on_cancel(self):
         """Handle cancel/exit button click."""
@@ -481,26 +487,6 @@ class LoginDialog(QDialog):
         
         if reply == QMessageBox.Yes:
             self.reject()
-    
-    def _save_remembered_username(self, username: str):
-        """Save username for auto-fill."""
-        try:
-            config_file = self.user_manager.config_dir / "remembered_username.txt"
-            config_file.write_text(username)
-        except Exception as e:
-            print(f"Failed to save username: {e}")
-    
-    def _load_remembered_username(self):
-        """Load saved username."""
-        try:
-            config_file = self.user_manager.config_dir / "remembered_username.txt"
-            if config_file.exists():
-                username = config_file.read_text().strip()
-                self.username_input.setText(username)
-                self.remember_checkbox.setChecked(True)
-                self.password_input.setFocus()
-        except Exception as e:
-            print(f"Failed to load username: {e}")
     
     def get_authenticated_user(self):
         """Get authenticated user info."""
@@ -535,7 +521,20 @@ class LoginDialog(QDialog):
     def _on_rfid_status_changed(self, status: str) -> None:
         """Handle RFID status update."""
         self.rfid_status_label.setText(status)
-        self.rfid_status_label.setStyleSheet("QLabel { color: blue; font-size: 11px; }")
+        
+        # Set color based on status message content
+        if any(indicator in status for indicator in ["✓", "ready", "Connected to", "Card detected"]):
+            # Success/ready status - green
+            self.rfid_status_label.setStyleSheet("QLabel { color: green; font-size: 11px; font-weight: bold; }")
+        elif any(indicator in status for indicator in ["❌", "Error", "Failed", "not found", "lost"]):
+            # Error status - red
+            self.rfid_status_label.setStyleSheet("QLabel { color: red; font-size: 11px; }")
+        elif any(indicator in status for indicator in ["⚠️", "Timeout", "Retrying"]):
+            # Warning status - orange
+            self.rfid_status_label.setStyleSheet("QLabel { color: orange; font-size: 11px; }")
+        else:
+            # Default/info status - blue
+            self.rfid_status_label.setStyleSheet("QLabel { color: blue; font-size: 11px; }")
     
     def _on_rfid_device_ready(self) -> None:
         """Handle RFID device ready signal."""
@@ -591,6 +590,17 @@ class LoginDialog(QDialog):
     
     def closeEvent(self, event):
         """Handle dialog close to stop RFID thread."""
-        if self.rfid_thread:
-            self.rfid_thread.stop()
+        self._cleanup_rfid_thread()
         super().closeEvent(event)
+    
+    def _cleanup_rfid_thread(self):
+        """Stop and cleanup RFID thread completely."""
+        if self.rfid_thread:
+            print("🛑 Stopping RFID reader thread...")
+            self.rfid_thread.stop()
+            # Wait for thread to actually stop
+            if not self.rfid_thread.wait(5000):  # 5 second timeout
+                print("⚠️ RFID thread did not stop gracefully")
+            else:
+                print("✓ RFID reader thread stopped")
+            self.rfid_thread = None

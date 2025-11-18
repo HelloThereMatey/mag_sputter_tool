@@ -45,8 +45,10 @@ class RFIDReaderThread(QThread):
         self.baudrate = baudrate
         self.serial_conn: Optional[serial.Serial] = None
         self.running = False
-        self.device_ready = False
+        self._device_is_ready = False  # Renamed to avoid conflict with signal
         self._stop_requested = False
+        self.auto_reconnect = True  # Enable auto-reconnection by default
+        self.reconnect_delay = 3.0  # Seconds between reconnection attempts
         
         # Debounce: ignore same card read within this time (milliseconds)
         self.debounce_ms = 500
@@ -54,9 +56,53 @@ class RFIDReaderThread(QThread):
         self.last_card_time = 0
     
     def run(self) -> None:
-        """Main thread execution loop."""
+        """Main thread execution loop with auto-reconnection support."""
+        self.running = True
+        
+        while self.running and not self._stop_requested:
+            try:
+                # Attempt connection
+                if not self._connect_to_device():
+                    if not self.auto_reconnect or self._stop_requested:
+                        break
+                    
+                    # Wait before retry
+                    self.status_changed.emit(f"🔄 Retrying in {self.reconnect_delay}s...")
+                    time.sleep(self.reconnect_delay)
+                    continue
+                
+                # Main read loop
+                self._read_loop()
+                
+                # If we exit read loop naturally, check if we should reconnect
+                if not self.auto_reconnect or self._stop_requested:
+                    break
+                    
+                # Connection lost - attempt reconnect
+                self.status_changed.emit(f"🔄 Reconnecting in {self.reconnect_delay}s...")
+                time.sleep(self.reconnect_delay)
+                
+            except Exception as e:
+                self.error_occurred.emit(f"❌ Thread error: {e}")
+                
+                if not self.auto_reconnect or self._stop_requested:
+                    break
+                    
+                time.sleep(self.reconnect_delay)
+        
+        # Final cleanup
+        self.disconnect()
+        self.running = False
+    
+    def _connect_to_device(self) -> bool:
+        """
+        Attempt to connect to RFID reader.
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
         try:
-            self.running = True
+            self._device_is_ready = False
             
             # Find port if not specified
             if self.port is None:
@@ -72,8 +118,7 @@ class RFIDReaderThread(QThread):
                 
                 if self.port is None:
                     self.error_occurred.emit("❌ RFID reader not found. Is Pico connected?")
-                    self.running = False
-                    return
+                    return False
             
             # Connect to serial port
             self.status_changed.emit(f"🔌 Connecting to {self.port} @ {self.baudrate} baud...")
@@ -86,28 +131,26 @@ class RFIDReaderThread(QThread):
                 )
             except serial.SerialException as e:
                 self.error_occurred.emit(f"❌ Cannot connect to {self.port}: {e}")
-                self.running = False
-                return
+                self.port = None  # Clear port so it will re-detect next time
+                return False
             
             self.status_changed.emit(f"✓ Connected to {self.port}")
             
             # Wait for device ready message
             self._wait_for_device_ready()
             
-            if not self.device_ready and not self._stop_requested:
-                self.error_occurred.emit("❌ RFID reader did not respond with ready message")
+            if not self._device_is_ready:
+                if not self._stop_requested:
+                    self.error_occurred.emit("❌ RFID reader did not respond with ready message (Check USB connection)")
                 self.disconnect()
-                self.running = False
-                return
+                self.port = None  # Clear port for re-detection
+                return False
             
-            # Main read loop
-            self._read_loop()
+            return True
             
         except Exception as e:
-            self.error_occurred.emit(f"❌ Thread error: {e}")
-        finally:
-            self.disconnect()
-            self.running = False
+            self.error_occurred.emit(f"❌ Connection error: {e}")
+            return False
     
     def _wait_for_device_ready(self, timeout: float = 5.0) -> None:
         """
@@ -134,7 +177,7 @@ class RFIDReaderThread(QThread):
                         
                         if RFIDConfig.READY_MESSAGE in line:
                             self.status_changed.emit("✓ RFID reader ready")
-                            self.device_ready = True
+                            self._device_is_ready = True
                             self.device_ready.emit()
                             return
                     else:
@@ -146,7 +189,7 @@ class RFIDReaderThread(QThread):
                 self.error_occurred.emit(f"Error waiting for device ready: {e}")
                 return
         
-        if not self.device_ready:
+        if not self._device_is_ready:
             self.error_occurred.emit("Timeout waiting for RFID reader ready message")
     
     def _read_loop(self) -> None:
@@ -250,7 +293,9 @@ class RFIDReaderThread(QThread):
         try:
             if self.serial_conn and self.serial_conn.is_open:
                 self.serial_conn.close()
-                self.status_changed.emit("Disconnected from RFID reader")
+                # Only emit status if this was a clean shutdown (not an error)
+                if self._device_is_ready and not self._stop_requested:
+                    self.status_changed.emit("📴 RFID reader disconnected")
         except Exception as e:
             self.error_occurred.emit(f"Error disconnecting: {e}")
     
@@ -258,7 +303,7 @@ class RFIDReaderThread(QThread):
         """Check if currently connected to device."""
         return (self.serial_conn is not None and
                 self.serial_conn.is_open and
-                self.device_ready)
+                self._device_is_ready)
     
     def set_port(self, port: str) -> None:
         """Change the serial port before starting the thread."""
