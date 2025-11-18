@@ -3154,8 +3154,7 @@ class AutoControlWindow(QMainWindow):
             print(f"❌ Error changing user: {e}")
             QMessageBox.critical(
                 self,
-                "Change User Error",
-                f"Failed to change user: {str(e)}"
+                "Change User Error",                f"Failed to change user: {str(e)}"
             )
     
     def _delayed_show_login_dialog(self) -> None:

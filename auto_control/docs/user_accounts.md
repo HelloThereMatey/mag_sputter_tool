@@ -35,7 +35,29 @@ During login, click **"Create Account"** to add new users:
 
 ## Changing User Permission Levels
 
+### Using Command-Line Interface (Recommended)
+
+The easiest way to manage user accounts is using the CLI tool:
+
+```bash
+# List all users
+python manage_users.py list
+
+# View user details
+python manage_users.py info john_doe
+
+# Change user level (requires master password)
+python manage_users.py set-level john_doe 3
+
+# Full documentation
+See: auto_control/python/USER_CLI_README.md
+```
+
+**Location:** `auto_control/python/manage_users.py`
+
 ### Using Python Code
+
+For programmatic access or scripting:
 
 ```python
 from security.user_account_manager import UserAccountManager

@@ -544,16 +544,47 @@ class LoginDialog(QDialog):
     
     def _on_rfid_device_lost(self) -> None:
         """Handle RFID device lost signal."""
-        self.rfid_status_label.setText("❌ RFID device disconnected")
+        self.rfid_status_label.setText("❌ RFID device disconnected - Try restarting GUI")
         self.rfid_status_label.setStyleSheet("QLabel { color: red; font-size: 11px; }")
         self.rfid_card_label.setText("No card detected")
         self.rfid_card_label.setStyleSheet("QLabel { color: gray; }")
         self.rfid_enabled = False
+        
+        # Show helpful message box
+        QMessageBox.warning(
+            self,
+            "RFID Reader Disconnected",
+            "RFID card reader has disconnected.\n\n"
+            "If the reader fails to reconnect automatically:\n"
+            "1. Check USB connection\n"
+            "2. Close and restart the GUI application\n\n"
+            "The reader will attempt to reconnect every 3 seconds."
+        )
     
     def _on_rfid_error(self, error_msg: str) -> None:
         """Handle RFID error."""
         self.rfid_status_label.setText(f"⚠️  {error_msg}")
         self.rfid_status_label.setStyleSheet("QLabel { color: orange; font-size: 11px; }")
+        
+        # If it's a connection failure after logout, show restart suggestion
+        if "not found" in error_msg.lower() or "cannot connect" in error_msg.lower():
+            # Check if this is a reconnection attempt (not first startup)
+            if hasattr(self, '_rfid_connection_attempts'):
+                self._rfid_connection_attempts += 1
+                # Show message after 3 failed attempts
+                if self._rfid_connection_attempts >= 3:
+                    QMessageBox.warning(
+                        self,
+                        "RFID Reader Connection Issue",
+                        "RFID card reader cannot connect.\n\n"
+                        "The reader shows as connected but may not be responding.\n"
+                        "Please close and restart the GUI application.\n\n"
+                        "This can happen after logout if the previous session\n"
+                        "did not release the serial port properly."
+                    )
+                    self._rfid_connection_attempts = 0  # Reset counter
+            else:
+                self._rfid_connection_attempts = 1
     
     def _on_rfid_card_detected(self, card_id: str) -> None:
         """
@@ -597,10 +628,34 @@ class LoginDialog(QDialog):
         """Stop and cleanup RFID thread completely."""
         if self.rfid_thread:
             print("🛑 Stopping RFID reader thread...")
+            
+            # Disconnect signals first to prevent any callbacks during cleanup
+            try:
+                self.rfid_thread.card_detected.disconnect()
+                self.rfid_thread.device_ready.disconnect()
+                self.rfid_thread.device_lost.disconnect()
+                self.rfid_thread.error_occurred.disconnect()
+                self.rfid_thread.status_changed.disconnect()
+            except:
+                pass  # Ignore if already disconnected
+            
+            # Stop the thread
             self.rfid_thread.stop()
-            # Wait for thread to actually stop
+            
+            # Wait for thread to actually stop with timeout
             if not self.rfid_thread.wait(5000):  # 5 second timeout
-                print("⚠️ RFID thread did not stop gracefully")
+                print("⚠️ RFID thread did not stop gracefully, forcing termination")
+                self.rfid_thread.terminate()
+                self.rfid_thread.wait(2000)
             else:
-                print("✓ RFID reader thread stopped")
+                print("✓ RFID reader thread stopped cleanly")
+            
+            # Delete the thread object to ensure proper cleanup
+            self.rfid_thread.deleteLater()
             self.rfid_thread = None
+            
+        # Clear any stored card data
+        self.rfid_detected_card = None
+        self.current_enrollment_username = None
+        
+        print("✓ RFID thread cleanup complete")

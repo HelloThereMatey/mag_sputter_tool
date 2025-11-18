@@ -285,19 +285,33 @@ class RFIDReaderThread(QThread):
         self._stop_requested = True
         self.running = False
         
+        # Disconnect serial port before waiting
+        self.disconnect()
+        
         # Wait for thread to finish (with timeout)
         self.wait(timeout=3000)  # 3 second timeout
     
     def disconnect(self) -> None:
-        """Disconnect from serial port."""
+        """Disconnect from serial port and cleanup."""
         try:
-            if self.serial_conn and self.serial_conn.is_open:
-                self.serial_conn.close()
-                # Only emit status if this was a clean shutdown (not an error)
-                if self._device_is_ready and not self._stop_requested:
-                    self.status_changed.emit("📴 RFID reader disconnected")
+            if self.serial_conn:
+                if self.serial_conn.is_open:
+                    self.serial_conn.close()
+                    # Only emit status if this was a clean shutdown (not an error)
+                    if self._device_is_ready and not self._stop_requested:
+                        self.status_changed.emit("📴 RFID reader disconnected")
+                
+                # Delete the serial connection object
+                del self.serial_conn
+                self.serial_conn = None
+                
+            # Reset state flags
+            self._device_is_ready = False
+            
         except Exception as e:
-            self.error_occurred.emit(f"Error disconnecting: {e}")
+            # Don't emit signal if stop was requested (normal shutdown)
+            if not self._stop_requested:
+                self.error_occurred.emit(f"Error disconnecting: {e}")
     
     def is_connected(self) -> bool:
         """Check if currently connected to device."""

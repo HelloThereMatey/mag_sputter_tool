@@ -267,40 +267,56 @@ If uniform coating is desired, enable stage rotation:
    - Reduce Argon flow to sputtering conditions
    - **Typical DC metal sputtering:** 20-100 sccm Ar
    - **Target chamber pressure:** 1-7 × 10⁻³ mbar
-   - Wait for pressure to stabilize.
+   - Wait for pressure to stabilize, (does not need long).
 
 ### DC Sputtering Operation
 
 1. **Verify Electrical Connections**
+Ensure that:
    - ✅ Electrical cable between gun and DC power supply is connected
    - ✅ Grounding cables are properly connected
    - ✅ All connections are secure
+   - It is best to also check with a multimeter when you load your target. Measuring between your target surface and the outer sheath (grounded) of the magnetron gun, you should see high resistance > 200 kOhm. Connectivity indicates short. One can also measure this by measuring resistance between inner pin and outer casing of the electrical connector that connects to the DC power supply.
 
-2. **Power Supply Setup**
-   - Turn on **DC power supply** for the gun(s) being used
+2. **Begin stage rotation (optional)**
+   - Turn on small DC supply above keyboard connected to the stage rotation motor.
+   - Use constant voltage mode and apply 1 - 12 V to set spin speed.
+   - Do not exceed 12V.
+
+3. **Power Supply Setup**
+   - Turn on **DC power supply** for the gun(s) being used. First switch the breaker at back of unit and then the power button on front at bottom left.
+   - Set setpoint using the "Right display - SETPT" button and dial.
+   - Ensure that setpoint is set as power (watts) and that right display "ACTUAL" is set to show watts.
    - Set **power setpoint**:
      - **Typical range:** 30-100 W
      - **Absolute maximum:** 300 W
 
-3. **Start Deposition Monitor**
-   - Launch **MaxTec deposition monitor** for target material
-   - Verify monitor is reading and calibrated
-   - Reference: `MaxTec_FilmMonitor.pdf` (Section 10.6 for tooling factor calibration)
+4. **Start Deposition Monitor**
+      - Launch **MaxTec deposition monitor**.
+      - Choose process with your target material
+      - See [MaxTec Operation Manual](MaxTec_FilmMonitor.pdf) for further information.
 
-4. **Ignite Plasma**
-   - Press **Start** on DC power supply to apply power
-   - Plasma should ignite on gun - you will see characteristic glow
-   - Close **front window shutter** to prevent window coating
+5. **Ignite Plasma**
+   - Press **OUTPUT "ON"** on power supply to apply power.
+   - You should see the "ACTUAL" power (watts) displayed on RIGHT DISPLAY ramp up to meet your setpoint.
+   - Plasma should ignite on gun - you will see characteristic glow behind shutter.
+   - Close **front window shutter** with the magnet slide to prevent window coating.
+   - Run plasma for some period with shutter closed in order to pre-sputter/clean your target. This varies for every material.
+   - When ready to start deposition:
+      - Begin reading on the Maxtec thickness monitor.
+      - Open shutter to begin deposition on your sample.
    - Verify deposition monitor shows:
      - Non-zero deposition rate
      - Increasing thickness reading
+     - Adjust power if necessary.
+     - Remember that the tooling factor is critical for showing accurate deposition rate reading.
 
-5. **Begin Sample Deposition**
+6. **Begin Sample Deposition**
    - Open **gun shutter** to start deposition on sample
    - ⏱️ **Restart MaxTec monitor** simultaneously for accurate thickness reading
    - Monitor deposition rate and thickness
 
-6. **Run to Desired Thickness**
+7. **Run to Desired Thickness**
    - Continue sputtering until target thickness achieved
    - Typical rates vary by material and power (refer to training or previous logs)
 
@@ -315,10 +331,11 @@ If uniform coating is desired, enable stage rotation:
    - Turn off **breaker switch** at back of power supply
    - Allow plasma to extinguish completely
 
-2. **Stop Gas Flow**
-   - Click **SET GAS** button and set all flows to 0 sccm
-   - OR close MFC dialog (flows will automatically stop)
-   - Verify gas flow stops on MFC display
+2. **Exit Sputter mode & Stop Gas Flow**
+   - Click again the currently green "SPUTTER" button in order to cancel Sputter mode.
+   - Wait for cancelling to complete.
+   - This will automatically close gas valves and set MFC flows back to 0.
+   - Once complete, either go to "STAND-BY" or "VENT" or "PUMP".
 
 3. **Remove Sample via Load-Lock**
    - Click **LOAD/UNLOAD** button
@@ -345,6 +362,10 @@ If uniform coating is desired, enable stage rotation:
      - ✅ All other valves CLOSED (red - correct)
      - ✅ Ion gauge ON (green - if high vacuum achieved)
 
+6. **Alternatively: vent system & remove targets**
+   - I would not recommend leaving targets in system for too long.
+   - If you don't intend to use system again real soon, then remove target/s.
+
 ### Final Checks
 
 6. **Verify Equipment Status**
@@ -354,20 +375,20 @@ If uniform coating is desired, enable stage rotation:
 
 7. **Update Target Labels**
    - If targets were changed, update **sticky note labels** on chamber door
-   - Write material name and installation date
+   - Write material name and installation date.
 
-8. **Complete Instrument Logbook**
-   - Record session information:
-     - Date and time
-     - User name
-     - Target material(s)
-     - Process parameters (power, pressure, gas flow)
-     - Deposition time and estimated thickness
-     - Any issues or anomalies
+8. **Complete Instrument Logbook entry**
+   - The GUI has a digital logbook. The window is opened when the GUI is booted.
+   - It can be re-opened through: Tools -> Logbook
+   - Enter the Target material for each gun and write notes about session. Then click "Add Entry".
+   - The GUI will display the last entry for the Gun target materials.
 
-9. **Leave System in Standby**
-   - System can be left in high vacuum state for next user
-   - Do **not** close control application unless instructed
+9. **Leave System in Standby state**
+   - CLick "STAND-BY" button on GUI.
+   - Wait for sytsme to go to default state.
+   - "Click "Yes" on teh dialog box that pops up asking if you want to go to Stand by.
+   - Close GUI and terminal to logout.
+   - Leave system like this unless next user requests to leave pumping.
 
 ---
 
@@ -385,18 +406,22 @@ The load-lock rod extends into the main chamber through a gate valve to position
 ### Load-Lock Procedure Summary
 
 **Loading Sample:**
-1. LOAD/UNLOAD → vent load-lock → open small door
-2. Attach stage to rod → close door → Continue
-3. System pumps load-lock → opens gate valve automatically
-4. Adjust Z-nuts → position stage in chamber → detach rod → retract rod → Continue
+1. VENT LOAD-LOCK  → load lock vents & venting stops once complete → open small door
+2. Attach samples to stage → attach stage to rod → close door
+3. Click "LOAD/UNLOAD".
+4. System pumps load-lock → opens gate valve automatically when complete
+5. Adjust Z-nuts → position stage in chamber → detach rod → retract rod → Continue
+
+NOTE: Load-lock arm must be in home position before LOAD/UNLOAD dialog can be exited.
 
 **Removing Sample:**
-1. LOAD/UNLOAD → gate valve opens → dialog appears
-2. Extend rod → adjust Z-nuts → attach to stage → retract to home → Continue
-3. System closes gate valve → vents load-lock
-4. Open small door → remove stage → close door → Continue (re-evacuates load-lock)
+1. Similar procedure to above yet in reverse.
 
 ---
+
+# BELOW is raw AI generated doc
+
+NOTE: There is a "MANUAL" mode that can be accessed on this GUI by a User account of level > 1. This enables practice with the load-lock arm in atmosphere as described below. Ask System Administrator for details.
 
 ## 🎓 Load-Lock Practice Procedure
 
