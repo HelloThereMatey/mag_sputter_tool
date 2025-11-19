@@ -1,0 +1,1838 @@
+<!DOCTYPE html><html><head>
+      <title>TECHNICAL_MANUAL</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\Little Cat\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.20\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script></head><body for="html-export">
+    
+    
+      <div class="crossnote markdown-preview  ">
+      
+<style>
+p {font-size: 14x}
+li {font-size: 14px}
+figcaption {font-size: 13px}
+table {font-size: 12px}
+math, .math {font-size: 13px}
+code, pre {font-size: 13px}
+
+```
+/* Force continuous layout */
+@media print {
+@page {
+  size: A4 portrait;
+  margin: 0.05in 0.1in;
+  /* Remove page height constraint */
+  height: auto;
+}
+}
+```
+
+</style>
+<h2 id="magnetron-sputtering-system---technical-manual">Magnetron Sputtering System - Technical Manual </h2>
+<p><strong>Document Version:</strong> 1.0<br>
+<strong>Last Updated:</strong> August 21, 2025<br>
+<strong>System:</strong> Vacuum Sputter Control System<br>
+<strong>Hardware Platform:</strong> Arduino Mega 2560 R3</p>
+<hr>
+<h3 id="table-of-contents">Table of Contents </h3>
+<ol>
+<li><a href="#system-overview">System Overview</a></li>
+<li><a href="#operation-modes">Operation Modes</a></li>
+<li><a href="#hardware-pin-assignments">Hardware Pin Assignments</a></li>
+<li><a href="#relay-configuration">Relay Configuration</a></li>
+<li><a href="#digital-input-configuration">Digital Input Configuration</a></li>
+<li><a href="#analog-input-configuration">Analog Input Configuration</a></li>
+<li><a href="#pin-assignment-summary">Pin Assignment Summary</a></li>
+</ol>
+<hr>
+<h3 id="system-overview">System Overview </h3>
+<p>The Magnetron Sputtering System is controlled by an Arduino Mega 2560 R3 microcontroller that manages:</p>
+<ul>
+<li><strong>23 relay outputs</strong> for pump, valve, and power control</li>
+<li><strong>4 digital inputs</strong> for safety interlocks</li>
+<li><strong>4 analog inputs</strong> for pressure monitoring</li>
+<li><strong>Serial communication</strong> at 9600 baud for PC interface</li>
+</ul>
+<p><strong>Key Components:</strong></p>
+<ul>
+<li>Main chamber with vacuum pumps</li>
+<li>Load-lock chamber</li>
+<li>Gas delivery system</li>
+<li>Safety interlock system</li>
+<li>Pressure monitoring system</li>
+</ul>
+<h4 id="electronics-control-box">Electronics Control Box </h4>
+<p><img src="./pics/Electronics_Control_Box.png" alt=""></p>
+<p><strong>Figure:</strong> Electronics control box showing Raspberry Pi, Arduino Mega, relay banks, power supplies, and multi-pin feedthroughs.</p>
+<p>This enclosure contains the main control electronics for the sputter system. It houses a Raspberry Pi 5 (host GUI and supervisory controller), an Arduino Mega 2560 R3 (real-time I/O and relay control), relay modules, DC power supplies, terminal blocks and multi-pin feedthroughs for chamber and auxiliary I/O. Wiring is bundled and labeled (ish); feeds for pumps, valves, sensors, and mains pass through the enclosure's feedthroughs. The Raspberry Pi runs the high-level GUI and coordination logic while the Arduino handles low-latency digital and analog I/O. The box also contains fusing, earth grounding, and isolation components as required for safe operation.</p>
+<hr>
+<h3 id="operation-modes">Operation Modes </h3>
+<p>The system operates in three distinct modes that control user access to functions and safety checks:</p>
+<h4 id="normal-mode-default">Normal Mode (Default) </h4>
+<p><strong>Button Access:</strong></p>
+<ul>
+<li><strong>Automatic Procedures Only:</strong> PUMP, VENT, SPUTTER, VENT Load-lock, Load/Unload</li>
+<li><strong>Manual Controls:</strong> Disabled (grayed out)</li>
+</ul>
+<p><strong>Safety System:</strong></p>
+<ul>
+<li><strong>Full Safety Checks:</strong> All safety conditions enforced</li>
+<li><strong>Interlock Protection:</strong> Operations blocked if interlocks violated</li>
+<li><strong>Confirmation Dialogs:</strong> Required for potentially dangerous operations</li>
+</ul>
+<p><strong>Use Case:</strong> Standard production operation with maximum safety protection</p>
+<h4 id="manual-mode">Manual Mode </h4>
+<p><strong>Button Access:</strong></p>
+<ul>
+<li><strong>All Buttons Enabled:</strong> Both automatic procedures and manual controls</li>
+<li><strong>Full GUI Access:</strong> Complete control over all system functions</li>
+</ul>
+<p><strong>Safety System:</strong></p>
+<ul>
+<li><strong>Full Safety Checks:</strong> All safety conditions enforced</li>
+<li><strong>Interlock Protection:</strong> Operations blocked if interlocks violated</li>
+<li><strong>Confirmation Dialogs:</strong> Required for potentially dangerous operations</li>
+</ul>
+<p><strong>Use Case:</strong> Setup, maintenance, and advanced operations requiring manual control</p>
+<h4 id="override-mode-️">Override Mode ⚠️ </h4>
+<p><strong>Button Access:</strong></p>
+<ul>
+<li><strong>All Buttons Enabled:</strong> Complete unrestricted access to all functions</li>
+<li><strong>No Restrictions:</strong> All manual and automatic controls available</li>
+</ul>
+<p><strong>Safety System:</strong></p>
+<ul>
+<li><strong>⚠️ ALL SAFETY CHECKS BYPASSED ⚠️</strong></li>
+<li><strong>No Interlock Protection:</strong> Operations allowed even with violated interlocks</li>
+<li><strong>No Confirmation Dialogs:</strong> Direct execution without safety prompts</li>
+<li><strong>No Condition Checking:</strong> Analog thresholds and digital inputs ignored</li>
+</ul>
+<p><strong>Use Case:</strong> Emergency operation, system recovery, advanced troubleshooting</p>
+<p><strong>⚠️ WARNING:</strong> Override mode completely bypasses all safety systems. Use only when absolutely necessary and with full understanding of system hazards. Ensure proper PPE and safety protocols are followed.</p>
+<hr>
+<h3 id="hardware-pin-assignments">Hardware Pin Assignments </h3>
+<h4 id="arduino-mega-2560-r3-pin-allocation">Arduino Mega 2560 R3 Pin Allocation </h4>
+<table>
+<thead>
+<tr>
+<th>Pin Range</th>
+<th>Function</th>
+<th>Count</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22-37</td>
+<td>Relay Outputs</td>
+<td>16</td>
+<td>Primary relay control pins</td>
+</tr>
+<tr>
+<td>38-41</td>
+<td>Relay Outputs</td>
+<td>4</td>
+<td>Spare relay positions (wires only)</td>
+</tr>
+<tr>
+<td>44</td>
+<td>Relay Output</td>
+<td>1</td>
+<td>Scroll pump control</td>
+</tr>
+<tr>
+<td>46</td>
+<td>Relay Output</td>
+<td>1</td>
+<td><strong>CRITICAL: Mains power control</strong></td>
+</tr>
+<tr>
+<td>48</td>
+<td>Relay Output</td>
+<td>1</td>
+<td>Spare relay for future upgrades</td>
+</tr>
+<tr>
+<td>45, 47, 49, 51</td>
+<td>Digital Inputs</td>
+<td>4</td>
+<td>Safety interlock inputs</td>
+</tr>
+<tr>
+<td>A1-A4</td>
+<td>Analog Inputs</td>
+<td>4</td>
+<td>Pressure sensor inputs &amp; turbo spin speed (%)</td>
+</tr>
+</tbody>
+</table>
+<h5 id="analog-inputs">Analog inputs </h5>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">Analog PINS</th>
+<th style="text-align:left">Connects to</th>
+<th style="text-align:left">WIRE COLOR</th>
+<th style="text-align:left">NOTES</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">A0</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">A1</td>
+<td style="text-align:left">Analog out A from the gauge controller</td>
+<td style="text-align:left">yellow</td>
+<td style="text-align:left">Load-lock pirani gauge</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">A2</td>
+<td style="text-align:left">Analog out B from the gauge controller</td>
+<td style="text-align:left">dark red</td>
+<td style="text-align:left">Chamber pirani gauge</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">A3</td>
+<td style="text-align:left">Analog out from the gauge controller</td>
+<td style="text-align:left">green</td>
+<td style="text-align:left">Ion gauge</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">A4</td>
+<td style="text-align:left">Analog in TMP speed</td>
+<td style="text-align:left">fat red</td>
+<td style="text-align:left">Analog speed output from Turbo controller.</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">A5</td>
+<td style="text-align:left">Not connected</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+</tbody>
+</table>
+<h5 id="analog-inputs-1">Analog inputs </h5>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:right">DIGITAL In/Out PINS</th>
+<th style="text-align:left">Connects to</th>
+<th style="text-align:left">WIRE COLOR</th>
+<th style="text-align:left">Controls</th>
+<th style="text-align:left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:right">22</td>
+<td style="text-align:left">Relay 1</td>
+<td style="text-align:left">Typically red</td>
+<td style="text-align:left">Mains power relay</td>
+<td style="text-align:left">Mains power relay to the DC/RF power supplies. Activates in sputter mode.</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:right">23</td>
+<td style="text-align:left">Relay 2</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Rough valve</td>
+<td style="text-align:left">This is the valve between TMP &amp; scroll</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:right">24</td>
+<td style="text-align:left">Relay 3</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Vent valve</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:right">25</td>
+<td style="text-align:left">Relay 4</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Chamber rough valve</td>
+<td style="text-align:left">This pumps down the chamber with scroll</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:right">26</td>
+<td style="text-align:left">Relay 5</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Load-lock rough</td>
+<td style="text-align:left">24V out to operate load-lock rough valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:right">27</td>
+<td style="text-align:left">Relay 6</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Load-lock vent</td>
+<td style="text-align:left">24V out to operate load-lock vent valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:right">28</td>
+<td style="text-align:left">Relay 7</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Load-lock Gate</td>
+<td style="text-align:left">24V out to operate load-lock gate valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:right">29</td>
+<td style="text-align:left">Relay 8</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Gas valve 1</td>
+<td style="text-align:left">24V out to operate Ar gas in valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:right">30</td>
+<td style="text-align:left">Relay 9</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Gas valve 2</td>
+<td style="text-align:left">24V out to operate N2 gas in valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:right">31</td>
+<td style="text-align:left">Relay 10</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Gas valve 3</td>
+<td style="text-align:left">24V out to operate O2 gas in valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">10</td>
+<td style="text-align:right">32</td>
+<td style="text-align:left">Relay 11</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Shutter 1</td>
+<td style="text-align:left">24V out to operate shutter 1 movement.</td>
+</tr>
+<tr>
+<td style="text-align:right">11</td>
+<td style="text-align:right">33</td>
+<td style="text-align:left">Relay 12</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Shutter 2</td>
+<td style="text-align:left">24V out to operate shutter 2 movement.</td>
+</tr>
+<tr>
+<td style="text-align:right">12</td>
+<td style="text-align:right">34</td>
+<td style="text-align:left">Relay 13</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Empty</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">13</td>
+<td style="text-align:right">35</td>
+<td style="text-align:left">Relay 14</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Ion gauge on/off</td>
+<td style="text-align:left">Pulsed in order to deliver signal to pressure gauge controller to turn on ion gauge. 5V.</td>
+</tr>
+<tr>
+<td style="text-align:right">14</td>
+<td style="text-align:right">36</td>
+<td style="text-align:left">Relay 15</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Turbo gate valve</td>
+<td style="text-align:left">24V out to operate main gate valve.</td>
+</tr>
+<tr>
+<td style="text-align:right">15</td>
+<td style="text-align:right">37</td>
+<td style="text-align:left">Relay 16</td>
+<td style="text-align:left">"</td>
+<td style="text-align:left">Turbo on/off</td>
+<td style="text-align:left">Connected to turbo controller ground 0V. Connecting pin 1 on EXDC controller to GND gives signal to operate turbo.</td>
+</tr>
+<tr>
+<td style="text-align:right">16</td>
+<td style="text-align:right">44</td>
+<td style="text-align:left">Scroll pump solid state relay +ve</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Activates the scroll pump relay when high (5V) to power he scroll &amp; turn it on. This relay is in the electronics box.</td>
+</tr>
+<tr>
+<td style="text-align:right">17</td>
+<td style="text-align:right">45</td>
+<td style="text-align:left">Water switch signal</td>
+<td style="text-align:left">pink</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Connects to GND when water flowing.</td>
+</tr>
+<tr>
+<td style="text-align:right">18</td>
+<td style="text-align:right">46</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">19</td>
+<td style="text-align:right">47</td>
+<td style="text-align:left">Rod Home Switch signal</td>
+<td style="text-align:left">purple</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Connects to GND when rod home</td>
+</tr>
+<tr>
+<td style="text-align:right">20</td>
+<td style="text-align:right">48</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">21</td>
+<td style="text-align:right">49</td>
+<td style="text-align:left">Door Switch signal</td>
+<td style="text-align:left">orange</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">This is +24V as the door switch is supplied with 24V. I have created transistor inversion circuit to deliver GND potential to pin 49 when door closed.</td>
+</tr>
+<tr>
+<td style="text-align:right">22</td>
+<td style="text-align:right">50</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+</tbody>
+</table>
+<h5 id="25-pin-d-sub-connectors-inout-to-electronics-box">25 Pin D-sub connectors In/out to electronics box </h5>
+<h6 id="s1-inside-electronics-box">S1 Inside Electronics Box </h6>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">Pin</th>
+<th style="text-align:left">Function</th>
+<th style="text-align:left">Wire Color</th>
+<th style="text-align:left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">25 pin male S1</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">Relay 7 on board 2, Turbo gate valve</td>
+<td style="text-align:left">brown</td>
+<td style="text-align:left">24V out to open the turbo gate valve via solenoid</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">Relay 5, board 1. Load-lock rough.</td>
+<td style="text-align:left">white</td>
+<td style="text-align:left">24V out to open solenoid to open load lock pump valve</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">Relay 2, board 1. Rough valve solenoid</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">24V out to open solenoid to open rough valve</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">4</td>
+<td style="text-align:left">Relay 3, board 2. Shut 2</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">24V out to open solenoid to open/close shutter on G2</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">5</td>
+<td style="text-align:left">Relay 4, board 2. Shut 1</td>
+<td style="text-align:left">green</td>
+<td style="text-align:left">24V out to open solenoid to open/close shutter on G1</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">6</td>
+<td style="text-align:left">Relay 7, board 1. LL valve open</td>
+<td style="text-align:left">yellow</td>
+<td style="text-align:left">24V out to open solenoid to open load lock gate valve I think</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">7</td>
+<td style="text-align:left">Relay 6, board 1. Load-lock vent valve</td>
+<td style="text-align:left">purple</td>
+<td style="text-align:left">24V out to open solenoid to open load lock vent valve</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">8</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">9</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">10</td>
+<td style="text-align:left">10</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">11</td>
+<td style="text-align:left">11</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">12</td>
+<td style="text-align:left">12</td>
+<td style="text-align:left">Relay 4, board 1. Chamber roughing valve solenoid</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">24V out to open solenoid to open chamber rough valve</td>
+</tr>
+<tr>
+<td style="text-align:right">13</td>
+<td style="text-align:left">13</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">14</td>
+<td style="text-align:left">14</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">15</td>
+<td style="text-align:left">15</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">16</td>
+<td style="text-align:left">16</td>
+<td style="text-align:left">+12V from power supply</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">To power the relay board modules</td>
+</tr>
+<tr>
+<td style="text-align:right">17</td>
+<td style="text-align:left">17</td>
+<td style="text-align:left">GND/-ve from 12V power supply</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">""</td>
+</tr>
+<tr>
+<td style="text-align:right">18</td>
+<td style="text-align:left">18</td>
+<td style="text-align:left">Relay 2, board 2. G3</td>
+<td style="text-align:left">orange</td>
+<td style="text-align:left">24V out to turn on G3 I think</td>
+</tr>
+<tr>
+<td style="text-align:right">19</td>
+<td style="text-align:left">19</td>
+<td style="text-align:left">Relay 1, board 2. G2</td>
+<td style="text-align:left">pink</td>
+<td style="text-align:left">24V out to turn on G2 I think</td>
+</tr>
+<tr>
+<td style="text-align:right">20</td>
+<td style="text-align:left">20</td>
+<td style="text-align:left">Relay 8, board 1. G1</td>
+<td style="text-align:left">grey</td>
+<td style="text-align:left">24V out to turn on G1 I think</td>
+</tr>
+<tr>
+<td style="text-align:right">21</td>
+<td style="text-align:left">21</td>
+<td style="text-align:left">Relay 3, board 1. Vent</td>
+<td style="text-align:left">light blue</td>
+<td style="text-align:left">Relay 3, board 1. 24V out to open vent valve</td>
+</tr>
+<tr>
+<td style="text-align:right">22</td>
+<td style="text-align:left">22</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">23</td>
+<td style="text-align:left">23</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">24</td>
+<td style="text-align:left">24</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">25</td>
+<td style="text-align:left">25</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+</tbody>
+</table>
+<h6 id="s2-inside-electronics-box">S2 Inside Electronics Box </h6>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">Connector</th>
+<th style="text-align:left">Connects to/labelled as</th>
+<th style="text-align:left">Wire color</th>
+<th style="text-align:left">Arduino PIN</th>
+<th style="text-align:left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">25 pin female S2</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">Analog out from the gauge controller</td>
+<td style="text-align:left">green</td>
+<td style="text-align:left">A1</td>
+<td style="text-align:left">LabJack: AI2. There are 3 analog out from the gauge controller</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">Analog out A from the gauge controller</td>
+<td style="text-align:left">yellow</td>
+<td style="text-align:left">A2</td>
+<td style="text-align:left">LabJack: AI0. labelled 'analog out', 'analog out A', 'analog out B'.</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">Analog out B from the gauge controller</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">A3</td>
+<td style="text-align:left">LabJack: AI1.  Analog input gauge reading</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">4</td>
+<td style="text-align:left">Rod home switch</td>
+<td style="text-align:left">purple</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">LabJack: IO1.  Must be digital input</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">5</td>
+<td style="text-align:left">Water switch</td>
+<td style="text-align:left">pink</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">LabJack: IO0.</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">6</td>
+<td style="text-align:left">Door switch</td>
+<td style="text-align:left">Light blue</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">5V out to door switch.  Brown wire on outside</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">7</td>
+<td style="text-align:left">Door switch</td>
+<td style="text-align:left">orange</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Goes into LabJack: IO2. Must be door switch high/low signal</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">8</td>
+<td style="text-align:left">Into Relay 6, Board 2 - IG, switched pin</td>
+<td style="text-align:left">grey</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Must switch to connect these two 8-9 in order to give IG on signal</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">9</td>
+<td style="text-align:left">Into Relay 6, Board 2 - IG, common pin</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">May be a pin to connect to PS -ve to turn on IG, just like with turbo</td>
+</tr>
+<tr>
+<td style="text-align:right">10</td>
+<td style="text-align:left">10</td>
+<td style="text-align:left">TMP connector PIN 1 On/off</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Into relay 8, board 2 (relay 16) switched pin</td>
+</tr>
+<tr>
+<td style="text-align:right">11</td>
+<td style="text-align:left">11</td>
+<td style="text-align:left">TMP 80V PS -ve PIN</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Into relay 8, board 2 (relay 16) common pin</td>
+</tr>
+<tr>
+<td style="text-align:right">12</td>
+<td style="text-align:left">12</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">13</td>
+<td style="text-align:left">13</td>
+<td style="text-align:left">Analog in TMP speed</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">A4</td>
+<td style="text-align:left">LabJack: AI4</td>
+</tr>
+<tr>
+<td style="text-align:right">14</td>
+<td style="text-align:left">14</td>
+<td style="text-align:left">GND</td>
+<td style="text-align:left">Fat Grey white stripe</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">These 14 - 16 are the ground side of the analog outs from the gauge controller.</td>
+</tr>
+<tr>
+<td style="text-align:right">15</td>
+<td style="text-align:left">15</td>
+<td style="text-align:left">GND</td>
+<td style="text-align:left">Fat Grey white stripe</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">"</td>
+</tr>
+<tr>
+<td style="text-align:right">16</td>
+<td style="text-align:left">16</td>
+<td style="text-align:left">GND</td>
+<td style="text-align:left">Fat Grey white stripe</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">"</td>
+</tr>
+<tr>
+<td style="text-align:right">17</td>
+<td style="text-align:left">17</td>
+<td style="text-align:left">5V out to interlock switches</td>
+<td style="text-align:left">Fat Grey</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Rod Home switch</td>
+</tr>
+<tr>
+<td style="text-align:right">18</td>
+<td style="text-align:left">18</td>
+<td style="text-align:left">5V out to interlock switches</td>
+<td style="text-align:left">Fat Grey</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Water Switch.</td>
+</tr>
+<tr>
+<td style="text-align:right">19</td>
+<td style="text-align:left">19</td>
+<td style="text-align:left">GND</td>
+<td style="text-align:left">Fat Grey white stripe</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">Door switch ground</td>
+</tr>
+<tr>
+<td style="text-align:right">20</td>
+<td style="text-align:left">20</td>
+<td style="text-align:left">GND</td>
+<td style="text-align:left">Fat Grey white stripe</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">21</td>
+<td style="text-align:left">21</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">22</td>
+<td style="text-align:left">22</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">23</td>
+<td style="text-align:left">23</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">24</td>
+<td style="text-align:left">24</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">25</td>
+<td style="text-align:left">25</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+</tbody>
+</table>
+<h6 id="s1-outside-electronics-box">S1 Outside Electronics Box </h6>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">Connector</th>
+<th style="text-align:left">Coming from</th>
+<th style="text-align:left">Wire color</th>
+<th style="text-align:left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">25 pin female S2</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">Analog out from the gauge controller</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">LabJack: AI2. There are 3 analog out from the gauge controller</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">Analog out A from the gauge controller</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">LabJack: AI0. labelled 'analog out', 'analog out A', 'analog out B'.</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">Analog out B from the gauge controller</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">LabJack: AI1.  Analog input gauge reading</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">4</td>
+<td style="text-align:left">Rod home switch</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">LabJack: IO1.  Must be digital input</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">5</td>
+<td style="text-align:left">Water switch</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">6</td>
+<td style="text-align:left">Door switch</td>
+<td style="text-align:left">brown</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">7</td>
+<td style="text-align:left">Door switch</td>
+<td style="text-align:left">green/yellow GND</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">8</td>
+<td style="text-align:left">Remote I/O d-sub 9 pin from gauge controller</td>
+<td style="text-align:left">blue</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">9</td>
+<td style="text-align:left">Remote I/O d-sub 9 pin from gauge controller</td>
+<td style="text-align:left">red</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">10</td>
+<td style="text-align:left">10</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">11</td>
+<td style="text-align:left">11</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">12</td>
+<td style="text-align:left">12</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">13</td>
+<td style="text-align:left">13</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">14</td>
+<td style="text-align:left">14</td>
+<td style="text-align:left">Analog out from the gauge controller</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">15</td>
+<td style="text-align:left">15</td>
+<td style="text-align:left">Analog out A from the gauge controller</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">16</td>
+<td style="text-align:left">16</td>
+<td style="text-align:left">Analog out B from the gauge controller</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">17</td>
+<td style="text-align:left">17</td>
+<td style="text-align:left">Rod home switch</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">Green and fat grey wires input 5V to these from inside the box</td>
+</tr>
+<tr>
+<td style="text-align:right">18</td>
+<td style="text-align:left">18</td>
+<td style="text-align:left">Water switch</td>
+<td style="text-align:left">black</td>
+<td style="text-align:left">These have +5 V into black lines and black the +ve red go to AI 0 - 3 on LJ</td>
+</tr>
+<tr>
+<td style="text-align:right">19</td>
+<td style="text-align:left">19</td>
+<td style="text-align:left">Door switch</td>
+<td style="text-align:left">blue</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">20</td>
+<td style="text-align:left">20</td>
+<td style="text-align:left">PROBS NC</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+<tr>
+<td style="text-align:right">21</td>
+<td style="text-align:left">21</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+<td style="text-align:left">nan</td>
+</tr>
+</tbody>
+</table>
+<h3 id="relay-configuration">Relay Configuration </h3>
+<h4 id="primary-relay-assignments-pins-22-37">Primary Relay Assignments (Pins 22-37) </h4>
+<table>
+<thead>
+<tr>
+<th>Relay #</th>
+<th>Arduino Pin</th>
+<th>Button Name</th>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>22</td>
+<td>btnMainsPower</td>
+<td><strong>🔴 Mains Power</strong></td>
+<td><strong>CRITICAL: Magnetron power supply mains control</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>23</td>
+<td>btnValveBacking</td>
+<td>Backing Valve</td>
+<td>Backing pump isolation valve</td>
+</tr>
+<tr>
+<td>3</td>
+<td>24</td>
+<td>btnValveVent</td>
+<td>Vent Valve</td>
+<td>Chamber vent valve</td>
+</tr>
+<tr>
+<td>4</td>
+<td>25</td>
+<td>btnValveRough</td>
+<td>Rough Valve</td>
+<td>Rough pump valve</td>
+</tr>
+<tr>
+<td>5</td>
+<td>26</td>
+<td>btnValveLoadLockRough</td>
+<td>LL Rough Valve</td>
+<td>Load-lock rough pump valve</td>
+</tr>
+<tr>
+<td>6</td>
+<td>36</td>
+<td>btnValveLoadLockVent</td>
+<td>LL Vent Valve</td>
+<td>Load-lock vent valve</td>
+</tr>
+<tr>
+<td>7</td>
+<td>28</td>
+<td>btnValveLoadLockGate</td>
+<td>LL Gate Valve</td>
+<td>Load-lock gate valve</td>
+</tr>
+<tr>
+<td>8</td>
+<td>29</td>
+<td>btnValveGas1</td>
+<td>Gas 1 Valve</td>
+<td>Process gas 1 control</td>
+</tr>
+<tr>
+<td>9</td>
+<td>30</td>
+<td>btnValveGas2</td>
+<td>Gas 2 Valve</td>
+<td>Process gas 2 control</td>
+</tr>
+<tr>
+<td>10</td>
+<td>31</td>
+<td>btnValveGas3</td>
+<td>Gas 3 Valve</td>
+<td>Process gas 3 control</td>
+</tr>
+<tr>
+<td>11</td>
+<td>32</td>
+<td>btnShutter1</td>
+<td>Shutter 1</td>
+<td>Target shutter 1</td>
+</tr>
+<tr>
+<td>12</td>
+<td>33</td>
+<td>btnShutter2</td>
+<td>Shutter 2</td>
+<td>Target shutter 2</td>
+</tr>
+<tr>
+<td>13</td>
+<td>34</td>
+<td><em>Reserved</em></td>
+<td><em>Future Use</em></td>
+<td>Available for expansion</td>
+</tr>
+<tr>
+<td>14</td>
+<td>35</td>
+<td>btnIonGauge</td>
+<td>Ion Gauge</td>
+<td>Ion gauge power control</td>
+</tr>
+<tr>
+<td>15</td>
+<td>27</td>
+<td>btnValveTurboGate</td>
+<td>Turbo Gate Valve</td>
+<td>Turbo pump gate valve</td>
+</tr>
+<tr>
+<td>16</td>
+<td>37</td>
+<td>btnPumpTurbo</td>
+<td>Turbo Pump</td>
+<td>Turbo pump power</td>
+</tr>
+</tbody>
+</table>
+<h4 id="spare-relay-positions-pins-38-41">Spare Relay Positions (Pins 38-41) </h4>
+<table>
+<thead>
+<tr>
+<th>Relay #</th>
+<th>Arduino Pin</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17</td>
+<td>38</td>
+<td>Spare Wire</td>
+<td>Physical relay not installed</td>
+</tr>
+<tr>
+<td>18</td>
+<td>39</td>
+<td>Spare Wire</td>
+<td>Physical relay not installed</td>
+</tr>
+<tr>
+<td>19</td>
+<td>40</td>
+<td>Spare Wire</td>
+<td>Physical relay not installed</td>
+</tr>
+<tr>
+<td>20</td>
+<td>41</td>
+<td>Spare Wire</td>
+<td>Physical relay not installed</td>
+</tr>
+</tbody>
+</table>
+<h4 id="critical-safety-and-special-relay-assignments">Critical Safety and Special Relay Assignments </h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Arduino Pin</th>
+<th>Button Name</th>
+<th>Relay #</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scroll Pump</td>
+<td>44</td>
+<td>btnPumpScroll</td>
+<td>21</td>
+<td>Backing pump control</td>
+</tr>
+<tr>
+<td><strong>Spare 1</strong></td>
+<td><strong>46</strong></td>
+<td><strong>btnSpare1</strong></td>
+<td><strong>22</strong></td>
+<td><strong>Available for future expansion</strong></td>
+</tr>
+<tr>
+<td>Spare Relay</td>
+<td>48</td>
+<td>btnSpareRelay</td>
+<td>23</td>
+<td>Available for future upgrades</td>
+</tr>
+</tbody>
+</table>
+<p><strong>📌 Note:</strong> Pin 46 (btnSpare1) is wired but currently unassigned. Mains power control (btnMainsPower) is assigned to pin 22 (Relay #1).</p>
+<h4 id="-critical-safety---mains-power-relay-pin-22">🔴 CRITICAL SAFETY - Mains Power Relay (Pin 22) </h4>
+<p><strong>Function:</strong> Controls mains voltage switch for magnetron sputtering power supplies</p>
+<p><strong>Safety Integration:</strong></p>
+<ul>
+<li>Mains power relay (btnMainsPower) on pin 22 provides master power control</li>
+<li>Can be controlled through GUI during sputter procedure</li>
+<li>Subject to safety conditions defined in safety_conditions.yml</li>
+<li>Requires all critical interlocks satisfied before enabling</li>
+</ul>
+<p><strong>Critical Interlocks Required:</strong></p>
+<ol>
+<li><strong>Water Flow Interlock (Pin 45):</strong> Cooling water must be flowing</li>
+<li><strong>Rod Position Interlock (Pin 47):</strong> Sample rod must be in safe position</li>
+<li><strong>Door Interlock (Pin 49):</strong> Chamber door must be closed</li>
+</ol>
+<p><strong>⚠️ WARNING:</strong> This relay controls lethal mains voltage to high-power magnetron supplies. The safety system enforces strict interlock requirements before allowing power to be enabled.</p>
+<hr>
+<h3 id="digital-input-configuration">Digital Input Configuration </h3>
+<h3 id="safety-interlock-inputs">Safety Interlock Inputs </h3>
+<table>
+<thead>
+<tr>
+<th>Input #</th>
+<th>Arduino Pin</th>
+<th>Function</th>
+<th>Safe State</th>
+<th>GUI Indicator</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>45</td>
+<td>Water Flow Interlock</td>
+<td>LOW (switch closed)</td>
+<td>indWater</td>
+<td>Cooling water flow sensor</td>
+</tr>
+<tr>
+<td>1</td>
+<td>47</td>
+<td>Rod Position Interlock</td>
+<td>LOW (switch closed)</td>
+<td>indRod</td>
+<td>Sample rod position sensor</td>
+</tr>
+<tr>
+<td>2</td>
+<td>49</td>
+<td>Door Interlock</td>
+<td>LOW (switch closed)</td>
+<td>indDoor</td>
+<td>Chamber door closed sensor</td>
+</tr>
+<tr>
+<td>3</td>
+<td>51</td>
+<td>Spare Interlock</td>
+<td>LOW (switch closed)</td>
+<td><em>(none)</em></td>
+<td>Reserved for future use</td>
+</tr>
+</tbody>
+</table>
+<h3 id="interlock-logic">Interlock Logic </h3>
+<p><strong>Hardware Configuration:</strong></p>
+<ul>
+<li><strong>Internal Pull-ups Enabled:</strong> 20-50kΩ pull-up resistors to +5V</li>
+<li><strong>Active Low Logic:</strong> Switches connect pin to ground when activated</li>
+<li><strong>Fast Response:</strong> ~20-50ms switching time (no floating inputs)</li>
+</ul>
+<p><strong>Safe State Definition:</strong></p>
+<ul>
+<li><code>LOW (false)</code> at Arduino pin = Switch closed/activated = Interlock satisfied (safe to operate)</li>
+<li><code>HIGH (true)</code> at Arduino pin = Switch open/disconnected = Interlock violated (unsafe, operations blocked)</li>
+</ul>
+<p><strong>Software Logic Inversion:</strong></p>
+<ul>
+<li>Arduino firmware inverts readings: <code>digitalInputStates[i] = !digitalRead(pin)</code></li>
+<li>Python receives: <code>true</code> = safe state, <code>false</code> = unsafe state</li>
+<li>This maintains consistent high-level logic while using reliable pull-up hardware</li>
+</ul>
+<p><strong>Visual Indicators:</strong></p>
+<ul>
+<li><strong>Green:</strong> Interlock OK (switch closed, safe state)</li>
+<li><strong>Red:</strong> Interlock triggered (switch open, unsafe state)</li>
+<li><strong>Gray:</strong> No connection/unknown state</li>
+</ul>
+<p><strong>Physical Switch Wiring:</strong></p>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>Arduino Pin 45 ----[Water Switch]--- GND
+Arduino Pin 47 ----[Rod Switch]----- GND
+Arduino Pin 49 ----[Door Switch]---- GND  
+Arduino Pin 51 ----[Spare Switch]--- GND
+</code></pre><p><strong>IMPORTANT - Inverted Logic Operation:</strong></p>
+<ul>
+<li><strong>Physical switches connect Arduino pins to GND when activated (safe state)</strong></li>
+<li><strong>NO connection to +5V required</strong> - internal pull-ups provide the HIGH state</li>
+<li><strong>Switch closed → Pin LOW → Safe condition → Green indicator</strong></li>
+<li><strong>Switch open → Pin HIGH → Unsafe condition → Red indicator</strong></li>
+</ul>
+<p><strong>Benefits of Inverted Logic Design:</strong></p>
+<ul>
+<li><strong>Improved Safety:</strong> Open/broken wires default to unsafe state (fail-safe)</li>
+<li><strong>Lower Power Consumption:</strong> No current flow through switches when closed</li>
+<li><strong>Fast Response:</strong> Internal pull-ups eliminate floating inputs (~20-50ms switching)</li>
+<li><strong>Simplified Wiring:</strong> Only one wire per switch (to GND), no +5V connection needed</li>
+</ul>
+<p><strong>Safety Integration:</strong></p>
+<ul>
+<li>Water flow interlock prevents pump operations without cooling water flow</li>
+<li>Rod position interlock prevents process operations when rod in unsafe position</li>
+<li>Door interlock prevents all vacuum operations when chamber door open</li>
+<li>Spare interlock available for additional safety features</li>
+</ul>
+<hr>
+<h3 id="analog-input-configuration">Analog Input Configuration </h3>
+<h3 id="pressure-monitoring-inputs">Pressure Monitoring Inputs </h3>
+<table>
+<thead>
+<tr>
+<th>Input #</th>
+<th>Arduino Pin</th>
+<th>Label</th>
+<th>GUI Display</th>
+<th>Scale</th>
+<th>Offset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>A1</td>
+<td>Load-lock (Torr)</td>
+<td>lcdAnalog1</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>Load-lock chamber pressure</td>
+</tr>
+<tr>
+<td>1</td>
+<td>A2</td>
+<td>Chamber (Torr)</td>
+<td>lcdAnalog2</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>Main chamber pressure</td>
+</tr>
+<tr>
+<td>2</td>
+<td>A3</td>
+<td>Ion Gauge (Torr)</td>
+<td>lcdAnalog3</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>Ion gauge pressure reading</td>
+</tr>
+<tr>
+<td>3</td>
+<td>A4</td>
+<td>Turbo Spin (%)</td>
+<td>lcdAnalog4</td>
+<td>25.0</td>
+<td>-12.5</td>
+<td>Turbo spin speed (0.5-4.5V → 0-100%)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analog-signal-processing">Analog Signal Processing </h3>
+<p><strong>ADC Resolution:</strong> 10-bit (0-1023 counts)<br>
+<strong>Input Voltage Range:</strong> 0-5V DC<br>
+<strong>Scaling Formula:</strong> <code>Display_Value = (ADC_Reading × Scale) + Offset</code><br>
+<strong>Update Rate:</strong> 700ms polling interval</p>
+<p><strong>Pressure Sensor Integration:</strong></p>
+<ul>
+<li>Raw ADC values converted to engineering units</li>
+<li>Configurable scaling and offset per channel</li>
+<li>Real-time display on GUI LCD widgets</li>
+<li>Safety system monitoring for out-of-range conditions</li>
+</ul>
+<hr>
+<h3 id="pin-assignment-summary">Pin Assignment Summary </h3>
+<h3 id="complete-pin-allocation-table">Complete Pin Allocation Table </h3>
+<table>
+<thead>
+<tr>
+<th>Arduino Pin</th>
+<th>Function</th>
+<th>Direction</th>
+<th>Signal Type</th>
+<th>Connected Device</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22</td>
+<td>Relay 1</td>
+<td>Output</td>
+<td>Digital</td>
+<td><strong>🔴 Mains Power (CRITICAL)</strong></td>
+</tr>
+<tr>
+<td>23</td>
+<td>Relay 2</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Backing Valve</td>
+</tr>
+<tr>
+<td>24</td>
+<td>Relay 3</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Vent Valve</td>
+</tr>
+<tr>
+<td>25</td>
+<td>Relay 4</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Rough Valve</td>
+</tr>
+<tr>
+<td>26</td>
+<td>Relay 5</td>
+<td>Output</td>
+<td>Digital</td>
+<td>LL Rough Valve</td>
+</tr>
+<tr>
+<td>36</td>
+<td>Relay 6</td>
+<td>Output</td>
+<td>Digital</td>
+<td>LL Vent Valve</td>
+</tr>
+<tr>
+<td>28</td>
+<td>Relay 7</td>
+<td>Output</td>
+<td>Digital</td>
+<td>LL Gate Valve</td>
+</tr>
+<tr>
+<td>29</td>
+<td>Relay 8</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Gas 1 Valve</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Relay 9</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Gas 2 Valve</td>
+</tr>
+<tr>
+<td>31</td>
+<td>Relay 10</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Gas 3 Valve</td>
+</tr>
+<tr>
+<td>32</td>
+<td>Relay 11</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Shutter 1</td>
+</tr>
+<tr>
+<td>33</td>
+<td>Relay 12</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Shutter 2</td>
+</tr>
+<tr>
+<td>34</td>
+<td>Relay 13</td>
+<td>Output</td>
+<td>Digital</td>
+<td><em>Reserved</em></td>
+</tr>
+<tr>
+<td>35</td>
+<td>Relay 14</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Ion Gauge</td>
+</tr>
+<tr>
+<td>27</td>
+<td>Relay 15</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Turbo Gate Valve</td>
+</tr>
+<tr>
+<td>37</td>
+<td>Relay 16</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Turbo Pump</td>
+</tr>
+<tr>
+<td>38</td>
+<td>Relay 17</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Spare Wire</td>
+</tr>
+<tr>
+<td>39</td>
+<td>Relay 18</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Spare Wire</td>
+</tr>
+<tr>
+<td>40</td>
+<td>Relay 19</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Spare Wire</td>
+</tr>
+<tr>
+<td>41</td>
+<td>Relay 20</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Spare Wire</td>
+</tr>
+<tr>
+<td>44</td>
+<td>Relay 21</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Scroll Pump</td>
+</tr>
+<tr>
+<td>46</td>
+<td>Relay 22</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Spare (btnSpare1)</td>
+</tr>
+<tr>
+<td>48</td>
+<td>Relay 23</td>
+<td>Output</td>
+<td>Digital</td>
+<td>Spare Relay</td>
+</tr>
+<tr>
+<td>45</td>
+<td>Digital Input 0</td>
+<td>Input</td>
+<td>Digital</td>
+<td>Water Flow Interlock</td>
+</tr>
+<tr>
+<td>47</td>
+<td>Digital Input 1</td>
+<td>Input</td>
+<td>Digital</td>
+<td>Rod Position Interlock</td>
+</tr>
+<tr>
+<td>49</td>
+<td>Digital Input 2</td>
+<td>Input</td>
+<td>Digital</td>
+<td>Door Interlock</td>
+</tr>
+<tr>
+<td>51</td>
+<td>Digital Input 3</td>
+<td>Input</td>
+<td>Digital</td>
+<td>Spare Interlock</td>
+</tr>
+<tr>
+<td>A1</td>
+<td>Analog Input 0</td>
+<td>Input</td>
+<td>Analog</td>
+<td>Load-lock Pressure</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>Analog Input 1</td>
+<td>Input</td>
+<td>Analog</td>
+<td>Chamber Pressure</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>Analog Input 2</td>
+<td>Input</td>
+<td>Analog</td>
+<td>Ion Gauge Pressure</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>Analog Input 3</td>
+<td>Input</td>
+<td>Analog</td>
+<td>Turbo Spin Speed (%)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reservedunused-pins">Reserved/Unused Pins </h3>
+<p><strong>Available for Future Expansion:</strong></p>
+<ul>
+<li>Digital pins: 0-21, 42-43, 50, 52-53</li>
+<li>Analog pins: A5-A15</li>
+<li>Serial pins: 0 (RX), 1 (TX) - reserved for PC communication</li>
+<li>SPI pins: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (SS) - available if needed</li>
+</ul>
+<p><strong>Note:</strong> Pins 46 and 48 have been allocated for critical mains power control and spare relay expansion respectively.</p>
+<hr>
+<p><strong>End of Technical Manual Section 1</strong></p>
+<p><em>This document will be expanded with additional sections covering software architecture, safety systems, operational procedures, and maintenance protocols.</em></p>
+
+      </div>
+      <div class="md-sidebar-toc">
+<div class="md-toc">
+<details style="padding:0;;padding-left:0px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#magnetron-sputtering-system---technical-manual" class="md-toc-link"><p>Magnetron Sputtering System - Technical Manual</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#table-of-contents" class="md-toc-link">
+            <p>Table of Contents</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#system-overview" class="md-toc-link"><p>System Overview</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#electronics-control-box" class="md-toc-link">
+            <p>Electronics Control Box</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#operation-modes" class="md-toc-link"><p>Operation Modes</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#normal-mode-default" class="md-toc-link">
+            <p>Normal Mode (Default)</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#manual-mode" class="md-toc-link">
+            <p>Manual Mode</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#override-mode-️" class="md-toc-link">
+            <p>Override Mode ⚠️</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#hardware-pin-assignments" class="md-toc-link"><p>Hardware Pin Assignments</p>
+</a>
+          </summary>
+        <div>
+          <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#arduino-mega-2560-r3-pin-allocation" class="md-toc-link"><p>Arduino Mega 2560 R3 Pin Allocation</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#analog-inputs" class="md-toc-link">
+            <p>Analog inputs</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#analog-inputs-1" class="md-toc-link">
+            <p>Analog inputs</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#25-pin-d-sub-connectors-inout-to-electronics-box" class="md-toc-link"><p>25 Pin D-sub connectors In/out to electronics box</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#s1-inside-electronics-box" class="md-toc-link">
+            <p>S1 Inside Electronics Box</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#s2-inside-electronics-box" class="md-toc-link">
+            <p>S2 Inside Electronics Box</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#s1-outside-electronics-box" class="md-toc-link">
+            <p>S1 Outside Electronics Box</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#relay-configuration" class="md-toc-link"><p>Relay Configuration</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#primary-relay-assignments-pins-22-37" class="md-toc-link">
+            <p>Primary Relay Assignments (Pins 22-37)</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#spare-relay-positions-pins-38-41" class="md-toc-link">
+            <p>Spare Relay Positions (Pins 38-41)</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#critical-safety-and-special-relay-assignments" class="md-toc-link">
+            <p>Critical Safety and Special Relay Assignments</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#-critical-safety---mains-power-relay-pin-22" class="md-toc-link">
+            <p>🔴 CRITICAL SAFETY - Mains Power Relay (Pin 22)</p>
+
+          </a></div>
+        </div>
+      </details>
+    <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#digital-input-configuration" class="md-toc-link">
+            <p>Digital Input Configuration</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#safety-interlock-inputs" class="md-toc-link">
+            <p>Safety Interlock Inputs</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#interlock-logic" class="md-toc-link">
+            <p>Interlock Logic</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#analog-input-configuration" class="md-toc-link">
+            <p>Analog Input Configuration</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#pressure-monitoring-inputs" class="md-toc-link">
+            <p>Pressure Monitoring Inputs</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#analog-signal-processing" class="md-toc-link">
+            <p>Analog Signal Processing</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#pin-assignment-summary" class="md-toc-link">
+            <p>Pin Assignment Summary</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#complete-pin-allocation-table" class="md-toc-link">
+            <p>Complete Pin Allocation Table</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#reservedunused-pins" class="md-toc-link">
+            <p>Reserved/Unused Pins</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+</div>
+</div>
+      <a id="sidebar-toc-btn">≡</a>
+    
+    
+    
+    
+    
+    
+<script>
+document.body.setAttribute('html-show-sidebar-toc', true)
+var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
+sidebarTOCBtn.addEventListener('click', function(event) {
+  event.stopPropagation()
+  if (document.body.hasAttribute('html-show-sidebar-toc')) {
+    document.body.removeAttribute('html-show-sidebar-toc')
+  } else {
+    document.body.setAttribute('html-show-sidebar-toc', true)
+  }
+})
+</script>
+      
+  
+    </body></html>

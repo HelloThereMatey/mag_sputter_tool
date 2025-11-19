@@ -1,6 +1,6 @@
 ---
 html:
-  embed_local_images: false
+  embed_local_images: true
   embed_svg: true
   offline: true
   toc: true # Set desired content width

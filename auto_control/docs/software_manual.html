@@ -1,0 +1,679 @@
+<!DOCTYPE html><html><head>
+      <title>software_manual</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\Little Cat\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.20\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script></head><body for="html-export">
+    
+    
+      <div class="crossnote markdown-preview  ">
+      
+<style>
+p {font-size: 12px}
+li {font-size: 12px}
+figcaption {font-size: 12px}
+table {font-size: 12px}
+math, .math {font-size: 12px}
+code, pre {font-size: 12px}
+
+```
+/* Force continuous layout */
+@media print {
+@page {
+  size: A4 portrait;
+  margin: 0.05in 0.1in;
+  /* Remove page height constraint */
+  height: auto;
+}
+}
+```
+</style>
+<h1 id="sputter-control-system---software-manual">Sputter Control System - Software Manual </h1>
+<h2 id="repository-structure">Repository Structure </h2>
+<p>The sputter control software is organized into logical modules to handle different aspects of the vacuum sputtering system:</p>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code>auto_control/
+├── python/                          <span class="token comment"># Main application code</span>
+│   ├── app.py                       <span class="token comment"># Main PyQt5 GUI application</span>
+│   ├── main.py                      <span class="token comment"># Entry point script</span>
+│   ├── config.py                    <span class="token comment"># Configuration loader</span>
+│   ├── arduino_controller.py         <span class="token comment"># Hardware communication (serial)</span>
+│   ├── auto_procedures.py           <span class="token comment"># Automated vacuum procedures</span>
+│   ├── safety/                      <span class="token comment"># Safety interlock system</span>
+│   │   ├── safety_controller.py     <span class="token comment"># Safety logic evaluator</span>
+│   │   └── safety_conditions.yml    <span class="token comment"># YAML-based safety rules</span>
+│   ├── security/                    <span class="token comment"># User authentication</span>
+│   │   ├── password_manager.py      <span class="token comment"># Password hashing &amp; verification</span>
+│   │   └── reset_passwords.py       <span class="token comment"># Admin password reset utility</span>
+│   ├── gas_control/                 <span class="token comment"># Mass flow controller integration</span>
+│   │   ├── controller.py            <span class="token comment"># Main MFC driver</span>
+│   │   ├── subprocess_controller.py <span class="token comment"># Subprocess-based MFC variant</span>
+│   │   ├── recipes.py               <span class="token comment"># Gas flow recipes/presets</span>
+│   │   ├── config.yml               <span class="token comment"># MFC configuration</span>
+│   │   └── safety_integration.py    <span class="token comment"># MFC safety checks</span>
+│   ├── widgets/                     <span class="token comment"># PyQt5 UI components</span>
+│   │   ├── indicators.py            <span class="token comment"># Status indicator widgets</span>
+│   │   ├── mfc_dialog.py            <span class="token comment"># Mass flow controller dialog</span>
+│   │   ├── mode_dialog.py           <span class="token comment"># System mode selector</span>
+│   │   ├── plotter_widget.py        <span class="token comment"># Real-time data plotting</span>
+│   │   ├── password_setup_dialog.py <span class="token comment"># Password initialization</span>
+│   │   └── other_dialogs.py         <span class="token comment"># Additional dialog boxes</span>
+│   ├── tests/                       <span class="token comment"># Unit and integration tests</span>
+│   └── __init__.py
+├── relay_controller/                <span class="token comment"># Arduino firmware</span>
+│   └── relay_controller.ino         <span class="token comment"># Arduino Mega 2560 sketch</span>
+├── docs/                            <span class="token comment"># Documentation</span>
+│   ├── TECHNICAL_MANUAL.md          <span class="token comment"># Hardware pin assignments</span>
+│   ├── software_manual.md           <span class="token comment"># This file</span>
+│   ├── README_desktop_launcher.md   <span class="token comment"># System launch guide</span>
+│   ├── security_codes.txt           <span class="token comment"># Emergency codes</span>
+│   └── pics/                        <span class="token comment"># Hardware photos</span>
+├── sput.yml                         <span class="token comment"># Runtime configuration (pins, thresholds)</span>
+├── vacuum_system_gui.ui             <span class="token comment"># Qt Designer UI file</span>
+└── __init__.py
+</code></pre><hr>
+<h2 id="module-overview">Module Overview </h2>
+<h3 id="core-application">Core Application </h3>
+<h4 id="apppy---main-pyqt5-application"><code>app.py</code> - Main PyQt5 Application </h4>
+<ul>
+<li><strong>Purpose</strong>: Primary GUI application for system control</li>
+<li><strong>Key Components</strong>:
+<ul>
+<li>Main window with relay/procedure controls</li>
+<li>Timer-based status monitoring (refresh_status, refresh_inputs)</li>
+<li>Safety state evaluation (update_safety_state)</li>
+<li>Background procedure execution via QThreadPool</li>
+<li>Real-time pressure and sensor display</li>
+<li>User authentication and role-based access control</li>
+</ul>
+</li>
+<li><strong>Responsibilities</strong>:
+<ul>
+<li>Loads UI from <code>vacuum_system_gui.ui</code></li>
+<li>Manages Arduino serial connection</li>
+<li>Coordinates safety system with sensor inputs</li>
+<li>Handles all user interactions and GUI updates</li>
+<li>Runs automated procedures safely in background threads</li>
+</ul>
+</li>
+</ul>
+<h4 id="mainpy---application-entry-point"><code>main.py</code> - Application Entry Point </h4>
+<ul>
+<li><strong>Purpose</strong>: Launcher script for the GUI application</li>
+<li><strong>Functionality</strong>: Initializes QApplication and runs the main window</li>
+</ul>
+<h4 id="configpy---configuration-system"><code>config.py</code> - Configuration System </h4>
+<ul>
+<li><strong>Purpose</strong>: Loads and manages system configuration</li>
+<li><strong>Loads From</strong>: <code>sput.yml</code> runtime configuration file</li>
+<li><strong>Provides</strong>: Relay mappings, pin assignments, pressure thresholds, scaling factors</li>
+</ul>
+<hr>
+<h3 id="hardware-communication">Hardware Communication </h3>
+<h4 id="arduino_controllerpy---arduino-relay-interface"><code>arduino_controller.py</code> - Arduino Relay Interface </h4>
+<ul>
+<li><strong>Purpose</strong>: Serial communication with Arduino Mega 2560 microcontroller</li>
+<li><strong>Key Features</strong>:
+<ul>
+<li>Thread-safe relay control via serial protocol</li>
+<li>Automatic port detection and connection management</li>
+<li>Relay state tracking (23 relays total)</li>
+<li>Digital input reading (4 sensors: Door, Water, Rod, Spare)</li>
+<li>Analog input reading (4 pressure gauges and turbo speed)</li>
+<li>Automatic reconnection and connection persistence</li>
+</ul>
+</li>
+<li><strong>Hardware Target</strong>: Arduino Mega 2560 R3 with relay driver boards</li>
+<li><strong>Communication</strong>: 9600 baud serial protocol with command queue</li>
+</ul>
+<hr>
+<h3 id="safety-system">Safety System </h3>
+<h4 id="safetysafety_controllerpy---safety-interlock-logic"><code>safety/safety_controller.py</code> - Safety Interlock Logic </h4>
+<ul>
+<li><strong>Purpose</strong>: Central safety condition evaluator and system state manager</li>
+<li><strong>Key Features</strong>:
+<ul>
+<li>Evaluates complex YAML-based safety rules with OR/AND logic</li>
+<li>Automatic system state detection (e.g., "vented", "rough pump", "turbo pump", "sputter")</li>
+<li>Button enable/disable checking before user actions</li>
+<li>Pressure threshold monitoring</li>
+<li>Relay state validation</li>
+<li>Confirmation dialogs for risky operations</li>
+</ul>
+</li>
+<li><strong>Responsibilities</strong>:
+<ul>
+<li>Prevents unsafe operations (e.g., can't vent while sputtering)</li>
+<li>Determines next valid operations based on current system state</li>
+<li>Tracks active procedures to allow safe overrides</li>
+<li>Synchronizes with relay controller state</li>
+</ul>
+</li>
+</ul>
+<h4 id="safetysafety_conditionsyml---safety-rules-configuration"><code>safety/safety_conditions.yml</code> - Safety Rules Configuration </h4>
+<ul>
+<li><strong>Purpose</strong>: Defines all safety interlocks and button conditions</li>
+<li><strong>Contains</strong>:
+<ul>
+<li>Emergency stop conditions</li>
+<li>Button enable/disable rules</li>
+<li>Pressure thresholds for system states</li>
+<li>Relay dependency checks</li>
+<li>Confirmation requirements for operations</li>
+</ul>
+</li>
+<li><strong>Format</strong>: YAML with conditional logic (pressure &gt; X, relay_state, digital_input checks)</li>
+</ul>
+<hr>
+<h3 id="automated-procedures">Automated Procedures </h3>
+<h4 id="auto_procedurespy---vacuum-procedure-library"><code>auto_procedures.py</code> - Vacuum Procedure Library </h4>
+<ul>
+<li><strong>Purpose</strong>: Implements automated sequences for vacuum system operations</li>
+<li><strong>Main Procedures</strong>:
+<ul>
+<li><code>pump_down()</code> - Multi-stage pump sequence (rough → medium → high vacuum)</li>
+<li><code>vent_system()</code> - Safe venting with interlock checks</li>
+<li><code>load_unload()</code> - Load-lock chamber management</li>
+<li><code>sputter()</code> - Sputtering mode with ion gauge and gas flow</li>
+</ul>
+</li>
+<li><strong>Features</strong>:
+<ul>
+<li>Real-time pressure monitoring and feedback</li>
+<li>Automatic stage transitions</li>
+<li>Safety interlock verification at each step</li>
+<li>User cancellation support</li>
+<li>Waits for physical sensors (door closure, etc.)</li>
+<li>Unicode icons for terminal feedback</li>
+</ul>
+</li>
+<li><strong>Responsible For</strong>:
+<ul>
+<li>Coordinating complex multi-relay sequences</li>
+<li>Polling sensor states during operations</li>
+<li>Waiting for user actions (e.g., close door, load sample)</li>
+<li>Error recovery and safety violations</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="security-system">Security System </h3>
+<h4 id="securitypassword_managerpy---authentication"><code>security/password_manager.py</code> - Authentication </h4>
+<ul>
+<li><strong>Purpose</strong>: Secure user authentication and role management</li>
+<li><strong>Features</strong>:
+<ul>
+<li>Password hashing (bcrypt)</li>
+<li>Multi-level access control (Admin, Operator, Technician)</li>
+<li>Session management</li>
+<li>Failed login attempt tracking</li>
+</ul>
+</li>
+</ul>
+<h4 id="securityreset_passwordspy---admin-tools"><code>security/reset_passwords.py</code> - Admin Tools </h4>
+<ul>
+<li><strong>Purpose</strong>: Password reset and account management utilities</li>
+<li><strong>Functionality</strong>: Emergency admin password reset for system recovery</li>
+</ul>
+<hr>
+<h3 id="gas-flow-control">Gas Flow Control </h3>
+<h4 id="gas_controlcontrollerpy---mass-flow-controller-mfc-driver"><code>gas_control/controller.py</code> - Mass Flow Controller (MFC) Driver </h4>
+<ul>
+<li><strong>Purpose</strong>: Interface with Alicat APEX mass flow controllers</li>
+<li><strong>Features</strong>:
+<ul>
+<li>Multi-device support (independent gas lines)</li>
+<li>Real-time gas flow monitoring</li>
+<li>Setpoint control and ramping</li>
+<li>Thread-safe command queue</li>
+<li>Data logging and plotting</li>
+<li>Integration with safety system</li>
+</ul>
+</li>
+<li><strong>Communications</strong>: Serial interface (typically RS-232)</li>
+</ul>
+<h4 id="gas_controlsubprocess_controllerpy---alternative-mfc-implementation"><code>gas_control/subprocess_controller.py</code> - Alternative MFC Implementation </h4>
+<ul>
+<li><strong>Purpose</strong>: Subprocess-based MFC control variant</li>
+<li><strong>Use Case</strong>: When Python threading conflicts with serial communication</li>
+</ul>
+<h4 id="gas_controlrecipespy---gas-flow-presets"><code>gas_control/recipes.py</code> - Gas Flow Presets </h4>
+<ul>
+<li><strong>Purpose</strong>: Pre-configured gas flow recipes for different materials/processes</li>
+<li><strong>Contains</strong>: Named recipes with setpoints for each gas line</li>
+</ul>
+<h4 id="gas_controlconfigyml---mfc-configuration"><code>gas_control/config.yml</code> - MFC Configuration </h4>
+<ul>
+<li><strong>Purpose</strong>: MFC serial ports, gas types, and scaling parameters</li>
+<li><strong>Defines</strong>: Device addresses, port mappings, gas identities</li>
+</ul>
+<h4 id="gas_controlsafety_integrationpy---mfc-safety-interlocks"><code>gas_control/safety_integration.py</code> - MFC Safety Interlocks </h4>
+<ul>
+<li><strong>Purpose</strong>: Gas safety checks and procedure integration</li>
+<li><strong>Ensures</strong>: Gas flows only during appropriate system states</li>
+</ul>
+<hr>
+<h3 id="user-interface-widgets">User Interface Widgets </h3>
+<h4 id="widgetsindicatorspy---status-indicators"><code>widgets/indicators.py</code> - Status Indicators </h4>
+<ul>
+<li><strong>Purpose</strong>: Visual feedback elements for system state</li>
+<li><strong>Displays</strong>: Relay status, sensor states, alarm conditions</li>
+</ul>
+<h4 id="widgetsmfc_dialogpy---gas-flow-control-dialog"><code>widgets/mfc_dialog.py</code> - Gas Flow Control Dialog </h4>
+<ul>
+<li><strong>Purpose</strong>: UI for setting mass flow controller setpoints</li>
+<li><strong>Features</strong>: Graphical setpoint input, real-time feedback display</li>
+</ul>
+<h4 id="widgetsmode_dialogpy---system-mode-selector"><code>widgets/mode_dialog.py</code> - System Mode Selector </h4>
+<ul>
+<li><strong>Purpose</strong>: Switch between Normal, Manual, and Override modes</li>
+<li><strong>Safety</strong>: Enforces mode selection interlocks</li>
+</ul>
+<h4 id="widgetsplotter_widgetpy---real-time-data-visualization"><code>widgets/plotter_widget.py</code> - Real-time Data Visualization </h4>
+<ul>
+<li><strong>Purpose</strong>: Live pressure and parameter trending</li>
+<li><strong>Displays</strong>: Time-series graphs of all analog inputs</li>
+</ul>
+<h4 id="widgetspassword_setup_dialogpy---initial-password-configuration"><code>widgets/password_setup_dialog.py</code> - Initial Password Configuration </h4>
+<ul>
+<li><strong>Purpose</strong>: First-run password setup for system security</li>
+</ul>
+<h4 id="widgetsother_dialogspy---additional-ui-components"><code>widgets/other_dialogs.py</code> - Additional UI Components </h4>
+<ul>
+<li><strong>Contains</strong>: Miscellaneous dialog boxes and utility dialogs</li>
+</ul>
+<hr>
+<h3 id="testing">Testing </h3>
+<h4 id="tests---unit-and-integration-tests"><code>tests/</code> - Unit and Integration Tests </h4>
+<ul>
+<li><strong>Contents</strong>:
+<ul>
+<li><code>test_arduino_relay.py</code> - Arduino communication tests</li>
+<li><code>serial_tests.py</code> - Serial port utilities</li>
+<li><code>test_mode_dialog.py</code> - UI component tests</li>
+</ul>
+</li>
+<li><strong>Purpose</strong>: Validation of critical components during development</li>
+</ul>
+<hr>
+<h3 id="configuration-files">Configuration Files </h3>
+<h4 id="sputyml---runtime-configuration"><code>sput.yml</code> - Runtime Configuration </h4>
+<ul>
+<li><strong>Purpose</strong>: Centralized configuration for all hardware mappings</li>
+<li><strong>Defines</strong>:
+<ul>
+<li>Arduino pin assignments for relays, digital inputs, analog inputs</li>
+<li>Pressure threshold values</li>
+<li>Scaling factors for analog sensors</li>
+<li>Baud rates and timeout values</li>
+</ul>
+</li>
+<li><strong>Format</strong>: YAML key-value pairs</li>
+</ul>
+<h4 id="vacuum_system_guiui---qt-designer-ui-layout"><code>vacuum_system_gui.ui</code> - Qt Designer UI Layout </h4>
+<ul>
+<li><strong>Purpose</strong>: Visual layout of the main application window</li>
+<li><strong>Contains</strong>: Button positions, indicator widgets, dialogs</li>
+<li><strong>Format</strong>: Qt Designer XML (auto-generated, edit in Qt Creator for reliability)</li>
+</ul>
+<hr>
+<h3 id="arduino-firmware">Arduino Firmware </h3>
+<h4 id="relay_controllerrelay_controllerino---microcontroller-firmware"><code>relay_controller/relay_controller.ino</code> - Microcontroller Firmware </h4>
+<ul>
+<li><strong>Target</strong>: Arduino Mega 2560 R3</li>
+<li><strong>Purpose</strong>: Hardware-level relay and sensor control</li>
+<li><strong>Responsibilities</strong>:
+<ul>
+<li>Relay driver control (23 relays on pins 22-41)</li>
+<li>Digital input reading (Door, Water, Rod, Spare)</li>
+<li>Analog input reading (4 pressure gauges, turbo speed)</li>
+<li>Serial communication protocol implementation</li>
+<li>Hardware safety interlocks (e.g., relay interlock logic)</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="system-architecture">System Architecture </h2>
+<h3 id="timer-based-functions-for-system-state-and-safety">Timer-Based Functions for System State and Safety </h3>
+<p>The sputter control system uses multiple timer-based functions to continuously monitor hardware status and maintain safety conditions. These functions ensure real-time system state tracking and safety interlocks.</p>
+<h4 id="1-refresh_status---runs-every-1000ms-1-second">1. <code>refresh_status()</code> - Runs every 1000ms (1 second) </h4>
+<ul>
+<li><strong>Purpose</strong>: Relay status synchronization</li>
+<li><strong>Timer setup</strong>: <code>self.status_timer.setInterval(1000)</code></li>
+<li><strong>What it does</strong>:
+<ul>
+<li>Gets current relay states from Arduino</li>
+<li>Updates button visual states to match hardware</li>
+<li>Handles special logic for ion gauge (based on analog voltage)</li>
+<li>Detects connection loss</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-refresh_inputs---runs-every-700ms-07-seconds">2. <code>refresh_inputs()</code> - Runs every 700ms (0.7 seconds) </h4>
+<ul>
+<li><strong>Purpose</strong>: Digital/Analog input polling and safety state updates</li>
+<li><strong>Timer setup</strong>: <code>self.input_timer.setInterval(700)</code></li>
+<li><strong>What it does</strong>:
+<ul>
+<li>Reads digital inputs (Door, Water, Rod, Spare sensors)</li>
+<li>Reads analog inputs (pressure gauges, ion gauge, turbo spin)</li>
+<li>Updates visual indicators</li>
+<li><strong>Calls <code>update_safety_state()</code> at the end</strong></li>
+</ul>
+</li>
+</ul>
+<h4 id="3-update_safety_state---called-by-refresh_inputs-every-700ms">3. <code>update_safety_state()</code> - Called by <code>refresh_inputs()</code> every 700ms </h4>
+<ul>
+<li><strong>Purpose</strong>: Core safety evaluation and system state determination</li>
+<li><strong>What it does</strong>:
+<ul>
+<li>Passes current readings to SafetyController</li>
+<li>Updates relay states</li>
+<li>Calls <code>SafetyController.determine_system_state()</code> to auto-detect system state</li>
+<li>Updates app's system status if state changed</li>
+<li>Keeps SafetyController in sync with UI state</li>
+</ul>
+</li>
+</ul>
+<h4 id="key-points">Key Points: </h4>
+<ul>
+<li><strong>Most frequent</strong>: <code>refresh_inputs()</code> at 700ms intervals is the primary safety monitoring function</li>
+<li><strong>Safety evaluation</strong>: Happens every 700ms through <code>update_safety_state()</code></li>
+<li><strong>System state detection</strong>: The SafetyController automatically determines the best-matching system state based on current sensor readings and relay positions</li>
+<li><strong>State transitions</strong>: When <code>determine_system_state()</code> detects a different state, it automatically updates the system status</li>
+</ul>
+<p><strong>Summary</strong>: <code>refresh_inputs()</code> (every 700ms) is the main function that triggers safety condition evaluation and system state determination through its call to <code>update_safety_state()</code>.</p>
+<hr>
+<p><em>This manual is a work in progress. Additional sections will be added before production release.</em></p>
+
+      </div>
+      <div class="md-sidebar-toc">
+<div class="md-toc">
+<details style="padding:0;;padding-left:0px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#sputter-control-system---software-manual" class="md-toc-link"><p>Sputter Control System - Software Manual</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#repository-structure" class="md-toc-link">
+            <p>Repository Structure</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#module-overview" class="md-toc-link"><p>Module Overview</p>
+</a>
+          </summary>
+        <div>
+          <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#core-application" class="md-toc-link"><p>Core Application</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#apppy---main-pyqt5-application" class="md-toc-link">
+            <p><code>app.py</code> - Main PyQt5 Application</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#mainpy---application-entry-point" class="md-toc-link">
+            <p><code>main.py</code> - Application Entry Point</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#configpy---configuration-system" class="md-toc-link">
+            <p><code>config.py</code> - Configuration System</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#hardware-communication" class="md-toc-link"><p>Hardware Communication</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#arduino_controllerpy---arduino-relay-interface" class="md-toc-link">
+            <p><code>arduino_controller.py</code> - Arduino Relay Interface</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#safety-system" class="md-toc-link"><p>Safety System</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#safetysafety_controllerpy---safety-interlock-logic" class="md-toc-link">
+            <p><code>safety/safety_controller.py</code> - Safety Interlock Logic</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#safetysafety_conditionsyml---safety-rules-configuration" class="md-toc-link">
+            <p><code>safety/safety_conditions.yml</code> - Safety Rules Configuration</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#automated-procedures" class="md-toc-link"><p>Automated Procedures</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#auto_procedurespy---vacuum-procedure-library" class="md-toc-link">
+            <p><code>auto_procedures.py</code> - Vacuum Procedure Library</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#security-system" class="md-toc-link"><p>Security System</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#securitypassword_managerpy---authentication" class="md-toc-link">
+            <p><code>security/password_manager.py</code> - Authentication</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#securityreset_passwordspy---admin-tools" class="md-toc-link">
+            <p><code>security/reset_passwords.py</code> - Admin Tools</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#gas-flow-control" class="md-toc-link"><p>Gas Flow Control</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gas_controlcontrollerpy---mass-flow-controller-mfc-driver" class="md-toc-link">
+            <p><code>gas_control/controller.py</code> - Mass Flow Controller (MFC) Driver</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gas_controlsubprocess_controllerpy---alternative-mfc-implementation" class="md-toc-link">
+            <p><code>gas_control/subprocess_controller.py</code> - Alternative MFC Implementation</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gas_controlrecipespy---gas-flow-presets" class="md-toc-link">
+            <p><code>gas_control/recipes.py</code> - Gas Flow Presets</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gas_controlconfigyml---mfc-configuration" class="md-toc-link">
+            <p><code>gas_control/config.yml</code> - MFC Configuration</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#gas_controlsafety_integrationpy---mfc-safety-interlocks" class="md-toc-link">
+            <p><code>gas_control/safety_integration.py</code> - MFC Safety Interlocks</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#user-interface-widgets" class="md-toc-link"><p>User Interface Widgets</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#widgetsindicatorspy---status-indicators" class="md-toc-link">
+            <p><code>widgets/indicators.py</code> - Status Indicators</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#widgetsmfc_dialogpy---gas-flow-control-dialog" class="md-toc-link">
+            <p><code>widgets/mfc_dialog.py</code> - Gas Flow Control Dialog</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#widgetsmode_dialogpy---system-mode-selector" class="md-toc-link">
+            <p><code>widgets/mode_dialog.py</code> - System Mode Selector</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#widgetsplotter_widgetpy---real-time-data-visualization" class="md-toc-link">
+            <p><code>widgets/plotter_widget.py</code> - Real-time Data Visualization</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#widgetspassword_setup_dialogpy---initial-password-configuration" class="md-toc-link">
+            <p><code>widgets/password_setup_dialog.py</code> - Initial Password Configuration</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#widgetsother_dialogspy---additional-ui-components" class="md-toc-link">
+            <p><code>widgets/other_dialogs.py</code> - Additional UI Components</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#testing" class="md-toc-link"><p>Testing</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#tests---unit-and-integration-tests" class="md-toc-link">
+            <p><code>tests/</code> - Unit and Integration Tests</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#configuration-files" class="md-toc-link"><p>Configuration Files</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#sputyml---runtime-configuration" class="md-toc-link">
+            <p><code>sput.yml</code> - Runtime Configuration</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#vacuum_system_guiui---qt-designer-ui-layout" class="md-toc-link">
+            <p><code>vacuum_system_gui.ui</code> - Qt Designer UI Layout</p>
+
+          </a></div>
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#arduino-firmware" class="md-toc-link"><p>Arduino Firmware</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#relay_controllerrelay_controllerino---microcontroller-firmware" class="md-toc-link">
+            <p><code>relay_controller/relay_controller.ino</code> - Microcontroller Firmware</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#system-architecture" class="md-toc-link"><p>System Architecture</p>
+</a>
+          </summary>
+        <div>
+          <details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#timer-based-functions-for-system-state-and-safety" class="md-toc-link"><p>Timer-Based Functions for System State and Safety</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#1-refresh_status---runs-every-1000ms-1-second" class="md-toc-link">
+            <ol>
+<li><code>refresh_status()</code> - Runs every 1000ms (1 second)</li>
+</ol>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#2-refresh_inputs---runs-every-700ms-07-seconds" class="md-toc-link">
+            <ol start="2">
+<li><code>refresh_inputs()</code> - Runs every 700ms (0.7 seconds)</li>
+</ol>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#3-update_safety_state---called-by-refresh_inputs-every-700ms" class="md-toc-link">
+            <ol start="3">
+<li><code>update_safety_state()</code> - Called by <code>refresh_inputs()</code> every 700ms</li>
+</ol>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#key-points" class="md-toc-link">
+            <p>Key Points:</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    
+        </div>
+      </details>
+    
+</div>
+</div>
+      <a id="sidebar-toc-btn">≡</a>
+    
+    
+    
+    
+    
+    
+<script>
+document.body.setAttribute('html-show-sidebar-toc', true)
+var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
+sidebarTOCBtn.addEventListener('click', function(event) {
+  event.stopPropagation()
+  if (document.body.hasAttribute('html-show-sidebar-toc')) {
+    document.body.removeAttribute('html-show-sidebar-toc')
+  } else {
+    document.body.setAttribute('html-show-sidebar-toc', true)
+  }
+})
+</script>
+      
+  
+    </body></html>
