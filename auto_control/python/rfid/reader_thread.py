@@ -47,6 +47,7 @@ class RFIDReaderThread(QThread):
         self.running = False
         self._device_is_ready = False  # Renamed to avoid conflict with signal
         self._stop_requested = False
+        self._stop_event = threading.Event()  # Event for immediate thread wake-up
         self.auto_reconnect = True  # Enable auto-reconnection by default
         self.reconnect_delay = 3.0  # Seconds between reconnection attempts
         
@@ -66,9 +67,11 @@ class RFIDReaderThread(QThread):
                     if not self.auto_reconnect or self._stop_requested:
                         break
                     
-                    # Wait before retry
+                    # Wait before retry (interruptible by stop event)
                     self.status_changed.emit(f"🔄 Retrying in {self.reconnect_delay}s...")
-                    time.sleep(self.reconnect_delay)
+                    if self._stop_event.wait(self.reconnect_delay):
+                        # Event was set (stop requested)
+                        break
                     continue
                 
                 # Main read loop
@@ -78,9 +81,11 @@ class RFIDReaderThread(QThread):
                 if not self.auto_reconnect or self._stop_requested:
                     break
                     
-                # Connection lost - attempt reconnect
+                # Connection lost - attempt reconnect (interruptible by stop event)
                 self.status_changed.emit(f"🔄 Reconnecting in {self.reconnect_delay}s...")
-                time.sleep(self.reconnect_delay)
+                if self._stop_event.wait(self.reconnect_delay):
+                    # Event was set (stop requested)
+                    break
                 
             except Exception as e:
                 self.error_occurred.emit(f"❌ Thread error: {e}")
@@ -88,7 +93,10 @@ class RFIDReaderThread(QThread):
                 if not self.auto_reconnect or self._stop_requested:
                     break
                     
-                time.sleep(self.reconnect_delay)
+                # Wait before retry (interruptible by stop event)
+                if self._stop_event.wait(self.reconnect_delay):
+                    # Event was set (stop requested)
+                    break
         
         # Final cleanup
         self.disconnect()
@@ -285,11 +293,14 @@ class RFIDReaderThread(QThread):
         self._stop_requested = True
         self.running = False
         
-        # Disconnect serial port before waiting
-        self.disconnect()
+        # Signal the stop event to immediately wake thread from any sleep
+        self._stop_event.set()
         
-        # Wait for thread to finish (with timeout)
-        self.wait(timeout=3000)  # 3 second timeout
+        # Wait for thread to finish (with timeout) - let run() do its cleanup
+        if not self.wait(3000):  # 3 second timeout
+            # The run() loop should have called disconnect() already
+            # but ensure it's done
+            self.disconnect()
     
     def disconnect(self) -> None:
         """Disconnect from serial port and cleanup."""

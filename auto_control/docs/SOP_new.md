@@ -1,6 +1,6 @@
 ---
 html:
-  embed_local_images: false
+  embed_local_images: true
   embed_svg: true
   offline: true
   toc: true
@@ -425,7 +425,8 @@ NOTE: There is a "MANUAL" mode that can be accessed on this GUI by a User accoun
 
 ## 🎓 Load-Lock Practice Procedure
 
-⚠️ **Important:** The load-lock can be difficult to master initially. **Practice with the chamber vented and door open** until confident you can operate it blind (door closed, at vacuum).
+⚠️ **Important:** The load-lock sample loading prcoedure can be difficult to master initially. The sample stage can fall off the load-lock arm during loading if not done well. This necessitates venting main chamber.
+To avoid this eventuality, **Practice with the chamber vented and door open** until confident you can operate it when your view is retricted to the small windows with door closed, at vacuum.
 
 **If sample stage is dropped inside chamber during attempted load-lock use, the chamber must be vented to retrieve it!**
 

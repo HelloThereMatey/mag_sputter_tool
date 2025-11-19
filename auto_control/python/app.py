@@ -21,7 +21,6 @@ try:
     from .widgets.logbook_widget import LogbookWidget  # type: ignore
     from .widgets.login_dialog import LoginDialog  # type: ignore
     from .widgets.about_dialog import AboutDialog  # type: ignore
-    from .widgets.other_dialogs import LogoutDialog  # type: ignore
     #from .gas_control.controller import GasFlowController  # type: ignore
     from .gas_control.subprocess_controller import GasFlowController
 except ImportError:
@@ -36,7 +35,6 @@ except ImportError:
     from widgets.logbook_widget import LogbookWidget  # type: ignore
     from widgets.login_dialog import LoginDialog  # type: ignore
     from widgets.about_dialog import AboutDialog  # type: ignore
-    from widgets.other_dialogs import LogoutDialog  # type: ignore
     #from gas_control.controller import GasFlowController  # type: ignore
     from gas_control.subprocess_controller import GasFlowController #try subprocess method instead
 
@@ -320,13 +318,6 @@ class AutoControlWindow(QMainWindow):
             # Add Run Procedure menu
             procedure_menu = menubar.addMenu('Run Procedure')
             self._setup_procedure_menu(procedure_menu)
-            
-            # Add User Account menu
-            user_menu = menubar.addMenu('User Account')
-            logout_action = user_menu.addAction('Logout')
-            logout_action.triggered.connect(self.show_logout_dialog)
-            change_user_action = user_menu.addAction('Change User')
-            change_user_action.triggered.connect(self.show_change_user_dialog)
             
             # Add Help menu
             help_menu = menubar.addMenu('Help')
@@ -852,7 +843,7 @@ class AutoControlWindow(QMainWindow):
             from pathlib import Path
             import sqlite3
             
-            db_path = Path(__file__).parent.parent / "logbook.db"
+            db_path = Path(__file__).parent.parent.parent / "logbook.db"
             
             # Check if database exists
             if not db_path.exists():
@@ -3113,99 +3104,6 @@ class AutoControlWindow(QMainWindow):
                 "Sputter Control System v2.0\n\n"
                 "Automated control software for magnetron sputtering.\n"
                 "Built on Raspberry Pi 5 with Arduino Mega 2560 R3."
-            )
-    
-    def show_logout_dialog(self) -> None:
-        """Show the logout dialog and handle user logout."""
-        try:
-            username = self.current_user.get('username', 'Unknown') if self.current_user else 'Unknown'
-            logout_dlg = LogoutDialog(username, parent=self)
-            
-            if logout_dlg.exec() == logout_dlg.Accepted:
-                action = logout_dlg.get_logout_action()
-                
-                if action == 'logout':
-                    # Return to login screen
-                    print(f"👋 User '{username}' logging out - returning to login screen")
-                    self.show_change_user_dialog()
-                    
-                elif action == 'shutdown':
-                    # Exit application
-                    print(f"👋 User '{username}' logging out - exiting application")
-                    QApplication.quit()
-                    
-        except Exception as e:
-            print(f"❌ Error showing logout dialog: {e}")
-            QMessageBox.critical(
-                self,
-                "Logout Error",
-                f"Failed to show logout dialog: {str(e)}"
-            )
-    
-    def show_change_user_dialog(self) -> None:
-        """Show login dialog to change user."""
-        try:
-            print("🔄 Changing user - showing login dialog")
-            
-            # Use QTimer to delay dialog creation, giving previous RFID thread time to cleanup
-            QTimer.singleShot(500, self._delayed_show_login_dialog)
-            
-        except Exception as e:
-            print(f"❌ Error changing user: {e}")
-            QMessageBox.critical(
-                self,
-                "Change User Error",                f"Failed to change user: {str(e)}"
-            )
-    
-    def _delayed_show_login_dialog(self) -> None:
-        """Show login dialog after delay to ensure RFID cleanup."""
-        try:
-            # Create and show login dialog
-            login_dlg = LoginDialog(parent=self)
-            
-            if login_dlg.exec() == login_dlg.Accepted:
-                # Get new user info
-                new_user = login_dlg.get_authenticated_user()
-                new_master_password = login_dlg.get_master_password()
-                
-                if new_user:
-                    # Update current user
-                    old_username = self.current_user.get('username', 'Unknown') if self.current_user else 'Unknown'
-                    self.current_user = new_user
-                    self.master_password = new_master_password
-                    
-                    print(f"✅ User changed from '{old_username}' to '{new_user['username']}' (Level {new_user['admin_level']})")
-                    
-                    # Update UI to reflect new user
-                    self._update_user_label()
-                    
-                    # Reset mode to Normal for safety (new user should start with default mode)
-                    self.current_mode = "Normal"
-                    self._update_mode_display()
-                    
-                    # Show success message
-                    QMessageBox.information(
-                        self,
-                        "User Changed",
-                        f"Successfully logged in as: {new_user['username']}\n"
-                        f"Level: {new_user['admin_level']} ({new_user['level_name']})\n\n"
-                        f"Mode has been reset to Normal."
-                    )
-            else:
-                # User cancelled login - keep current user
-                print("ℹ️ User change cancelled - keeping current user")
-                
-        except Exception as e:
-            print(f"❌ Error in delayed login dialog: {e}")
-            QMessageBox.critical(
-                self,
-                "Change User Error",
-                f"Failed to change user: {str(e)}"
-            )
-            QMessageBox.critical(
-                self,
-                "Change User Error",
-                f"Failed to change user: {str(e)}"
             )
 
 

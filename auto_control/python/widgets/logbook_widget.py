@@ -3,8 +3,8 @@ Logbook Widget for Sputter Control System
 
 Simple logbook table to track target materials and users.
 
-Database Location: {project_root}/logbook.db (SQLite format)
-CSV Export: {project_root}/logbook.csv (automatically updated)
+Database Location: {project_root}.parent/logbook.db (SQLite format)
+CSV Export: {project_root}.parent/logbook.csv (automatically updated)
 """
 
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
@@ -26,8 +26,8 @@ class LogbookWidget(QWidget):
         # Set window flags to make this an independent window
         self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
         
-        self.db_path = Path(__file__).parent.parent.parent / "logbook.db"
-        self.csv_path = Path(__file__).parent.parent.parent / "logbook.csv"
+        self.db_path = Path(__file__).parent.parent.parent.parent / "logbook.db"
+        self.csv_path = Path(__file__).parent.parent.parent.parent / "logbook.csv"
         self.parent_window = parent  # Store reference to parent window
         self.current_user = current_user  # Store current user info
         self._init_database()

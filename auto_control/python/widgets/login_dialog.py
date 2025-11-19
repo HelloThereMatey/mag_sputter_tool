@@ -621,41 +621,8 @@ class LoginDialog(QDialog):
     
     def closeEvent(self, event):
         """Handle dialog close to stop RFID thread."""
-        self._cleanup_rfid_thread()
-        super().closeEvent(event)
-    
-    def _cleanup_rfid_thread(self):
-        """Stop and cleanup RFID thread completely."""
+        # Simple cleanup - dialog only shown once on boot, so no complex logic needed
         if self.rfid_thread:
-            print("🛑 Stopping RFID reader thread...")
-            
-            # Disconnect signals first to prevent any callbacks during cleanup
-            try:
-                self.rfid_thread.card_detected.disconnect()
-                self.rfid_thread.device_ready.disconnect()
-                self.rfid_thread.device_lost.disconnect()
-                self.rfid_thread.error_occurred.disconnect()
-                self.rfid_thread.status_changed.disconnect()
-            except:
-                pass  # Ignore if already disconnected
-            
-            # Stop the thread
             self.rfid_thread.stop()
-            
-            # Wait for thread to actually stop with timeout
-            if not self.rfid_thread.wait(5000):  # 5 second timeout
-                print("⚠️ RFID thread did not stop gracefully, forcing termination")
-                self.rfid_thread.terminate()
-                self.rfid_thread.wait(2000)
-            else:
-                print("✓ RFID reader thread stopped cleanly")
-            
-            # Delete the thread object to ensure proper cleanup
-            self.rfid_thread.deleteLater()
-            self.rfid_thread = None
-            
-        # Clear any stored card data
-        self.rfid_detected_card = None
-        self.current_enrollment_username = None
-        
-        print("✓ RFID thread cleanup complete")
+            self.rfid_thread.wait(3000)
+        super().closeEvent(event)
