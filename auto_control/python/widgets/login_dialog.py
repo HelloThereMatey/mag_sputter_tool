@@ -111,6 +111,12 @@ class LoginDialog(QDialog):
         subtitle.setStyleSheet("QLabel { font-size: 12pt; font-weight: bold; }")
         layout.addWidget(subtitle)
         
+        # Add troubleshooting note
+        note_label = QLabel("NOTE: If card does not read, click 'Exit Application',\nclose terminal, wait 5s and then restart GUI.")
+        note_label.setAlignment(Qt.AlignCenter)
+        note_label.setStyleSheet("QLabel { font-size: 9pt; color: #e67e22; font-style: italic; padding: 5px; }")
+        layout.addWidget(note_label)
+        
         layout.addSpacing(20)
         
         # RFID Status
@@ -377,9 +383,18 @@ class LoginDialog(QDialog):
                 self, "Account Created",
                 f"Account '{username}' created successfully!\n\n"
                 f"Permission Level: {UserAccountManager.LEVEL_NAMES[UserAccountManager.LEVEL_OPERATOR]}\n\n"
-                f"Your RFID card has been enrolled.\n"
-                "You can now log in by presenting your card."
+                f"Your RFID card has been enrolled.\n\n"
+                "Logging you in now..."
             )
+            
+            # Auto-login the newly created user
+            user_info = self.user_manager.get_user_info(username)
+            if user_info:
+                self.authenticated_user = user_info
+                self.master_password = None
+                
+                # Accept dialog to continue with GUI boot
+                QTimer.singleShot(500, self.accept)
         else:
             QMessageBox.critical(self, "Account Creation Failed",
                                f"Failed to create account:\n{message}")

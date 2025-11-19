@@ -25,14 +25,14 @@ import argparse
 from pathlib import Path
 from getpass import getpass
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+# Add parent directory to path for imports (to access security module)
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     from security.user_account_manager import UserAccountManager
 except ImportError:
     print("❌ Error: Could not import UserAccountManager")
-    print("Make sure you're running this from the correct directory")
+    print("Make sure you're running this from the security directory")
     sys.exit(1)
 
 

@@ -19,8 +19,8 @@ No installation required! The tool uses the existing Python environment.
 ### Windows (PowerShell)
 
 ```powershell
-# Navigate to the python directory
-cd auto_control\python
+# Navigate to the security directory
+cd auto_control\python\security
 
 # Run commands using Python directly
 python manage_users.py <command> [arguments]
@@ -32,8 +32,8 @@ python manage_users.py <command> [arguments]
 ### Linux/macOS (Bash)
 
 ```bash
-# Navigate to the python directory
-cd auto_control/python
+# Navigate to the security directory
+cd auto_control/python/security
 
 # Make the bash wrapper executable (first time only)
 chmod +x manage_users.sh
@@ -245,7 +245,7 @@ It is **NOT** required for:
 
 Make sure you're running the script from the correct directory:
 ```bash
-cd auto_control/python
+cd auto_control/python/security
 python manage_users.py list
 ```
 
@@ -312,9 +312,9 @@ fi
 
 ## File Locations
 
-- **CLI Script:** `auto_control/python/manage_users.py`
-- **Bash Wrapper:** `auto_control/python/manage_users.sh`
-- **PowerShell Wrapper:** `auto_control/python/manage_users.ps1`
+- **CLI Script:** `auto_control/python/security/manage_users.py`
+- **Bash Wrapper:** `auto_control/python/security/manage_users.sh`
+- **PowerShell Wrapper:** `auto_control/python/security/manage_users.ps1`
 - **User Database:** `~/.sputter_control/users.enc`
 
 ## Related Documentation
