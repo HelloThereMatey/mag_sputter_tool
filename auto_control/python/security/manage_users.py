@@ -59,14 +59,16 @@ def print_user_table(users: list):
         level = f"{user['admin_level']}"
         level_name = user['level_name']
         login_count = user.get('login_count', 0)
-        last_login = user.get('last_login', 'Never')
+        last_login = user.get('last_login')
         
         # Truncate last login datetime for display
-        if last_login and last_login != 'Never':
+        if last_login:
             try:
                 last_login = last_login.split('T')[0]  # Just show date
             except:
-                pass
+                last_login = 'Never'
+        else:
+            last_login = 'Never'
         
         print(f"{username:<20} {level:<6} {level_name:<15} {login_count:<8} {last_login:<20}")
 
