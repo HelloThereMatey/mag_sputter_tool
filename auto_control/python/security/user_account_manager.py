@@ -177,13 +177,14 @@ class UserAccountManager(SecurePasswordManager):
             print(f"❌ Error saving users: {e}")
             return False
     
-    def create_user(self, username: str, card_id: str, admin_level: int, 
+    def create_user(self, username: str, password: str, card_id: str, admin_level: int, 
                    creator: str, master_password: str = None) -> Tuple[bool, str]:
         """
-        Create a new user account with mandatory RFID card.
+        Create a new user account with mandatory RFID card AND password.
         
         Args:
             username: New username
+            password: User password (can be empty string, but required parameter)
             card_id: RFID card ID (REQUIRED)
             admin_level: Permission level (1-4)
             creator: Username of creating user
@@ -201,6 +202,10 @@ class UserAccountManager(SecurePasswordManager):
             if not card_id or not card_id.strip():
                 return False, "RFID card is required to create an account."
             
+            # Password must be provided (can be empty string)
+            if password is None:
+                return False, "Password parameter is required (can be empty string for no password)."
+            
             # Load existing users
             users = self._load_users()
             if users is None:
@@ -215,9 +220,14 @@ class UserAccountManager(SecurePasswordManager):
                 if existing_user.get('rfid_card_id') == card_id:
                     return False, f"This RFID card is already enrolled to user '{existing_user['username']}'."
             
-            # Create user record (no password)
+            # Hash password (even if empty string)
+            password_hash, salt = self._hash_password(password)
+            
+            # Create user record (with both password and RFID)
             users[username.lower()] = {
                 'username': username,  # Store original case
+                'password_hash': password_hash,
+                'password_salt': salt.hex(),
                 'rfid_card_id': card_id,
                 'rfid_enrolled_date': datetime.now().isoformat(),
                 'admin_level': admin_level,
@@ -236,14 +246,13 @@ class UserAccountManager(SecurePasswordManager):
         except Exception as e:
             return False, f"Error creating user: {e}"
     
-    def authenticate_user(self, username: str, password: str = None) -> Tuple[bool, Optional[Dict], str]:
+    def authenticate_user(self, username: str, password: str) -> Tuple[bool, Optional[Dict], str]:
         """
-        Authenticate a user (DEPRECATED - use authenticate_by_rfid instead).
-        Kept for backward compatibility with legacy accounts.
+        Authenticate a user with username and password (fallback method).
         
         Args:
             username: Username
-            password: User password (optional, for legacy accounts)
+            password: User password
         
         Returns:
             (success, user_info, message) tuple
@@ -257,27 +266,27 @@ class UserAccountManager(SecurePasswordManager):
             # Check if user exists
             username_lower = username.lower()
             if username_lower not in users:
-                return False, None, "User not found. Please use RFID card to log in."
+                return False, None, "Invalid username or password."
             
             user = users[username_lower]
             
-            # Check if this is a legacy password-based account
-            if 'password_hash' in user and password:
-                # Verify password (legacy support)
-                stored_hash = user['password_hash']
-                salt = bytes.fromhex(user['password_salt'])
-                
-                provided_hash, _ = self._hash_password(password, salt)
-                
-                if provided_hash != stored_hash:
-                    return False, None, "Invalid username or password."
-            else:
-                # New RFID-only accounts cannot use password authentication
-                return False, None, "This account requires RFID card authentication. Please present your card."
+            # Check if user has password hash
+            if 'password_hash' not in user:
+                return False, None, "This account does not have password authentication enabled."
+            
+            # Verify password
+            stored_hash = user['password_hash']
+            salt = bytes.fromhex(user['password_salt'])
+            
+            provided_hash, _ = self._hash_password(password, salt)
+            
+            if provided_hash != stored_hash:
+                return False, None, "Invalid username or password."
             
             # Update login statistics
             user['last_login'] = datetime.now().isoformat()
             user['login_count'] = user.get('login_count', 0) + 1
+            user['last_login_method'] = 'password'
             
             # Save updated stats
             self._save_users(users)

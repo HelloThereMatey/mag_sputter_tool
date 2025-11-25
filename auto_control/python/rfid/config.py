@@ -6,6 +6,8 @@ Provides auto-detection of Pico RFID reader on Windows/Linux.
 """
 
 import platform
+import time
+import serial
 from pathlib import Path
 from typing import Optional, Tuple, List
 from serial.tools import list_ports
@@ -23,82 +25,93 @@ class RFIDConfig:
     PORT_CACHE_FILE = Path.home() / ".sputter_control" / "rfid_port.txt"
     
     @staticmethod
+    def _verify_port(port: str) -> bool:
+        """
+        Verify that a port has the Pico RFID reader by checking for READY_MESSAGE.
+        """
+        try:
+            # Open port with timeout
+            # Opening the port usually resets the Pico (DTR), causing it to send the ready message
+            ser = serial.Serial(port, RFIDConfig.DEFAULT_BAUDRATE, timeout=2.0)
+            
+            # Wait for ready message
+            start_time = time.time()
+            while time.time() - start_time < 3.0:
+                if ser.in_waiting:
+                    try:
+                        line = ser.readline().decode('utf-8', errors='ignore').strip()
+                        if RFIDConfig.READY_MESSAGE in line:
+                            ser.close()
+                            return True
+                    except Exception:
+                        pass
+                time.sleep(0.1)
+            
+            ser.close()
+        except Exception:
+            pass
+        return False
+
+    @staticmethod
     def find_rfid_port() -> Optional[str]:
         """
-        Auto-detect Pico RFID reader port.
+        Auto-detect Pico RFID reader port by verifying READY_MESSAGE.
         Prioritizes USB Serial Devices (Pico) over other ports.
-        
-        Returns:
-            Port device string (e.g., "COM5" on Windows, "/dev/ttyACM0" on Linux)
-            or None if not found.
         """
         ports = list_ports.comports()
-        
         if not ports:
             return None
         
-        # On Windows, prefer "USB Serial Device" (Pico)
-        if platform.system() == "Windows":
-            # First priority: Generic "USB Serial Device"
-            for port in ports:
-                desc_lower = port.description.lower()
-                if "usb serial device" in desc_lower:
-                    RFIDConfig._cache_port(port.device)
-                    return port.device
-            
-            # Second priority: Pico-specific
-            for port in ports:
-                desc_lower = port.description.lower()
-                if any(kw in desc_lower for kw in ["pico", "raspberry pi", "rp2040"]):
-                    RFIDConfig._cache_port(port.device)
-                    return port.device
-            
-            # Third priority: Other USB serial adapters
-            for port in ports:
-                desc_lower = port.description.lower()
-                if any(kw in desc_lower for kw in ["ch340", "cp210", "ftdi", "prolific"]):
-                    RFIDConfig._cache_port(port.device)
-                    return port.device
-            
-            # Fallback: use highest COM number (most likely external device)
-            usable = [p for p in ports if "communications port" not in p.description.lower()]
-            if usable:
-                usable.sort(key=lambda p: int(p.device.replace("COM", "")), reverse=True)
-                RFIDConfig._cache_port(usable[0].device)
-                return usable[0].device
+        candidates = []
+        system = platform.system()
         
-        # On Linux/RPi, prefer /dev/ttyUSB* or /dev/ttyACM*
+        # Filter candidates based on OS to speed up search
+        if system == "Windows":
+            for p in ports:
+                desc = p.description.lower()
+                # Prioritize likely candidates
+                if "usb serial device" in desc or "pico" in desc or "raspberry pi" in desc:
+                    candidates.append(p.device)
+                # Also check generic COM ports if they look like USB
+                elif "com" in p.device.lower():
+                     candidates.append(p.device)
         else:
-            # First: ttyACM (usually Pico on Linux)
-            for port in ports:
-                if "ttyACM" in port.device:
-                    RFIDConfig._cache_port(port.device)
-                    return port.device
-            
-            # Second: ttyUSB
-            for port in ports:
-                if "ttyUSB" in port.device:
-                    RFIDConfig._cache_port(port.device)
-                    return port.device
+            # Linux/Mac - Prioritize ttyACM (Pico usually shows as this)
+            for p in ports:
+                if "ttyACM" in p.device:
+                    candidates.append(p.device)
+            for p in ports:
+                if "ttyUSB" in p.device:
+                    candidates.append(p.device)
         
-        # Fallback: use first available
-        if ports:
-            RFIDConfig._cache_port(ports[0].device)
-            return ports[0].device
+        # If no specific candidates found, try all available ports
+        if not candidates:
+            candidates = [p.device for p in ports]
+            
+        # Remove duplicates while preserving order
+        candidates = list(dict.fromkeys(candidates))
+
+        # Test candidates
+        for port in candidates:
+            if RFIDConfig._verify_port(port):
+                RFIDConfig._cache_port(port)
+                return port
         
         return None
     
     @staticmethod
     def try_cached_port() -> Optional[str]:
-        """Try to load cached port from previous successful connection."""
+        """Try to load cached port and VERIFY it."""
         try:
             if RFIDConfig.PORT_CACHE_FILE.exists():
                 cached = RFIDConfig.PORT_CACHE_FILE.read_text().strip()
                 if cached:
-                    # Verify port still exists
+                    # Verify port still exists in system
                     ports = [p.device for p in list_ports.comports()]
                     if cached in ports:
-                        return cached
+                        # Verify it's actually the RFID reader
+                        if RFIDConfig._verify_port(cached):
+                            return cached
         except Exception:
             pass
         return None

@@ -12,18 +12,21 @@ Usage:
     python manage_users.py delete <username>              # Delete user account
     python manage_users.py enroll-card <username> <card_id>  # Enroll RFID card
     python manage_users.py remove-card <username>         # Remove RFID card
+    python manage_users.py set-password <username>        # Set/change user password
 
 Examples:
     python manage_users.py list
     python manage_users.py info john_doe
     python manage_users.py set-level john_doe 3
     python manage_users.py enroll-card john_doe 08:5C:D1:4C
+    python manage_users.py set-password john_doe
 """
 
 import sys
 import argparse
 from pathlib import Path
 from getpass import getpass
+from datetime import datetime
 
 # Add parent directory to path for imports (to access security module)
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -298,6 +301,71 @@ def cmd_remove_card(uam: UserAccountManager, args):
         return 1
 
 
+def cmd_set_password(uam: UserAccountManager, args):
+    """Set or change a user's password."""
+    username = args.username
+    
+    print_header(f"Set Password: {username}")
+    
+    # Check if user exists
+    user = uam.get_user_info(username)
+    if user is None:
+        print(f"❌ User '{username}' not found")
+        return 1
+    
+    print(f"\nUsername:  {user['username']}")
+    print(f"Level:     {user['level_name']}")
+    print("\nNote: Password can be empty string for no password")
+    print("      This provides fallback login if RFID fails")
+    
+    # Get new password
+    import getpass
+    
+    try:
+        new_password = getpass.getpass("\nEnter new password (or press Enter for empty): ")
+        confirm_password = getpass.getpass("Confirm password: ")
+        
+        if new_password != confirm_password:
+            print("\n❌ Passwords do not match")
+            return 1
+        
+        # Load users directly to set password
+        users = uam._load_users()
+        if users is None:
+            print("❌ Failed to load user database")
+            return 1
+        
+        username_lower = username.lower()
+        if username_lower not in users:
+            print(f"❌ User '{username}' not found")
+            return 1
+        
+        # Hash password (even if empty string)
+        password_hash, salt = uam._hash_password(new_password)
+        
+        # Update password
+        users[username_lower]['password_hash'] = password_hash
+        users[username_lower]['password_salt'] = salt.hex()
+        users[username_lower]['password_changed'] = datetime.now().isoformat()
+        
+        # Save users
+        if uam._save_users(users):
+            if new_password:
+                print("\n✅ Password set successfully")
+            else:
+                print("\n✅ Password cleared (empty password set)")
+            return 0
+        else:
+            print("\n❌ Failed to save user database")
+            return 1
+            
+    except KeyboardInterrupt:
+        print("\n\nCancelled.")
+        return 1
+
+
+# ==================== Main Program ====================
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -359,6 +427,10 @@ Permission Levels:
     remove_parser = subparsers.add_parser('remove-card', help='Remove RFID card from user')
     remove_parser.add_argument('username', help='Username to remove card from')
     
+    # Set password command
+    password_parser = subparsers.add_parser('set-password', help='Set or change user password')
+    password_parser.add_argument('username', help='Username to set password for')
+    
     args = parser.parse_args()
     
     # Show help if no command
@@ -381,6 +453,7 @@ Permission Levels:
         'delete': cmd_delete_user,
         'enroll-card': cmd_enroll_card,
         'remove-card': cmd_remove_card,
+        'set-password': cmd_set_password,
     }
     
     if args.command in commands:

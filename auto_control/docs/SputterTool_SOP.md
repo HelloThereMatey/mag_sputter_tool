@@ -53,7 +53,16 @@ code, pre {font-size: 13px}
 
 ## System Overview
 
-The sputter system uses a custom software running on low-cost hardware. A raspberry Pi 5 runs the software (written in python) and interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components...
+The sputter system uses a custom software running on low-cost hardware. A raspberry Pi 5 runs the software (written in python) and interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components. User interface is a custom GUI via a touchscreen, bluetooth keyboard & mouse.
+
+**NOTE:** The bluetooth keyboard requires about 4s to wake-up and reconnect after you press a button. It then stays awake. It will go back to sleep after 10 mins of no input.
+
+<figure style="display:flex;gap:1px;align-items:flex-start">
+   <div style="flex:1;margin:0">
+      <img src="pics/system.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+      <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) "Cryopump" sputter system. It used to have a cryopump & we kept the name.</figcaption>
+   </div>
+</figure>
 
 ## 🚀 System Startup Procedure
 
@@ -89,8 +98,22 @@ The sputter system uses a custom software running on low-cost hardware. A raspbe
    - Locate the **Sputter Control** desktop icon. It has a sun image icon :sunny:.
    - Double-click to launch the Python-based control application.
    - This will launch a terminal window that should be positioned on the large screen. This window shows running messages that details the system operation and is useful for debug.
-   - A user account login window will show first prior to displaying the GUI.
-   - **Login** with your user account or create new account & then login.
+   - A **user account login** window will show first prior to displaying the GUI.
+   - **Login** with your user account if already have one. Simply hold your UTS ID card to the card reader. It should read your card, login your account & launch GUI.
+
+   <figure style="display:flex;gap:1px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/rfid.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px"> RFID card reader (blue square). Hold your UTS ID card to this to login or enrol card. </figcaption>
+      </div>
+   </figure>
+
+   - Or create new account:
+      - Click "Create Account".
+      - Create username.
+      - Create & confirm password.
+      - Enrol your UTS ID card to go with account. Each account needs a unique ID card.
+      - Account will login and GUI launch.
    - Main control window will then open. Drag this window onto the small screen (touch-screen) and double click the top title bar to expand the GUI window to fill the small screen.
    - You can use touch on the small screen to activate buttons on the GUI or keep using mouse.
 
@@ -101,14 +124,25 @@ The sputter system uses a custom software running on low-cost hardware. A raspbe
    - There are 3 interlocks that need to show True state (green indicator on GUI). These show the state of the water switch, rod home switch and the door switch. These are True when water flowing, load-lock rod is in home position & the chamber door is closed respectively.
 
 3. **Verify Automated Procedure Buttons**
-   - Five main procedure buttons should be visible and enabled (not greyed out):
-     - 🌊 **PUMP** - Start pump-down sequence
-     - 💨 **VENT** - Vent chamber to atmosphere
-     - 📦 **LOAD/UNLOAD** - Load-lock operation
-     - 🔬 **SPUTTER** - Enter sputtering mode
+   - Five main auto-procedure buttons should be visible at top. They are enabled when orange, green while active and greyed out (inactive) when current state conditions disallows running of that procedure.
+   - These buttons are the main way that the system is used.
+   - Buttons are:
+     - 🌊 **PUMP** - Start pump-down sequence.
+     - 💨 **VENT** - Vent chamber to atmosphere.
+     - 💨 **VENT Load-Lock** - Vent the load-lock chamber.
+     - 📦 **LOAD/UNLOAD** - Load-lock operation, pumps load-lock & enables loading arm usage.
+     - 🔬 **SPUTTER** - Enter sputtering mode.
      - 🏠 **STAND BY** - Return system to default state or standby state. This should be used at end of session to put system into low-power stand-by state.
+   - **Whenever a procedure is active (button is green) you can cancel the procedure by pressing the button again.**
 
 These automated procedure buttons (as well as the shutter buttons, Ion gauge & chamber light) are the only operable buttons when the GUI is running in "Normal" mode. Normal is the only mode accessible by a level 1 user account.
+
+<figure style="display:flex;gap:1px;align-items:flex-start">
+   <div style="flex:1;margin:0">
+      <img src="pics/touchscreen.png" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+      <figcaption style="text-align:center;font-size:13px;margin-top:6px"> Main page of the PyQT based Graphical User Interface (GUI).</figcaption>
+   </div>
+</figure>
 
 #### BOOT TROUBLESHOOTING
 
@@ -291,6 +325,17 @@ Ensure that:
      - **Typical range:** 30-100 W
      - **Absolute maximum:** 300 W
 
+   <figure style="display:flex;gap:08px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/power_supps.jpg" alt="Image 1" style="width:70%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:4px">(a) Power supplies DC & RF.</figcaption>
+      </div>
+      <div style="flex:1.24;margin:0">
+         <img src="pics/elec_hardware.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) System electrical hardware. The power supply for stage rotation is seen behind the load-lock.</figcaption>
+      </div>
+   </figure>
+
 4. **Start Deposition Monitor**
       - Launch **MaxTec deposition monitor**.
       - Choose process with your target material
@@ -422,8 +467,6 @@ NOTE: Load-lock arm must be in home position before LOAD/UNLOAD dialog can be ex
 1. Similar procedure to above yet in reverse.
 
 ---
-
-# BELOW is raw AI generated doc
 
 NOTE: There is a "MANUAL" mode that can be accessed on this GUI by a User account of level > 1. This enables practice with the load-lock arm in atmosphere as described below. Ask System Administrator for details.
 
@@ -610,7 +653,7 @@ To avoid this eventuality, **Practice with the chamber vented and door open** un
 
 **Solutions:**
 1. **Close and restart application.** This can be done at any time if a software error is encountered.
-2. Reboot PC if problem persists
+2. Reboot the raspberry Pi if problem persists.
 3. Contact staff for assistance
 
 #### Memory/Performance Issues (Plotter Window)

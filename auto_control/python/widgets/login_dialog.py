@@ -146,6 +146,50 @@ class LoginDialog(QDialog):
         
         layout.addSpacing(20)
         
+        # Password fallback login
+        password_group = QGroupBox("Fallback: Password Login")
+        password_layout = QVBoxLayout()
+        
+        fallback_note = QLabel("Use this if RFID reader is not working:")
+        fallback_note.setStyleSheet("QLabel { font-size: 9pt; color: #7f8c8d; font-style: italic; }")
+        password_layout.addWidget(fallback_note)
+        
+        form_layout = QFormLayout()
+        
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Enter username")
+        form_layout.addRow("Username:", self.username_input)
+        
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Enter password")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.returnPressed.connect(self._on_password_login)
+        form_layout.addRow("Password:", self.password_input)
+        
+        password_layout.addLayout(form_layout)
+        
+        password_login_button = QPushButton("Login with Password")
+        password_login_button.clicked.connect(self._on_password_login)
+        password_login_button.setStyleSheet("""
+            QPushButton {
+                font-size: 10pt;
+                padding: 8px 16px;
+                background-color: #16a085;
+                color: white;
+                border: none;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #138d75;
+            }
+        """)
+        password_layout.addWidget(password_login_button)
+        
+        password_group.setLayout(password_layout)
+        layout.addWidget(password_group)
+        
+        layout.addSpacing(20)
+        
         # Buttons
         button_layout = QHBoxLayout()
         
@@ -191,6 +235,33 @@ class LoginDialog(QDialog):
         self.status_label.setAlignment(Qt.AlignCenter)
         self.status_label.setStyleSheet("QLabel { color: red; font-size: 10pt; }")
         layout.addWidget(self.status_label)
+    
+    def _on_password_login(self):
+        """Handle password login button click."""
+        username = self.username_input.text().strip()
+        password = self.password_input.text()
+        
+        if not username:
+            self.status_label.setText("Please enter username")
+            self.status_label.setStyleSheet("QLabel { color: red; font-size: 10pt; }")
+            return
+        
+        # Authenticate
+        success, user_info, message = self.user_manager.authenticate_user(username, password)
+        
+        if success:
+            self.authenticated_user = user_info
+            self.master_password = None
+            
+            self.status_label.setText(f"✓ {message}")
+            self.status_label.setStyleSheet("QLabel { color: green; font-size: 10pt; }")
+            
+            # Accept dialog after short delay
+            QTimer.singleShot(1000, self.accept)
+        else:
+            self.status_label.setText(f"✗ {message}")
+            self.status_label.setStyleSheet("QLabel { color: red; font-size: 10pt; }")
+            self.password_input.clear()
     
     def _show_first_time_setup(self):
         """Show first-time setup dialog to create master password and first admin."""
@@ -322,22 +393,22 @@ class LoginDialog(QDialog):
             QMessageBox.critical(self, "Error", "RFID card enrollment is required to create administrator account.")
             return False
         
-        # Create administrator account with card (no password)
+        # Create administrator account with both password and card
         success, message = self.user_manager.create_user(
-            username, card_id, UserAccountManager.LEVEL_ADMINISTRATOR, "system"
+            username, password, card_id, UserAccountManager.LEVEL_ADMINISTRATOR, "system"
         )
         
         if success:
             QMessageBox.information(self, "Success",
                                   f"Administrator account '{username}' created.\n\n"
-                                  "You can now use your RFID card to log in.")
+                                  "You can now log in with RFID card or password.")
             return True
         else:
             QMessageBox.critical(self, "Error", f"Failed to create administrator:\n{message}")
             return False
     
     def _on_create_account(self):
-        """Handle create account button click - RFID card enrollment is mandatory."""
+        """Handle create account button click - both password and RFID card are mandatory."""
         from PyQt5.QtWidgets import QInputDialog
         
         # Get username
@@ -350,6 +421,40 @@ class LoginDialog(QDialog):
             return
         
         username = username.strip()
+        
+        # Get password (can be empty string)
+        QMessageBox.information(
+            self, "Password Setup",
+            f"Creating account '{username}'.\n\n"
+            "You must set a password (can be empty for no password).\n"
+            "This provides fallback login if RFID reader fails."
+        )
+        
+        password, ok = QInputDialog.getText(
+            self, "Set Password",
+            f"Enter password for '{username}':\n(Leave empty for no password)",
+            QLineEdit.Password
+        )
+        
+        if not ok:
+            return
+        
+        # Confirm password (even if empty)
+        confirm_password, ok = QInputDialog.getText(
+            self, "Confirm Password",
+            "Confirm password:",
+            QLineEdit.Password
+        )
+        
+        if not ok:
+            return
+        
+        if password != confirm_password:
+            QMessageBox.warning(
+                self, "Password Mismatch",
+                "Passwords do not match. Account creation cancelled."
+            )
+            return
         
         # Show RFID enrollment requirement
         QMessageBox.information(
@@ -370,20 +475,23 @@ class LoginDialog(QDialog):
             )
             return
         
-        # Create account with Level 1 (Operator) permissions and enrolled card
+        # Create account with Level 1 (Operator) permissions, password, and enrolled card
         success, message = self.user_manager.create_user(
-            username, 
-            card_id,  # RFID card ID instead of password
+            username,
+            password,  # Password (can be empty string)
+            card_id,   # RFID card ID
             UserAccountManager.LEVEL_OPERATOR,  # Default to Level 1
             "self-registration"
         )
         
         if success:
+            password_msg = "Password set" if password else "No password set"
             QMessageBox.information(
                 self, "Account Created",
                 f"Account '{username}' created successfully!\n\n"
-                f"Permission Level: {UserAccountManager.LEVEL_NAMES[UserAccountManager.LEVEL_OPERATOR]}\n\n"
-                f"Your RFID card has been enrolled.\n\n"
+                f"Permission Level: {UserAccountManager.LEVEL_NAMES[UserAccountManager.LEVEL_OPERATOR]}\n"
+                f"{password_msg}\n"
+                f"RFID card enrolled\n\n"
                 "Logging you in now..."
             )
             
