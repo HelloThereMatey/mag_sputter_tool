@@ -12,10 +12,13 @@ import threading
 import time
 import json
 import logging
+import platform
+from pathlib import Path
 from dataclasses import dataclass
 from queue import Queue, Empty
 from typing import Dict, List, Optional, Tuple, Callable, Any
 import uuid
+from serial.tools import list_ports
 
 # Support both package and script execution
 try:
@@ -82,15 +85,17 @@ class GasFlowController:
     - Same API as the original async controller
     """
     
-    def __init__(self, config: Dict[str, Any], safety_controller: Optional[object] = None):
+    def __init__(self, config: Dict[str, Any], safety_controller: Optional[object] = None, excluded_ports: List[str] = None):
         """Initialize the subprocess-based gas flow controller.
         
         Args:
             config: Configuration dictionary from sput.yml gas_control section
             safety_controller: Optional SafetyController for safety integration
+            excluded_ports: List of serial ports to exclude from scanning (e.g. Arduino port)
         """
         self.config = config
         self.safety_controller = safety_controller
+        self.excluded_ports = excluded_ports or []
         
         # Initialize logging
         self.logger = logging.getLogger(__name__)
@@ -105,6 +110,10 @@ class GasFlowController:
         
         # Initialize MFC channels from config
         self.channels: Dict[str, MFCChannel] = {}
+        
+        # Auto-detect port if needed
+        self._detect_and_update_port()
+        
         self._init_channels()
         
         # Thread management
@@ -132,17 +141,152 @@ class GasFlowController:
         # Status callbacks
         self._status_callbacks: List[Callable] = []
         self._error_callbacks: List[Callable] = []
+    
+    def _detect_and_update_port(self) -> None:
+        """Auto-detect the correct serial port for Alicat MFCs."""
+        configured_port = self.config.get('serial_port')
         
+        # Get a unit ID to test with (use first available)
+        mfc_config = self.config.get('mfcs', {})
+        if not mfc_config:
+            return
+            
+        # Find a valid unit ID to test
+        test_unit_id = 'A'
+        for cfg in mfc_config.values():
+            if 'unit_id' in cfg:
+                test_unit_id = cfg['unit_id']
+                break
+        
+        if configured_port:
+            self.logger.info(f"Checking Alicat connection on {configured_port} (Unit {test_unit_id})...")
+            
+            # 1. Try configured port first (if not excluded)
+            if configured_port not in self.excluded_ports:
+                if self._test_port(configured_port, test_unit_id):
+                    self.logger.info(f"✅ Alicat found on configured port: {configured_port}")
+                    return
+            else:
+                self.logger.info(f"ℹ️ Configured port {configured_port} is excluded (likely Arduino). Skipping.")
+                
+            self.logger.warning(f"⚠️ Alicat not found on {configured_port}. Scanning available ports...")
+        else:
+            self.logger.info("ℹ️ No serial port configured. Scanning available ports...")
+        
+        # 2. Scan available ports
+        found_port = self._scan_ports(test_unit_id)
+        
+        if found_port:
+            self.logger.info(f"✅ Found Alicat on port: {found_port}")
+            
+            # Update runtime config
+            self.config['serial_port'] = found_port
+            
+            # Update config file
+            self._update_config_file(found_port)
+        else:
+            self.logger.error("❌ Could not find Alicat MFCs on any port")
+
+    def _scan_ports(self, unit_id: str) -> Optional[str]:
+        """Scan available serial ports for Alicat device."""
+        ports = list_ports.comports()
+        candidates = []
+        
+        # Prioritize USB serial devices
+        for p in ports:
+            desc = p.description.lower()
+            if "usb" in desc or "serial" in desc:
+                candidates.append(p.device)
+        
+        # Add remaining ports
+        for p in ports:
+            if p.device not in candidates:
+                candidates.append(p.device)
+                
+        for port in candidates:
+            if port in self.excluded_ports:
+                self.logger.info(f"Skipping excluded port {port}")
+                continue
+                
+            self.logger.info(f"Scanning {port}...")
+            if self._test_port(port, unit_id):
+                return port
+                
+        return None
+
+    def _test_port(self, port: str, unit_id: str) -> bool:
+        """Test if an Alicat unit responds on a port."""
+        try:
+            # Run alicat CLI command to check state
+            # alicat <port> --unit <id> (no args returns state)
+            cmd = ['alicat', port, '--unit', unit_id]
+            
+            # Run with short timeout
+            result = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                timeout=2.0
+            )
+            
+            if result.returncode == 0:
+                return True
+            return False
+        except Exception:
+            return False
+
+    def _update_config_file(self, new_port: str) -> None:
+        """Update the config.yml file with the new port."""
+        try:
+            config_path = Path(__file__).parent / 'config.yml'
+            if not config_path.exists():
+                self.logger.warning(f"Config file not found at {config_path}")
+                return
+                
+            content = config_path.read_text()
+            
+            lines = content.splitlines()
+            new_lines = []
+            updated = False
+            
+            for line in lines:
+                if 'serial_port:' in line and not updated:
+                    # Check if this is likely the global setting (indentation)
+                    if line.strip().startswith('serial_port:'):
+                        new_lines.append(f"  serial_port: '{new_port}'  # Auto-detected")
+                        updated = True
+                        continue
+                new_lines.append(line)
+            
+            if updated:
+                config_path.write_text('\n'.join(new_lines) + '\n')
+                self.logger.info(f"Updated config.yml with new port: {new_port}")
+            else:
+                self.logger.warning("Could not find serial_port key in config.yml to update")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to update config file: {e}")
+
     def _init_channels(self) -> None:
         """Initialize MFC channels from configuration."""
         mfc_config = self.config.get('mfcs', {})
         self.logger.info(f"Subprocess GasFlowController initializing with MFC config: {mfc_config}")
         
+        global_port = self.config.get('serial_port')
+        if not global_port:
+            self.logger.error("❌ No serial port configured for MFCs. Gas control will be disabled.")
+            global_port = "COM_MISSING"
+        
         for name, channel_config in mfc_config.items():
+            # Handle "serial_port" placeholder or missing port
+            port = channel_config.get('serial_port')
+            if not port or port == 'serial_port':
+                port = global_port
+                
             channel = MFCChannel(
                 name=name,
                 unit_id=channel_config.get('unit_id', 'A'),
-                serial_port=channel_config.get('serial_port', '/dev/ttyUSB0'),
+                serial_port=port,
                 max_flow=float(channel_config.get('max_flow', 100.0)),
                 gas_type=channel_config.get('gas_type', name),
                 enabled=channel_config.get('enabled', True),

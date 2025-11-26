@@ -12,6 +12,7 @@ import queue
 import sys
 import platform
 import os
+import uuid
 from pathlib import Path
 from typing import Optional, List, Tuple
 
@@ -785,9 +786,19 @@ class ArduinoController:
             try:
                 # Process outgoing commands if any
                 try:
-                    command = self.command_queue.get(timeout=0.1)
-                    response = self.send_command_direct(command)
-                    self.response_queue.put(response)
+                    # Expect tuple (cmd_id, command) or just command (legacy support)
+                    item = self.command_queue.get(timeout=0.1)
+                    
+                    if isinstance(item, tuple) and len(item) == 2:
+                        cmd_id, command = item
+                        response = self.send_command_direct(command)
+                        self.response_queue.put((cmd_id, response))
+                    else:
+                        # Legacy support for direct string commands (if any)
+                        command = item
+                        response = self.send_command_direct(command)
+                        self.response_queue.put(response)
+                        
                 except queue.Empty:
                     pass
 
@@ -878,7 +889,7 @@ class ArduinoController:
             
     def send_command(self, command: str, timeout: float = 2.0) -> str:
         """
-        Send command via queue system (thread-safe).
+        Send command via queue system (thread-safe) with ID matching.
         
         Args:
             command: Command string to send
@@ -890,18 +901,40 @@ class ArduinoController:
         if not self.is_connected:
             return "ERROR"
 
-        # Clear old responses
-        self.clear_response_queue()
+        # Generate unique ID for this command
+        cmd_id = str(uuid.uuid4())
 
-        # Send command
-        self.command_queue.put(command)
+        # Clear old responses (optional, but good for hygiene)
+        # self.clear_response_queue() 
 
-        # Wait for response
-        try:
-            response = self.response_queue.get(timeout=timeout)
-            return response
-        except queue.Empty:
-            return "TIMEOUT"
+        # Send command with ID
+        self.command_queue.put((cmd_id, command))
+
+        # Wait for matching response
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                # Wait for ANY response
+                item = self.response_queue.get(timeout=timeout - (time.time() - start_time))
+                
+                # Check if it matches our ID
+                if isinstance(item, tuple) and len(item) == 2:
+                    resp_id, response = item
+                    if resp_id == cmd_id:
+                        return response
+                    else:
+                        # Not our response (stale or from another thread), ignore or put back?
+                        # For now, just ignore stale responses
+                        continue
+                else:
+                    # Legacy response (string), assume it's ours if we are single threaded?
+                    # Or just return it
+                    return item
+                    
+            except queue.Empty:
+                return "TIMEOUT"
+                
+        return "TIMEOUT"
 
     def set_relay(self, relay_number: int, state: bool, suppress_logging: bool = False) -> bool:
         """

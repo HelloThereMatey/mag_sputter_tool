@@ -161,7 +161,13 @@ class AutoControlWindow(QMainWindow):
         self.gas_controller = None
         if hasattr(self.cfg, 'gas_control') and self.cfg.gas_control:
             try:
-                self.gas_controller = GasFlowController(self.cfg.gas_control, self.safety_controller)
+                # Exclude Arduino port if connected to prevent interference
+                excluded = []
+                if self.arduino and self.arduino.is_connected and self.arduino.serial_port:
+                    excluded.append(self.arduino.serial_port.port)
+                    print(f"🌀 DEBUG: Excluding Arduino port {self.arduino.serial_port.port} from MFC scan")
+                
+                self.gas_controller = GasFlowController(self.cfg.gas_control, self.safety_controller, excluded_ports=excluded)
                 print("🌀 DEBUG: GasFlowController created successfully")
             except Exception as e:
                 print(f"❌ DEBUG: Failed to create GasFlowController: {e}")

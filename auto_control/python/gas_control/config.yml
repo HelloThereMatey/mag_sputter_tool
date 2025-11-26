@@ -5,14 +5,15 @@
 gas_control:
   # Global settings
   auto_reconnect: true
+  
   reconnect_interval: 5.0  # seconds
   read_interval: 1.0  # seconds between MFC readings
-  
+  # serial_port: '/dev/ttyUSB0'  # Commented out to force auto-detection
   # MFC configurations
   mfcs:
     Ar:  # Argon MFC (Gas Valve 1)
       unit_id: 'A'  # Alicat unit ID
-      serial_port: '/dev/ttyUSB0'  # Windows: COMx, Linux: /dev/ttyUSBx
+      serial_port: serial_port  # Windows: COMx, Linux: /dev/ttyUSBx
       baudrate: 19200  # Optional: Serial baud rate (default: 19200)
       max_flow: 200.0  # Maximum flow rate in sccm
       gas_type: 'Ar'  # Gas type for Alicat (must match Alicat gas list)
@@ -21,7 +22,7 @@ gas_control:
 
     N2:  # Nitrogen MFC (Gas Valve 2)
       unit_id: 'B'
-      serial_port: '/dev/ttyUSB0'
+      serial_port: serial_port
       baudrate: 19200  # Optional: can be omitted if using default
       max_flow: 100.0
       gas_type: 'N2'
@@ -30,7 +31,7 @@ gas_control:
 
     O2:  # Oxygen MFC (Gas Valve 3)
       unit_id: 'C'
-      serial_port: '/dev/ttyUSB0'
+      serial_port: serial_port
       baudrate: 19200  # Optional: Serial baud rate (default: 19200)
       max_flow: 100.0  # Maximum flow rate in sccm
       gas_type: 'O2'  # Gas type for Alicat (must match Alicat gas list)
