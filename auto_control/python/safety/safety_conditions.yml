@@ -102,7 +102,8 @@ button_safety_conditions:
         - "digital_inputs[2] == True"                                   # Door closed OK
         - "relay_state['btnPumpScroll'] == True"                       # Scroll pump running
     forbidden_conditions:
-      - "relay_state['btnPumpTurbo'] == True"                        # Turbo pump off
+      - "relay_state['btnPumpTurbo'] == True"                        # Turbo pump active
+      - "relay_state['btnValveBacking'] == True"    # No backing valve to turbo open when rough valve open
     confirmation_required: false
     error_message: "Cannot open rough valve: scroll pump not running or turbo pump still on"
     

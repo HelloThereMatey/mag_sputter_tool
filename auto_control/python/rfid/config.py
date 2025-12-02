@@ -34,6 +34,11 @@ class RFIDConfig:
             # Opening the port usually resets the Pico (DTR), causing it to send the ready message
             ser = serial.Serial(port, RFIDConfig.DEFAULT_BAUDRATE, timeout=2.0)
             
+            # Force DTR toggle to ensure reset
+            ser.dtr = False
+            time.sleep(0.1)
+            ser.dtr = True
+            
             # Wait for ready message
             start_time = time.time()
             while time.time() - start_time < 3.0:

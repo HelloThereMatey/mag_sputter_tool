@@ -111,8 +111,8 @@ class GasFlowController:
         # Initialize MFC channels from config
         self.channels: Dict[str, MFCChannel] = {}
         
-        # Auto-detect port if needed
-        self._detect_and_update_port()
+        # Auto-detect port is DEFERRED until start() to prevent blocking GUI startup
+        # self._detect_and_update_port()
         
         self._init_channels()
         
@@ -529,12 +529,27 @@ class GasFlowController:
             return True
             
         try:
+            # Re-verify port connection before starting thread
+            # This handles cases where the device was off during init but is on now
+            current_port = self.config.get('serial_port')
+            
+            # Only attempt detection if we don't have a port or if the port is clearly invalid
+            if not current_port or current_port == 'serial_port':
+                 self.logger.info("No port configured. Attempting detection...")
+                 self._detect_and_update_port()
+            
+            # If we still don't have a port, we can't start
+            if not self.config.get('serial_port'):
+                 self.logger.error("Cannot start: No valid serial port found for MFCs")
+                 return False
+
             self._running = True
             self._control_thread = threading.Thread(target=self._control_loop, daemon=True)
             self._control_thread.start()
             
-            # Initial connectivity test
-            self._test_initial_connectivity()
+            # Initial connectivity test - REMOVED to prevent blocking/errors during startup
+            # The control loop will handle connection establishment naturally
+            # self._test_initial_connectivity()
             
             self.logger.info("Subprocess gas flow controller started successfully")
             return True
@@ -580,8 +595,9 @@ class GasFlowController:
                     self._read_all_mfcs()
                     last_read_time = current_time
                 
-                # Brief sleep to prevent high CPU usage
-                time.sleep(0.01)
+                # Sleep to prevent high CPU usage
+                # Increased from 0.01s to 0.1s to reduce load on RPi
+                time.sleep(0.1)
                 
         except Exception as e:
             self.logger.error(f"Error in subprocess gas flow control loop: {e}")

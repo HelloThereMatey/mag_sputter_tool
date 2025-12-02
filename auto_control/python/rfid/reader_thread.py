@@ -137,6 +137,11 @@ class RFIDReaderThread(QThread):
                     self.baudrate,
                     timeout=1.0
                 )
+                # Force DTR toggle to reset Pico and get READY message
+                self.serial_conn.dtr = False
+                time.sleep(0.1)
+                self.serial_conn.dtr = True
+                
             except serial.SerialException as e:
                 self.error_occurred.emit(f"❌ Cannot connect to {self.port}: {e}")
                 self.port = None  # Clear port so it will re-detect next time
@@ -148,8 +153,16 @@ class RFIDReaderThread(QThread):
             self._wait_for_device_ready()
             
             if not self._device_is_ready:
+                # If we timed out waiting for ready, but we have a valid connection
+                # and the port was likely auto-detected/cached correctly, we should PROCEED.
+                # The device might just be already running or missed the reset.
                 if not self._stop_requested:
-                    self.error_occurred.emit("❌ RFID reader did not respond with ready message (Check USB connection)")
+                    print(f"⚠️ RFID Warning: 'PICO_RFID_READY' not received from {self.port}. Assuming device is active.")
+                    self.status_changed.emit("✓ RFID ready (no startup msg)")
+                    self._device_is_ready = True
+                    self.device_ready.emit()
+                    return True
+                
                 self.disconnect()
                 self.port = None  # Clear port for re-detection
                 return False

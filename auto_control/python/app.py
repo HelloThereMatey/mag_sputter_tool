@@ -285,6 +285,18 @@ class AutoControlWindow(QMainWindow):
             menubar = None
 
         if menubar is not None:
+            # Add Tools menu items
+            tools_menu = None
+            for action in menubar.actions():
+                if action.text() == "Tools":
+                    tools_menu = action.menu()
+                    break
+            
+            if tools_menu:
+                # Add Standby Quick Reset action
+                quick_reset_action = tools_menu.addAction("Standby Quick Reset")
+                quick_reset_action.triggered.connect(self.run_quick_reset_to_standby)
+                print("✅ Added 'Standby Quick Reset' to Tools menu")
             tools_menu = menubar.addMenu('Tools')
             plot_action = tools_menu.addAction('Open Plotter')
             plot_action.triggered.connect(self.open_plotter)
@@ -2716,6 +2728,97 @@ class AutoControlWindow(QMainWindow):
         
         # Always update safety state with latest readings
         self.update_safety_state()
+
+    def run_quick_reset_to_standby(self) -> None:
+        """Run quick reset to standby procedure - forces all relays OFF immediately."""
+        # Confirm with user
+        reply = QMessageBox.warning(
+            self,
+            "Quick Reset to Standby",
+            "This will immediately force ALL relays OFF, bypassing normal shutdown sequences.\n\n"
+            "⚠️ WARNING: This bypasses safety checks and normal procedures.\n"
+            "Only use this for emergency resets or when relay states are incorrect.\n\n"
+            "Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        # Import the procedure
+        try:
+            from .auto_procedures import quick_reset_to_standby
+        except ImportError:
+            from auto_procedures import quick_reset_to_standby
+        
+        # Check if another procedure is running
+        if self.current_procedure is not None:
+            cancel_reply = QMessageBox.question(
+                self,
+                "Procedure Running",
+                f"Procedure '{self.current_procedure}' is currently running.\n\n"
+                "Cancel it and proceed with quick reset?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            
+            if cancel_reply != QMessageBox.StandardButton.Yes:
+                return
+            
+            # Cancel the running procedure
+            try:
+                from .auto_procedures import cancel_running_procedures
+            except ImportError:
+                from auto_procedures import cancel_running_procedures
+            
+            cancel_running_procedures()
+            self.current_procedure = None
+            self._update_auto_procedure_button_states()
+        
+        # Set current procedure
+        self.current_procedure = 'quick_reset'
+        self._update_auto_procedure_button_states()
+        
+        # Define the worker function
+        def worker_fn():
+            return quick_reset_to_standby(
+                arduino=self.arduino,
+                safety=self.safety_controller,
+                relay_map=self.relay_map
+            )
+        
+        # Run in background thread
+        worker = ProcedureWorker(worker_fn)
+        worker.signals.finished.connect(
+            lambda success, msg: self._on_quick_reset_complete(success, msg)
+        )
+        self.threadpool.start(worker)
+        
+        print("⚡ Quick reset to standby initiated...")
+    
+    def _on_quick_reset_complete(self, success: bool, message: str) -> None:
+        """Handle completion of quick reset procedure."""
+        self.current_procedure = None
+        self._update_auto_procedure_button_states()
+        
+        if success:
+            QMessageBox.information(
+                self,
+                "Quick Reset Complete",
+                "All relays have been forced OFF.\n\n"
+                "System is now in standby state."
+            )
+            # Update system status display
+            self.set_system_status('standby')
+        else:
+            QMessageBox.warning(
+                self,
+                "Quick Reset Issues",
+                f"Quick reset encountered errors:\n\n{message}\n\n"
+                "Some relays may not have been set to OFF state.\n"
+                "Check system state and try again if needed."
+            )
 
     # --- Cleanup ---
     def closeEvent(self, event) -> None:  # type: ignore[override]

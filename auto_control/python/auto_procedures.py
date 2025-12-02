@@ -1386,6 +1386,69 @@ def turbo_standby_spin_control(arduino: ArduinoController,
         
     return True
 
+def quick_reset_to_standby(arduino: ArduinoController,
+                           safety: SafetyController,
+                           relay_map: Dict[str, int]) -> bool:
+    """
+    Quick reset to standby state - forces all relays OFF immediately.
+    
+    This is an emergency/reset procedure that bypasses all safety checks and delays.
+    It directly sets every relay to OFF state to quickly put the system in standby.
+    
+    WARNING: This bypasses normal shutdown sequences. Use only for emergency resets
+    or when the system is already in a safe state but relay states are incorrect.
+    
+    Args:
+        arduino: ArduinoController instance
+        safety: SafetyController instance
+        relay_map: Dictionary mapping button names to relay numbers
+        
+    Returns:
+        True if all relays were successfully set to OFF, False otherwise
+    """
+    print("⚡ QUICK RESET TO STANDBY - Forcing all relays OFF immediately")
+    print("⚠️  WARNING: Bypassing normal safety checks and shutdown sequences")
+    
+    if arduino is None or not arduino.is_connected:
+        print("❌ Error: Arduino not connected")
+        return False
+    
+    # Cancel any running procedures
+    cancel_running_procedures()
+    
+    # Track success
+    all_success = True
+    failed_relays = []
+    
+    # Force all relays OFF, suppress logging to reduce console spam
+    print("🔌 Setting all relays to OFF state...")
+    for button_name, relay_num in relay_map.items():
+        try:
+            # Direct Arduino call bypassing safety checks
+            success = arduino.set_relay(relay_num, False, suppress_logging=True)
+            if success:
+                # Update safety controller bookkeeping
+                if safety is not None:
+                    safety.relay_states[button_name] = False
+            else:
+                all_success = False
+                failed_relays.append(button_name)
+        except Exception as e:
+            print(f"❌ Exception setting {button_name} OFF: {e}")
+            all_success = False
+            failed_relays.append(button_name)
+    
+    if all_success:
+        print("✅ Quick reset completed - all relays set to OFF (standby state)")
+        # Update system status to standby
+        if safety is not None:
+            safety.system_status = 'standby'
+        return True
+    else:
+        print(f"⚠️  Quick reset completed with errors. Failed relays: {', '.join(failed_relays)}")
+        return False
+
+
 def abort_and_go_default(arduino: ArduinoController,
                          safety: SafetyController,
                          relay_map: Dict[str, int]) -> tuple[bool, str]:

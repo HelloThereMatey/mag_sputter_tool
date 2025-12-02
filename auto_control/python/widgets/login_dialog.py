@@ -101,6 +101,7 @@ class LoginDialog(QDialog):
         title = QLabel("Sputter Control System")
         title_font = QFont()
         title_font.setPointSize(16)
+
         title_font.setBold(True)
         title.setFont(title_font)
         title.setAlignment(Qt.AlignCenter)
@@ -112,7 +113,8 @@ class LoginDialog(QDialog):
         layout.addWidget(subtitle)
         
         # Add troubleshooting note
-        note_label = QLabel("NOTE: If card does not read, click 'Exit Application',\nclose terminal, wait 5s and then restart GUI.")
+        note_label = QLabel("NOTE: Card reader can take up to 15 seconds to initialize. Wait at least 15s,\nyou should see connected message and then RFID ready...\n\
+                            Card reader is ready when RFID ready message is displayed.\n If it does not work at all, click 'Exit Application',\nclose terminal, wait 15s and then restart GUI.")
         note_label.setAlignment(Qt.AlignCenter)
         note_label.setStyleSheet("QLabel { font-size: 9pt; color: #e67e22; font-style: italic; padding: 5px; }")
         layout.addWidget(note_label)
@@ -744,8 +746,42 @@ class LoginDialog(QDialog):
     
     def closeEvent(self, event):
         """Handle dialog close to stop RFID thread."""
-        # Simple cleanup - dialog only shown once on boot, so no complex logic needed
-        if self.rfid_thread:
-            self.rfid_thread.stop()
-            self.rfid_thread.wait(3000)
+        self._cleanup_rfid()
         super().closeEvent(event)
+
+    def accept(self):
+        """Override accept to ensure RFID thread is stopped."""
+        self._cleanup_rfid()
+        super().accept()
+
+    def reject(self):
+        """Override reject to ensure RFID thread is stopped."""
+        self._cleanup_rfid()
+        super().reject()
+
+    def _cleanup_rfid(self):
+        """Stop and clean up RFID thread."""
+        if self.rfid_thread:
+            print("DEBUG: Stopping RFID thread...")
+            # Disconnect signals to prevent further GUI updates during shutdown
+            try:
+                self.rfid_thread.card_detected.disconnect()
+                self.rfid_thread.device_ready.disconnect()
+                self.rfid_thread.device_lost.disconnect()
+                self.rfid_thread.error_occurred.disconnect()
+                self.rfid_thread.status_changed.disconnect()
+            except Exception:
+                pass
+            
+            # Force stop
+            self.rfid_thread.stop()
+            self.rfid_thread.wait(2000)
+            
+            # If still running, terminate (last resort)
+            if self.rfid_thread.isRunning():
+                print("WARNING: RFID thread did not stop gracefully, terminating...")
+                self.rfid_thread.terminate()
+                self.rfid_thread.wait(1000)
+                
+            self.rfid_thread = None
+            print("DEBUG: RFID thread stopped and cleared.")

@@ -164,29 +164,65 @@ If the GUI displays with red indications for all three interlocks and the valve 
 
 #### Target Installation and Sample Loading
 
+See [Video tutorial on target installation...](pics/vids/target_installation.mp4) for a video tutorial on target installation. See below for written instructions.
+
 1. **Install Sputter Targets** (if not already in place)
-   - Ensure targets are clean and properly aligned.
-   - Secure target with **4 Phillips head screws** as shown in training.
-   - Secure outer electrode of gun with **3 circular head hex key screws**.
+   - Sputter targets must be 50 - 51 mm diameter. Typically targets are sold as either 50 mm (metric sizing) or 2 inch (50.8 mm, imperial sizing). Both fit fine.
+   - Rings to hold targets and screws for both target ring and outer sheath electrode are kept in the box shown below (a). Keep tools clean and return to box after use.
+   - Note that the target holder rings vary in depth of inset to accommodate targets of different thicknesses. See figure below (b).
+   - Targets can be between 1 and 4 mm thick. Choose correct ring for your target thickness.
+   - Rings also differ in internal diameter and some may not fit a 2 inch target. Choose correct ring for your target thickness and diameter.
+
+   <figure style="display:flex;gap:12px;align-items:flex-start">
+      <div style="flex:2;margin:0">
+         <img src="pics/SPUTpARTS.jpg" alt="Image 1" style="width:94%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Box with clean tools & sputter system parts. The screws and rings you will need to use. Keep the tools clean and keep them in here.</figcaption>
+      </div>
+      <div style="flex:1;margin:0">
+         <img src="pics/ring.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Ring to hold target. They have differing depths inset for different thicknesses of targets. This one is for a 2 mm tick target.</figcaption>
+      </div>
+   </figure>
+
+   - Secure target with **4 Phillips head screws** labelled in box as "TARGET RING SCREWS".
+   - Must use 4 screws and tighten firmly yet not too much to ensure good thermal contact.
+   - Secure outer sheath electrode of gun with **3 circular head hex key screws**. Ensure that you use the 3 screws & tighten slightly with alum key.
    - Target installation is demonstrated during training.
    - Remember that heat removal by water cooling is essential and targets must be flat (on back surface) and have good contact with the copper gun plate.
 
-2. **Load Sample and Sample Stage**
-   - Place sample on sample stage holder (take holder out and do sample prep on clean foil surfaces).
-   - Position stage on central pllar or on the load-lock rod.
-   - Verify samples are secure. Vacuum compatible double-sided copper tape or SEM mount adhesive should be used. Don't use non-vacuum compatible tape.
+   <figure style="display:flex;gap:12px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/ringTarget.jpg" alt="Image 1" style="width:94%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Backside of target inside holder ring. This target is 3mm & ring is for a 2mm target. Could be used but best to use ring with deeper inset. Ideally, target protrudes 0.1 - 0.4 mm. Note that it must protrude some so target is firmly held.   </figcaption>
+      </div>
+      <div style="flex:1.1;margin:0">
+         <img src="pics/elec_gap.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Fully assembled gun close-up showing gap between powered & grounded electrodes. If the electrodes touch gun is shorted. Must have a gap here. </figcaption>
+      </div>
+   </figure>
+
+   - Once gun assembled with target: **test connectivity between target and outer sheath using multimeter**. You should see high resistance > 200 kOhm. If you see low resistance, target is shorted to grounded electrode and will not work. Re-check assembly.
+   - If a ring with insufficient inset depth is used, shorting is likely.
+
+   ##### **Gun 1 and 2 differences**:
+      - Gun 1 is on left and Gun 2 is on right as you face the chamber front.
+      - Gun 2 has a polished backing plate with inset. Gun #2 **can accomodate targets up to 4mm thick**.
+      - *Gun 1 has a flat backing plate and can only accomodate targets up to 3mm thick.*
+      - Use gun #2 only for your thick target.
+
+   - Note that you could now load your sample stage onto the central spindle now rather than using load-lock as described below.
 
 #### Door Closure and Clamp Procedure
 
 ⚠️ **CRITICAL:** Proper door sealing is essential for vacuum integrity
 
-3. **Close and Seal Chamber Door**
+2. **Close and Seal Chamber Door**
    - Close door carefully, ensuring O-ring is clean and properly seated
    - Tighten **both door clamps**:
    - The clamps are simple nuts on bolts. **a T-key with hex socket tool** for the task is hanging nearby from a ribbon.
    - **Both clamps should be tightened to close the gap between sealing surface and door o-ring** before starting pump-down. They don't need to be tightened excessively.
 
-4. **Initiate Pump-Down**
+3. **Initiate Pump-Down**
 
    - Click/press the **PUMP** button
    - Monitor pressure readings on display and/or the Vacuum gauge controller.
@@ -210,17 +246,32 @@ If the chamber is already under vacuum, use the **Load-Lock** system to introduc
    - System will automatically:
      - Vent load-lock chamber
      - Wait for load-lock to reach atmospheric pressure.
-     - Stop venting.
+     - Venting will stop automatically.
 
-2. **Load Sample onto Load-Lock Rod**
+   <figure style="display:flex;gap:12px;align-items:flex-start">
+      <div style="flex:1;margin:0">
+         <img src="pics/stage.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(a) Sample stage of sputter system. Use clips or use vacuum compatible double-sided tape to mount sample/s. </figcaption>
+      </div>
+      <div style="flex:1;margin:0">
+         <img src="pics/rod.jpg" alt="Image 2" style="width:100%;height:auto;display:block;border:0">
+         <figcaption style="text-align:center;font-size:13px;margin-top:6px">(b) Sample stage on load-lock arm. Close door, pump & load stage using "Load/Unload". </figcaption>
+      </div>
+   </figure>
+
+2. **Load Sample and Sample Stage**
+   - Place sample on sample stage holder (take holder out and do sample prep on clean foil surfaces).
+   - Verify samples are secure. Vacuum compatible double-sided copper tape or SEM mount adhesive should be used. Don't use non-vacuum compatible tape.
+
+3. **Load Sample onto Load-Lock Rod**
    - Open small load-lock door
-   - Attach sample stage to load-lock rod bayonet fitting
+   - Attach sample stage to load-lock rod bayonet fitting as shown in (b) above.
    - Close load-lock door
 
-3. **Load/Unload Procedure**
+4. **Load/Unload Procedure**
    - Click **LOAD/UNLOAD** button
    - System will automatically:
-     - Evacuate load-lock chamber if it is vented.
+     - Evacuate load-lock chamber.
      - Open gate valve between load-lock and main chamber once the pressure in both chambers is similar.
      - A dialog box will appear and remain in place during your operation of the load-lock rod.
      - Move the load-lock rod into the main chamber and get the sample stage onto the central shaft.
@@ -229,6 +280,8 @@ If the chamber is already under vacuum, use the **Load-Lock** system to introduc
      - Click **Load-unload finished or cancel** button in the dialog box when complete.
      - This will close the gate valve automatically and complete the load-lock sequence.
      - Click "PUMP" button again to return system to high vacuum state in order to proceed to sputter mode.
+
+**Note:** Do not close program whilst the load-lock rod is extended into chamber. *System will close gate valve automatically when the GUI is rebooted and this will close on the load-lock rod causing damage*.
 
 #### Load-Lock Z-Position Adjustment & Chamber Illumination
 
@@ -653,7 +706,7 @@ To avoid this eventuality, **Practice with the chamber vented and door open** un
 
 **Solutions:**
 1. **Close and restart application.** This can be done at any time if a software error is encountered.
-2. Reboot the raspberry Pi if problem persists.
+2. Reboot the raspberry Pi if problem persists
 3. Contact staff for assistance
 
 #### Memory/Performance Issues (Plotter Window)
