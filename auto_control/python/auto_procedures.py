@@ -622,31 +622,8 @@ def pump_procedure(arduino: ArduinoController,
         return False
 
     if not set_relay_safe('btnValveRough', False, arduino, safety, relay_map):
-        print("❌ CRITICAL: Failed to close rough valve")
-        # Try emergency direct relay command
-        try:
-            print("🚨 Attempting emergency rough valve closure...")
-            rough_relay = relay_map.get('btnValveRough')
-            if rough_relay:
-                arduino.set_relay(rough_relay, False)
-                safety.relay_states['btnValveRough'] = False
-                print("✅ Emergency closure succeeded")
-            else:
-                print("❌ Cannot find rough valve relay - ABORTING")
-                return False
-        except Exception as e:
-            print(f"❌ Emergency closure failed: {e}")
-            print("⚠️ CRITICAL: Rough valve may still be open - manual intervention required")
-            return False
-
-    # Verify valve is actually closed
-    time.sleep(0.5)
-    if safety.relay_states.get('btnValveRough', True):  # True means still open (failed)
-        print("❌ CRITICAL: Rough valve state verification failed - valve may still be open")
-        print("⚠️ Cannot proceed to Step 6 with rough valve potentially open. Aborting.")
+        print("❌ Failed to close rough valve")
         return False
-    
-    print("✅ Rough valve closed and verified")
     
     # Step 6: Open backing valve
     print("🔀 Step 6: Opening backing valve")
