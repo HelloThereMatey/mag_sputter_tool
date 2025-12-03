@@ -605,6 +605,11 @@ def pump_procedure(arduino: ArduinoController,
         poll_interval=1.0
     ):
         print("⏰ Timeout waiting for chamber pressure to drop")
+        print("🔒 Closing rough valve before aborting...")
+        try:
+            set_relay_safe('btnValveRough', False, arduino, safety, relay_map)
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to close rough valve during abort: {e}")
         return False
     
     # Step 5: Close rough valve
@@ -612,14 +617,36 @@ def pump_procedure(arduino: ArduinoController,
     # Check safety (though closing should always be safe)
     safety_result = safety.check_button_safety('btnValveRough', is_auto_procedure=True)
     if not safety_result.allowed:
-        print(f"Safety check failed for closing btnValveRough: {safety_result.message}")
+        print(f"❌ Safety check failed for closing btnValveRough: {safety_result.message}")
+        print("⚠️ CRITICAL: Cannot proceed with rough valve open. Aborting pump procedure.")
         return False
 
     if not set_relay_safe('btnValveRough', False, arduino, safety, relay_map):
-        print("Failed to close rough valve")
-        return False
+        print("❌ CRITICAL: Failed to close rough valve")
+        # Try emergency direct relay command
+        try:
+            print("🚨 Attempting emergency rough valve closure...")
+            rough_relay = relay_map.get('btnValveRough')
+            if rough_relay:
+                arduino.set_relay(rough_relay, False)
+                safety.relay_states['btnValveRough'] = False
+                print("✅ Emergency closure succeeded")
+            else:
+                print("❌ Cannot find rough valve relay - ABORTING")
+                return False
+        except Exception as e:
+            print(f"❌ Emergency closure failed: {e}")
+            print("⚠️ CRITICAL: Rough valve may still be open - manual intervention required")
+            return False
 
-    print("Rough valve closed")
+    # Verify valve is actually closed
+    time.sleep(0.5)
+    if safety.relay_states.get('btnValveRough', True):  # True means still open (failed)
+        print("❌ CRITICAL: Rough valve state verification failed - valve may still be open")
+        print("⚠️ Cannot proceed to Step 6 with rough valve potentially open. Aborting.")
+        return False
+    
+    print("✅ Rough valve closed and verified")
     
     # Step 6: Open backing valve
     print("🔀 Step 6: Opening backing valve")

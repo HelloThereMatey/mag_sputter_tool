@@ -23,6 +23,7 @@ try:
     from .widgets.about_dialog import AboutDialog  # type: ignore
     #from .gas_control.controller import GasFlowController  # type: ignore
     from .gas_control.subprocess_controller import GasFlowController
+    from .gas_control.gas_methods import execute_zero_gas_flows  # type: ignore
 except ImportError:
     from config import load_config  # type: ignore
     from widgets.indicators import set_interlock_indicator  # type: ignore
@@ -37,6 +38,7 @@ except ImportError:
     from widgets.about_dialog import AboutDialog  # type: ignore
     #from gas_control.controller import GasFlowController  # type: ignore
     from gas_control.subprocess_controller import GasFlowController #try subprocess method instead
+    from gas_control.gas_methods import execute_zero_gas_flows  # type: ignore
 
 
 # Background procedure runner
@@ -71,7 +73,29 @@ class ProcedureWorker(QRunnable):
                 message = ''
                 self.signals.finished.emit(success, message)
         except Exception as e:
-            self.signals.finished.emit(False, str(e))
+            # Log the full traceback for debugging
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"❌ Exception in procedure execution:\n{error_details}")
+            self.signals.finished.emit(False, f"Exception: {str(e)}")
+
+
+# Helper function for conditional imports
+def _import_from_auto_procedures(function_name: str):
+    """Helper to import functions from auto_procedures with fallback.
+    
+    Args:
+        function_name: Name of the function to import
+        
+    Returns:
+        The imported function
+    """
+    try:
+        from . import auto_procedures
+        return getattr(auto_procedures, function_name)
+    except (ImportError, AttributeError):
+        import auto_procedures
+        return getattr(auto_procedures, function_name)
 
 
 class AutoControlWindow(QMainWindow):
@@ -156,22 +180,14 @@ class AutoControlWindow(QMainWindow):
         self.safety_controller = SafetyController()
         print("⚠️ DEBUG: SafetyController created")
 
-        # Gas Flow Controller (MFC)
-        print("🌀 DEBUG: Creating GasFlowController...")
+        # Gas Flow Controller (MFC) - Initialize in background to prevent GUI freezing
+        print("🌀 DEBUG: Scheduling GasFlowController initialization in background...")
         self.gas_controller = None
+        self._gas_controller_initializing = False
+        
         if hasattr(self.cfg, 'gas_control') and self.cfg.gas_control:
-            try:
-                # Exclude Arduino port if connected to prevent interference
-                excluded = []
-                if self.arduino and self.arduino.is_connected and self.arduino.serial_port:
-                    excluded.append(self.arduino.serial_port.port)
-                    print(f"🌀 DEBUG: Excluding Arduino port {self.arduino.serial_port.port} from MFC scan")
-                
-                self.gas_controller = GasFlowController(self.cfg.gas_control, self.safety_controller, excluded_ports=excluded)
-                print("🌀 DEBUG: GasFlowController created successfully")
-            except Exception as e:
-                print(f"❌ DEBUG: Failed to create GasFlowController: {e}")
-                self.gas_controller = None
+            # Schedule background initialization after GUI is ready
+            QTimer.singleShot(500, self._init_gas_controller_background)
         else:
             print("⚠️ DEBUG: No gas_control configuration found in sput.yml")
 
@@ -211,10 +227,10 @@ class AutoControlWindow(QMainWindow):
         self.mfc_readings_cache = {}
         self.mfc_update_in_progress = False
 
-        # Light bulb auto-off timer - turns off chamber light after 30 seconds
+        # Light bulb auto-off timer - turns off chamber light after 300 seconds
         self.light_timer = QTimer(self)
         self.light_timer.setSingleShot(True)  # One-shot timer
-        self.light_timer.setInterval(30000)  # 30 seconds
+        self.light_timer.setInterval(300000)  # 300 seconds
         self.light_timer.timeout.connect(self._auto_turn_off_light)
 
         # Plotter window handle and thread pool for background tasks
@@ -312,6 +328,11 @@ class AutoControlWindow(QMainWindow):
             # Add separator
             tools_menu.addSeparator()
             
+            # Add zero gas flows action
+            zero_gas_action = tools_menu.addAction('Zero Gas Flows')
+            zero_gas_action.triggered.connect(self.zero_gas_flows)
+            zero_gas_action.setStatusTip("Stop all gas flows, close valves, and shutdown gas controller")
+            
             # Add ion gauge auto-toggle menu item (checkable)
             self.ion_gauge_auto_toggle_action = tools_menu.addAction('Ion Gauge Auto-Toggle')
             self.ion_gauge_auto_toggle_action.setCheckable(True)
@@ -347,6 +368,14 @@ class AutoControlWindow(QMainWindow):
             self.previous_system_status = self.system_status
             self.system_status = new_status
             
+            # Manage gas controller based on state transitions
+            if new_status == 'sputter':
+                # Start gas controller when entering sputter mode
+                self._ensure_gas_controller_running()
+            elif self.previous_system_status == 'sputter':
+                # Stop gas controller when leaving sputter mode
+                QTimer.singleShot(1000, self._stop_gas_controller_if_not_needed)
+            
             # Update safety controller with new status
             try:
                 if hasattr(self.safety_controller, 'system_status'):
@@ -369,6 +398,73 @@ class AutoControlWindow(QMainWindow):
             except Exception as e:
                 print(f"DEBUG: Error updating MFC timer interval after status change: {e}")
             print(f"System status changed to: {new_status}")
+
+    def _init_gas_controller_background(self) -> None:
+        """Initialize gas controller in background thread to prevent GUI freezing."""
+        if self._gas_controller_initializing or self.gas_controller is not None:
+            return
+            
+        self._gas_controller_initializing = True
+        print("🌀 DEBUG: Starting background gas controller initialization...")
+        
+        class GasControllerInitWorker(QRunnable):
+            def __init__(self, parent_window):
+                super().__init__()
+                self.parent = parent_window
+                self.signals = ProcedureSignals()
+                
+            def run(self):
+                try:
+                    # Exclude Arduino port if connected
+                    excluded = []
+                    if self.parent.arduino and self.parent.arduino.is_connected and self.parent.arduino.serial_port:
+                        excluded.append(self.parent.arduino.serial_port.port)
+                        print(f"🌀 DEBUG: Excluding Arduino port {self.parent.arduino.serial_port.port} from MFC scan")
+                    
+                    # Create gas controller
+                    gas_controller = GasFlowController(
+                        self.parent.cfg.gas_control, 
+                        self.parent.safety_controller, 
+                        excluded_ports=excluded
+                    )
+                    
+                    self.signals.finished.emit(True, "Gas controller initialized")
+                    # Store controller reference (will be accessed in main thread)
+                    self.parent.gas_controller = gas_controller
+                    print("✅ DEBUG: GasFlowController created successfully in background")
+                    
+                except Exception as e:
+                    print(f"❌ DEBUG: Failed to create GasFlowController in background: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    self.signals.finished.emit(False, str(e))
+        
+        worker = GasControllerInitWorker(self)
+        worker.signals.finished.connect(self._on_gas_controller_init_finished)
+        QThreadPool.globalInstance().start(worker)
+    
+    def _on_gas_controller_init_finished(self, success: bool, message: str) -> None:
+        """Handle completion of background gas controller initialization."""
+        self._gas_controller_initializing = False
+        
+        if success:
+            print(f"✅ Gas controller initialization complete: {message}")
+            # Update UI if needed
+            try:
+                self._update_mfc_display()
+            except Exception as e:
+                print(f"⚠️ Could not update MFC display: {e}")
+        else:
+            print(f"❌ Gas controller initialization failed: {message}")
+            QMessageBox.warning(
+                self,
+                "Gas Controller Warning",
+                f"Failed to initialize gas flow controller:\n{message}\n\n"
+                "MFC control will not be available. Check that:\n"
+                "- Alicat MFCs are powered and connected\n"
+                "- Serial ports are configured correctly in gas_control/config.yml\n"
+                "- USB cables are properly connected"
+            )
 
     @staticmethod
     def voltage_to_pressure_torr(voltage: float) -> float:
@@ -421,15 +517,30 @@ class AutoControlWindow(QMainWindow):
             #print(f"DEBUG: Looking for procedure: '{procedure_name}'")
             #print(f"DEBUG: Is '{procedure_name}' in allowed list? {procedure_name in allowed_list}")
             
-            if procedure_name in allowed_list:
-                #print(f"DEBUG: Procedure '{procedure_name}' is allowed")
-                return True
-            else:
-                print(f"DEBUG: Procedure '{procedure_name}' is NOT allowed")
+            if procedure_name not in allowed_list:
+                print(f"DEBUG: Procedure '{procedure_name}' is NOT allowed in state '{self.system_status}'")
                 return False
+            
+            # Procedure is allowed for this state - now check safety conditions
+            # Update safety controller with current state before checking
+            self.update_safety_state()
+            
+            safety_result = self.safety_controller.check_procedure_safety(procedure_name)
+            if not safety_result.allowed:
+                print(f"⚠️ Procedure safety check failed: {safety_result.message}")
+                # Store the message so we can show it to the user
+                if not hasattr(self, '_last_procedure_safety_error'):
+                    self._last_procedure_safety_error = {}
+                self._last_procedure_safety_error[procedure_name] = safety_result.message
+                return False
+            
+            #print(f"DEBUG: Procedure '{procedure_name}' passed all checks")
+            return True
                 
         except Exception as err:
-            print(f"DEBUG: Error checking allowed_procedures: {err}")
+            print(f"DEBUG: Error checking procedure safety: {err}")
+            import traceback
+            traceback.print_exc()
             return False
     
 
@@ -454,10 +565,7 @@ class AutoControlWindow(QMainWindow):
             # Use the auto_procedures.abort_and_go_default helper so this runs
             # in the background and the UI remains responsive.
             try:
-                try:
-                    from .auto_procedures import abort_and_go_default
-                except Exception:
-                    from auto_procedures import abort_and_go_default
+                abort_and_go_default = _import_from_auto_procedures('abort_and_go_default')
 
                 def on_finished(success: bool, message: str) -> None:
                     # Runs in UI thread via signal
@@ -765,10 +873,7 @@ class AutoControlWindow(QMainWindow):
                         print(f"DEBUG: Ion gauge is ON but system state is '{self.system_status}' (not high_vacuum) - turning off ion gauge for safety")
                         
                         # Import the toggle function from auto_procedures
-                        try:
-                            from .auto_procedures import toggle_ion_gauge
-                        except ImportError:
-                            from auto_procedures import toggle_ion_gauge
+                        toggle_ion_gauge = self._import_from_auto_procedures('toggle_ion_gauge')
                         
                         # Turn off ion gauge safely
                         if toggle_ion_gauge(False, self.arduino, self.safety_controller, self.relay_map):
@@ -1121,18 +1226,9 @@ class AutoControlWindow(QMainWindow):
         self.status_timer.start()
         self.input_timer.start()
         
-        # Start gas controller and MFC timer if available
-        if self.gas_controller:
-            try:
-                self.gas_controller.start()
-                # Set initial MFC timer interval based on current system state
-                self.update_mfc_timer_interval()
-                self.mfc_timer.start()
-                # Initialize MFC cache with first reading
-                QTimer.singleShot(1000, self.schedule_mfc_update)  # Start after 1 second
-                print("DEBUG: Gas controller started and MFC timer activated")
-            except Exception as e:
-                print(f"DEBUG: Failed to start gas controller: {e}")
+        # Gas controller will start conditionally only during sputter mode
+        # This saves CPU resources when not actively controlling gas flow
+        print("DEBUG: Gas controller will start on-demand during sputter operations")
 
     def on_disconnected(self) -> None:
         self._set_controls_enabled(False)
@@ -1147,6 +1243,57 @@ class AutoControlWindow(QMainWindow):
                 print("DEBUG: Gas controller stopped")
             except Exception as e:
                 print(f"DEBUG: ❌ Error stopping gas controller: {e}")
+    
+    def _ensure_gas_controller_running(self) -> bool:
+        """Ensure gas controller is running, start if needed. Returns True if running."""
+        if not self.gas_controller:
+            return False
+        
+        try:
+            # Check if already running (subprocess controller has _process attribute)
+            if hasattr(self.gas_controller, '_process') and self.gas_controller._process is not None:
+                return True
+            
+            # Start gas controller
+            print("🌀 Starting gas controller for sputter operation...")
+            self.gas_controller.start()
+            
+            # Start MFC timer for monitoring
+            if not self.mfc_timer.isActive():
+                self.update_mfc_timer_interval()
+                self.mfc_timer.start()
+                print("DEBUG: MFC timer started")
+            
+            # Initialize MFC cache
+            QTimer.singleShot(500, self.schedule_mfc_update)
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to start gas controller: {e}")
+            return False
+    
+    def _stop_gas_controller_if_not_needed(self) -> None:
+        """Stop gas controller if not in sputter mode to save resources."""
+        if not self.gas_controller:
+            return
+        
+        # Only keep running during sputter operations
+        if self.system_status == 'sputter':
+            return
+        
+        try:
+            # Check if running
+            if hasattr(self.gas_controller, '_process') and self.gas_controller._process is not None:
+                print("🌀 Stopping gas controller (not in sputter mode)...")
+                self.gas_controller.stop()
+                
+                # Stop MFC timer to reduce overhead
+                if self.mfc_timer.isActive():
+                    self.mfc_timer.stop()
+                    print("DEBUG: MFC timer stopped")
+                    
+        except Exception as e:
+            print(f"⚠️ Error stopping gas controller: {e}")
 
     # --- Mode Management ---
     def show_mode_dialog(self) -> None:
@@ -1192,10 +1339,7 @@ class AutoControlWindow(QMainWindow):
             
             try:
                 # Import the standby procedure
-                try:
-                    from .auto_procedures import go_to_standby
-                except ImportError:
-                    from auto_procedures import go_to_standby
+                go_to_standby = self._import_from_auto_procedures('go_to_standby')
                 
                 def on_standby_finished(success: bool, message: str) -> None:
                     """Handle completion of standby procedure."""
@@ -1255,7 +1399,7 @@ class AutoControlWindow(QMainWindow):
                 if hasattr(btn, 'objectName') and btn.objectName() == 'btnLightBulb':
                     if checked:
                         # Light turned ON - start 30 second auto-off timer
-                        print("💡 Chamber light turned ON - will auto-off in 30 seconds")
+                        print("💡 Chamber light turned ON - will auto-off in 300 seconds")
                         self.light_timer.start()
                     else:
                         # Light turned OFF manually - stop the timer
@@ -1325,10 +1469,7 @@ class AutoControlWindow(QMainWindow):
         
         try:
             # Import the proper shutdown function
-            try:
-                from .auto_procedures import go_to_default_state
-            except ImportError:
-                from auto_procedures import go_to_default_state
+            go_to_default_state = self._import_from_auto_procedures('go_to_default_state')
             
             def on_finished(success: bool, message: str) -> None:
                 """Handle completion of close all procedure."""
@@ -2000,6 +2141,78 @@ class AutoControlWindow(QMainWindow):
         else:
             # Non-blocking fallback using QTimer
             QTimer.singleShot(0, lambda: stop_flows_worker())
+    
+    def zero_gas_flows(self) -> None:
+        """Zero all gas flows, close gas valves, and shutdown gas controller.
+        
+        This is a utility function accessible from Tools menu for safely
+        shutting down gas system without needing to be in sputter mode.
+        """
+        print("🌀 Starting Zero Gas Flows procedure...")
+        
+        # Show confirmation dialog
+        reply = QMessageBox.question(
+            self, "Zero Gas Flows",
+            "This will:\n"
+            "1. Start gas controller (if not running)\n"
+            "2. Set all MFC flows to 0 SCCM\n"
+            "3. Close all gas valves\n"
+            "4. Stop gas controller\n\n"
+            "Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            print("❌ Zero Gas Flows cancelled by user")
+            return
+        
+        # Execute in background thread using the gas_methods module function
+        class ZeroFlowsWorker(QRunnable):
+            def __init__(self, parent_window):
+                super().__init__()
+                self.parent = parent_window
+                self.signals = ProcedureSignals()
+            
+            def run(self):
+                # Call the module function with all required parameters
+                success, message = execute_zero_gas_flows(
+                    gas_controller=self.parent.gas_controller,
+                    arduino_controller=self.parent.arduino,
+                    safety_controller=self.parent.safety_controller,
+                    relay_map=self.parent.relay_map,
+                    mfc_timer=self.parent.mfc_timer if hasattr(self.parent, 'mfc_timer') else None
+                )
+                self.signals.finished.emit(success, message)
+        
+        def on_complete(success: bool, message: str):
+            """Handle completion in main thread."""
+            if success:
+                QMessageBox.information(self, "Success", message)
+            else:
+                QMessageBox.warning(self, "Failed", message)
+            print(f"🌀 Zero Gas Flows procedure complete: {message}")
+        
+        # Start worker
+        worker = ZeroFlowsWorker(self)
+        worker.signals.finished.connect(on_complete)
+        
+        if hasattr(self, 'threadpool') and self.threadpool is not None:
+            self.threadpool.start(worker)
+        else:
+            # Fallback: show warning that this will block
+            QMessageBox.warning(
+                self, "Warning",
+                "Thread pool not available. This operation may block the GUI briefly."
+            )
+            success, message = execute_zero_gas_flows(
+                gas_controller=self.gas_controller,
+                arduino_controller=self.arduino,
+                safety_controller=self.safety_controller,
+                relay_map=self.relay_map,
+                mfc_timer=self.mfc_timer if hasattr(self, 'mfc_timer') else None
+            )
+            on_complete(success, message)
 
     def test_mfc_integration(self) -> None:
         """Test function to check MFC integration status."""
@@ -2100,64 +2313,163 @@ class AutoControlWindow(QMainWindow):
             print(f"DEBUG: Exception in _pulse_relay: {e}")
 
     # --- Automatic Procedures ---
-    def run_pump_procedure(self) -> None:
-        """Run the automatic pump procedure."""
-        print("Running PUMP procedure...")
+    
+    def _start_procedure_worker(self, procedure_func, on_finished_callback):
+        """Start a procedure in background thread with standardized error handling.
+        
+        Args:
+            procedure_func: The procedure function to execute
+            on_finished_callback: Callback function(success: bool, message: str)
+        """
+        worker = ProcedureWorker(
+            procedure_func,
+            arduino=self.arduino,
+            safety=self.safety_controller,
+            relay_map=self.relay_map
+        )
+        worker.signals.finished.connect(on_finished_callback)
+        
+        if hasattr(self, 'threadpool') and self.threadpool is not None:
+            self.threadpool.start(worker)
+        else:
+            # Fallback: run synchronously
+            result = procedure_func(
+                arduino=self.arduino,
+                safety=self.safety_controller,
+                relay_map=self.relay_map
+            )
+            on_finished_callback(builtins.bool(result), '' if result is True else str(result))
+    
+    def _run_procedure(self, procedure_name: str, button_name: str, 
+                      new_status: str, success_status: str,
+                      confirmation_dialog_func=None,
+                      custom_success_handler=None):
+        """Generic procedure runner - eliminates repetitive code.
+        
+        Args:
+            procedure_name: Name of procedure function in auto_procedures module
+            button_name: Button identifier for tracking current procedure
+            new_status: System status to set when procedure starts
+            success_status: System status to set when procedure completes successfully
+            confirmation_dialog_func: Optional function returning True/False for confirmation
+            custom_success_handler: Optional function(message: str) for custom success handling
+        """
+        print(f"Running {procedure_name.upper().replace('_', ' ')}...")
         
         # Check if procedure can be started
-        if not self.can_start_procedure('pump_procedure'):
-            QMessageBox.warning(self, "Cannot Start Procedure", 
-                              f"Cannot start pump procedure in current system state: {self.system_status}")
+        if not self.can_start_procedure(procedure_name):
+            # Check if we have a specific safety error message
+            error_msg = f"Cannot start {procedure_name.replace('_', ' ')} in current system state: {self.system_status}"
+            if hasattr(self, '_last_procedure_safety_error') and procedure_name in self._last_procedure_safety_error:
+                error_msg = self._last_procedure_safety_error[procedure_name]
+            
+            QMessageBox.warning(
+                self, "Cannot Start Procedure",
+                error_msg
+            )
             return
         
+        # Optional confirmation dialog
+        if confirmation_dialog_func is not None:
+            if not confirmation_dialog_func():
+                print(f"{procedure_name} cancelled by user")
+                return
+        
         # Set current procedure and update system status
-        self.current_procedure = 'pushButton_2'
-        self.set_system_status('pumping')  # Set to pumping state
+        self.current_procedure = button_name
+        self.set_system_status(new_status)
         self._update_auto_procedure_button_states()
         
         try:
-            try:
-                from .auto_procedures import pump_procedure
-            except ImportError:
-                from auto_procedures import pump_procedure
-
+            # Import procedure function
+            procedure_func = _import_from_auto_procedures(procedure_name)
+            
+            # Define completion handler
             def on_finished(success: bool, message: str) -> None:
-                # This handler runs in the main thread via signal
                 if success:
-                    QMessageBox.information(self, "Success", "Pump procedure completed successfully!")
-                    # Set system status BEFORE clearing current procedure
-                    self.set_system_status('high_vacuum')
-                    # Update safety controller with completed state
-                    self.update_safety_state()
-                    # Small delay to ensure state is properly set
-                    QTimer.singleShot(100, lambda: self._clear_current_procedure())
-                else:
-                    if message:
-                        QMessageBox.warning(self, "Procedure Failed", f"Pump procedure failed: {message}")
+                    # Check for custom success handler (e.g., load/unload gate open)
+                    if custom_success_handler is not None:
+                        custom_success_handler(message)
                     else:
-                        QMessageBox.warning(self, "Procedure Failed", "Pump procedure failed. Check console for details.")
-                    self.set_system_status(self.previous_system_status)
-                    self._clear_current_procedure()
-
-            # Create worker to run procedure in background
-            worker = ProcedureWorker(pump_procedure, arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-            worker.signals.finished.connect(on_finished)
-
-            # Start worker via threadpool if available
-            if hasattr(self, 'threadpool') and self.threadpool is not None:
-                self.threadpool.start(worker)
-            else:
-                # Fallback: run synchronously
-                result = pump_procedure(arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-                on_finished(builtins.bool(result), '' if result is True else str(result))
+                        # Standard success handling
+                        QMessageBox.information(
+                            self, "Success",
+                            f"{procedure_name.replace('_', ' ').title()} completed successfully!"
+                        )
+                        self.set_system_status(success_status)
+                        self.update_safety_state()
+                        QTimer.singleShot(100, lambda: self._clear_current_procedure())
+                else:
+                    # Failure handling - return to default state for safety
+                    print(f"⚠️ Procedure '{procedure_name}' failed - returning system to default state")
+                    
+                    # Show error message to user
+                    if message:
+                        QMessageBox.warning(
+                            self, "Procedure Failed",
+                            f"{procedure_name.replace('_', ' ').title()} failed: {message}\n\n"
+                            "System will return to default state for safety."
+                        )
+                    else:
+                        QMessageBox.warning(
+                            self, "Procedure Failed",
+                            f"{procedure_name.replace('_', ' ').title()} failed. Check console for details.\n\n"
+                            "System will return to default state for safety."
+                        )
+                    
+                    # Attempt to return to default state
+                    self._return_to_default_after_failure()
+            
+            # Start the procedure worker
+            self._start_procedure_worker(procedure_func, on_finished)
+            
         except ImportError:
-            QMessageBox.critical(self, "Error", "Auto procedures module not found.")
-            self.set_system_status(self.previous_system_status)
-            self._clear_current_procedure()
+            QMessageBox.critical(self, "Error", "Auto procedures module not found.\n\nSystem will return to default state.")
+            self._return_to_default_after_failure()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Pump procedure failed: {str(e)}")
-            self.set_system_status(self.previous_system_status)
+            QMessageBox.critical(self, "Error", f"{procedure_name.replace('_', ' ').title()} failed: {str(e)}\n\nSystem will return to default state.")
+            self._return_to_default_after_failure()
+    
+    def _return_to_default_after_failure(self) -> None:
+        """Return system to default state after procedure failure.
+        
+        This runs in a background worker to avoid blocking the GUI.
+        """
+        try:
+            go_to_default_state = _import_from_auto_procedures('go_to_default_state')
+            
+            def on_default_complete(success: bool, message: str) -> None:
+                if success:
+                    print("✅ System successfully returned to default state after procedure failure")
+                    self.set_system_status('default')
+                    self.update_safety_state()
+                else:
+                    print(f"⚠️ Warning: Failed to return to default state: {message}")
+                    QMessageBox.warning(
+                        self, "Default State Failed",
+                        f"Could not return system to default state.\n\n{message}\n\n"
+                        "Please manually verify system state and use 'Go to Default' if needed."
+                    )
+                    self.set_system_status('error')
+                
+                self._clear_current_procedure()
+            
+            # Start background worker to go to default state
+            self._start_procedure_worker(go_to_default_state, on_default_complete)
+            
+        except Exception as e:
+            print(f"❌ Exception while attempting to return to default state: {e}")
+            self.set_system_status('error')
             self._clear_current_procedure()
+            QMessageBox.critical(
+                self, "Critical Error",
+                f"Failed to return system to default state after procedure failure.\n\n{str(e)}\n\n"
+                "Please manually verify system state and take appropriate action."
+            )
+    
+    def run_pump_procedure(self) -> None:
+        """Run the automatic pump procedure."""
+        self._run_procedure('pump_procedure', 'pushButton_2', 'pumping', 'high_vacuum')
 
     def _clear_current_procedure(self):
         """Helper method to clear current procedure and update UI."""
@@ -2176,270 +2488,140 @@ class AutoControlWindow(QMainWindow):
 
     def run_vent_procedure(self) -> None:
         """Run the automatic vent procedure."""
-        print("Running VENT procedure...")
+        def confirm_vent():
+            """Show confirmation dialog for venting."""
+            from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
+            from PyQt5.QtCore import Qt
+
+            dialog = QDialog(self)
+            dialog.setWindowTitle("CONFIRM VENTING")
+            dialog.setModal(True)
+            layout = QVBoxLayout()
+
+            msg = QLabel("CONFIRM THAT THE DOOR LATCHES HAVE BEEN REMOVED FIRST BEFORE VENTING!  ")
+            msg.setWordWrap(True)
+            msg.setAlignment(Qt.AlignCenter)
+            msg.setStyleSheet("QLabel { color: red; font-weight: bold; font-size: 18pt; }")
+            layout.addWidget(msg)
+
+            # Buttons
+            btn_layout = QHBoxLayout()
+            btn_layout.addStretch()
+            cancel_btn = QPushButton("Cancel")
+            ok_btn = QPushButton("I CONFIRM")
+            ok_btn.setDefault(True)
+            btn_layout.addWidget(cancel_btn)
+            btn_layout.addWidget(ok_btn)
+            layout.addLayout(btn_layout)
+
+            dialog.setLayout(layout)
+
+            confirmed = False
+            def on_ok():
+                nonlocal confirmed
+                confirmed = True
+                dialog.accept()
+
+            def on_cancel():
+                dialog.reject()
+
+            ok_btn.clicked.connect(on_ok)
+            cancel_btn.clicked.connect(on_cancel)
+
+            dialog.resize(700, 200)
+            return dialog.exec() == QDialog.Accepted and confirmed
         
-        # Check if procedure can be started
-        if not self.can_start_procedure('vent_procedure'):
-            QMessageBox.warning(self, "Cannot Start Procedure", 
-                              f"Cannot start vent procedure in current system status: {self.system_status}")
-            return
-        
-        # Set current procedure and update system status
-        self.current_procedure = 'pushButton_3'
-        self.set_system_status('venting')  # Set to venting state
-        self._update_auto_procedure_button_states()
-        
-        # Confirmation dialog: require explicit user consent before venting
-        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
-        from PyQt5.QtCore import Qt
-
-        dialog = QDialog(self)
-        dialog.setWindowTitle("CONFIRM VENTING")
-        dialog.setModal(True)
-        layout = QVBoxLayout()
-
-        msg = QLabel("CONFIRM THAT THE DOOR LATCHES HAVE BEEN REMOVED FIRST BEFORE VENTING!  ")
-        msg.setWordWrap(True)
-        msg.setAlignment(Qt.AlignCenter)
-        msg.setStyleSheet("QLabel { color: red; font-weight: bold; font-size: 18pt; }")
-        layout.addWidget(msg)
-
-        # Buttons
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
-        cancel_btn = QPushButton("Cancel")
-        ok_btn = QPushButton("I CONFIRM")
-        ok_btn.setDefault(True)
-        btn_layout.addWidget(cancel_btn)
-        btn_layout.addWidget(ok_btn)
-        layout.addLayout(btn_layout)
-
-        dialog.setLayout(layout)
-
-        confirmed = False
-        def on_ok():
-            nonlocal confirmed
-            confirmed = True
-            dialog.accept()
-
-        def on_cancel():
-            dialog.reject()
-
-        ok_btn.clicked.connect(on_ok)
-        cancel_btn.clicked.connect(on_cancel)
-
-        # Show dialog larger than typical by resizing
-        dialog.resize(700, 200)
-        if dialog.exec() != QDialog.Accepted or not confirmed:
-            print("Vent procedure cancelled by user")
-            self._clear_current_procedure()
-            return
-
-        try:
-            try:
-                from .auto_procedures import vent_procedure
-            except ImportError:
-                from auto_procedures import vent_procedure
-
-            def on_finished(success: bool, message: str) -> None:
-                if success:
-                    QMessageBox.information(self, "Success", "Vent procedure completed successfully!")
-                    self.set_system_status('vented')
-                    self.update_safety_state()
-                    QTimer.singleShot(100, lambda: self._clear_current_procedure())
-                else:
-                    if message:
-                        QMessageBox.warning(self, "Procedure Failed", f"Vent procedure failed: {message}")
-                    else:
-                        QMessageBox.warning(self, "Procedure Failed", "Vent procedure failed. Check console for details.")
-                    self.set_system_status(self.previous_system_status)
-                    self._clear_current_procedure()
-
-            worker = ProcedureWorker(vent_procedure, arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-            worker.signals.finished.connect(on_finished)
-            if hasattr(self, 'threadpool') and self.threadpool is not None:
-                self.threadpool.start(worker)
-            else:
-                result = vent_procedure(arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-                on_finished(builtins.bool(result), '' if result is True else str(result))
-        except ImportError:
-            QMessageBox.critical(self, "Error", "Auto procedures module not found.")
-            self.set_system_status(self.previous_system_status)
-            self._clear_current_procedure()
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Vent procedure failed: {str(e)}")
-            self.set_system_status(self.previous_system_status)
-            self._clear_current_procedure()
+        self._run_procedure('vent_procedure', 'pushButton_3', 'venting', 'vented',
+                           confirmation_dialog_func=confirm_vent)
 
     def run_sputter_procedure(self) -> None:
         """Run the automatic sputter procedure."""
-        print("Running SPUTTER procedure...")
+        def custom_sputter_success_handler(message: str):
+            """Custom success handler for sputter procedure."""
+            # Always stop MFC flows when sputter procedure ends
+            self.stop_all_mfc_flows()
+            
+            QMessageBox.information(self, "Success", "Sputter procedure completed successfully!")
+            # After sputter completes the system returns to high vacuum
+            self.set_system_status('high_vacuum')  # This triggers gas controller stop
+            self.update_safety_state()
+            QTimer.singleShot(100, lambda: self._clear_current_procedure())
         
-        # Check if procedure can be started
-        if not self.can_start_procedure('sputter_procedure'):
-            QMessageBox.warning(self, "Cannot Start Procedure", 
-                              f"Cannot start sputter procedure in current system state: {self.system_status}")
-            return
+        def custom_sputter_failure_handler():
+            """Custom failure handler for sputter procedure."""
+            self.stop_all_mfc_flows()
+            # Gas controller will be stopped by set_system_status call in error handler
         
-        # Set current procedure and update system status
+        # Store original state before modifying _run_procedure behavior
         print(f"DEBUG: Setting current_procedure = 'pushButton_6'")
+        
+        # Call parent procedure runner with sputter-specific settings
+        # We need to set procedure first so state transitions work
         self.current_procedure = 'pushButton_6'
-        # Align with safety_conditions.yml state name 'sputter'
         print(f"DEBUG: Setting system status to 'sputter'")
-        self.set_system_status('sputter')  # Set to sputter state
+        self.set_system_status('sputter')
         self._update_auto_procedure_button_states()
         
-        # Update safety state immediately after setting procedure
         print(f"DEBUG: Updating safety state after setting procedure")
         self.update_safety_state()
+        
+        # Ensure gas controller is running before starting flows
+        if not self._ensure_gas_controller_running():
+            QMessageBox.warning(self, "Gas Controller Error", 
+                              "Failed to start gas controller. Sputter procedure cannot proceed.")
+            self.set_system_status(self.previous_system_status)
+            self._clear_current_procedure()
+            return
         
         # Start MFC flows for sputter procedure (if configured)
         self.start_sputter_mfc_flows()
         
         try:
-            try:
-                from .auto_procedures import sputter_procedure
-            except ImportError:
-                from auto_procedures import sputter_procedure
-
+            procedure_func = _import_from_auto_procedures('sputter_procedure')
+            
             def on_finished(success: bool, message: str) -> None:
-                # Always stop MFC flows when sputter procedure ends
-                self.stop_all_mfc_flows()
-                
                 if success:
-                    QMessageBox.information(self, "Success", "Sputter procedure completed successfully!")
-                    # After sputter completes the system returns to high vacuum
-                    self.set_system_status('high_vacuum')
+                    custom_sputter_success_handler(message)
                 else:
+                    custom_sputter_failure_handler()
                     if message:
                         QMessageBox.warning(self, "Procedure Failed", f"Sputter procedure failed: {message}")
                     else:
                         QMessageBox.warning(self, "Procedure Failed", "Sputter procedure failed. Check console for details.")
                     self.set_system_status(self.previous_system_status)
-
-                self.current_procedure = None
-                self._update_auto_procedure_button_states()
-
-            worker = ProcedureWorker(sputter_procedure, arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-            worker.signals.finished.connect(on_finished)
-            if hasattr(self, 'threadpool') and self.threadpool is not None:
-                self.threadpool.start(worker)
-            else:
-                result = sputter_procedure(arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-                on_finished(builtins.bool(result), '' if result is True else str(result))
-        except ImportError:
-            QMessageBox.critical(self, "Error", "Auto procedures module not found.")
-            self.stop_all_mfc_flows()  # Stop MFC flows on error
+                    self.current_procedure = None
+                    self._update_auto_procedure_button_states()
+            
+            self._start_procedure_worker(procedure_func, on_finished)
+            
+        except (ImportError, Exception) as e:
+            QMessageBox.critical(self, "Error", f"Sputter procedure failed: {e}")
+            self.stop_all_mfc_flows()
             self.set_system_status(self.previous_system_status)
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Sputter procedure failed: {str(e)}")
-            self.stop_all_mfc_flows()  # Stop MFC flows on error
-            self.set_system_status(self.previous_system_status)
+            self._clear_current_procedure()
 
     def run_vent_loadlock_procedure(self) -> None:
         """Run the automatic load-lock vent procedure."""
-        print("Running VENT Load-lock procedure...")
-        
-        # Check if procedure can be started
-        if not self.can_start_procedure('vent_loadlock_procedure'):
-            QMessageBox.warning(self, "Cannot Start Procedure", 
-                              f"Cannot start vent load-lock procedure in current system state: {self.system_status}")
-            return
-        
-        # Set current procedure and update system status
-        self.current_procedure = 'pushButton_4'
-        self.set_system_status('loadlock_venting')  # Set to loadlock_venting state
-        self._update_auto_procedure_button_states()
-        
-        try:
-            try:
-                from .auto_procedures import vent_loadlock_procedure
-            except ImportError:
-                from auto_procedures import vent_loadlock_procedure
-
-            def on_finished(success: bool, message: str) -> None:
-                if success:
-                    QMessageBox.information(self, "Success", "Load-lock vent procedure completed successfully!")
-                    # Return to previous state or high_vacuum as specified in YAML
-                    self.set_system_status('high_vacuum')  # or use previous_system_status if preferred
-                    self.update_safety_state()
-                    QTimer.singleShot(100, lambda: self._clear_current_procedure())
-                else:
-                    if message:
-                        QMessageBox.warning(self, "Procedure Failed", f"Load-lock vent procedure failed: {message}")
-                    else:
-                        QMessageBox.warning(self, "Procedure Failed", "Load-lock vent procedure failed. Check console for details.")
-                    self.set_system_status(self.previous_system_status)
-                    self._clear_current_procedure()
-
-            worker = ProcedureWorker(vent_loadlock_procedure, arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-            worker.signals.finished.connect(on_finished)
-            if hasattr(self, 'threadpool') and self.threadpool is not None:
-                self.threadpool.start(worker)
-            else:
-                result = vent_loadlock_procedure(arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-                on_finished(builtins.bool(result), '' if result is True else str(result))
-        except ImportError:
-            QMessageBox.critical(self, "Error", "Auto procedures module not found.")
-            self.set_system_status(self.previous_system_status)
-            self._clear_current_procedure()
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Load-lock vent procedure failed: {str(e)}")
-            self.set_system_status(self.previous_system_status)
-            self._clear_current_procedure()
+        self._run_procedure('vent_loadlock_procedure', 'pushButton_4', 
+                           'loadlock_venting', 'high_vacuum')
 
     def run_load_unload_procedure(self) -> None:
         """Run the automatic load/unload procedure."""
-        print("Running Load/Unload procedure...")
-        
-        # Check if procedure can be started
-        if not self.can_start_procedure('load_unload_procedure'):
-            QMessageBox.warning(self, "Cannot Start Procedure", 
-                              f"Cannot start load/unload procedure in current system state: {self.system_status}")
-            return
-        
-        # Set current procedure and update system status
-        self.current_procedure = 'pushButton_5'
-        self.set_system_status('load_unload')  # Set to load_unload state
-        self._update_auto_procedure_button_states()
-        
-        try:
-            try:
-                from .auto_procedures import load_unload_procedure
-            except ImportError:
-                from auto_procedures import load_unload_procedure
-
-            def on_finished(success: bool, message: str) -> None:
-                if success:
-                    # Check if this is the special case where gate valve is open and waiting for user
-                    if message == "GATE_OPEN_WAITING_USER":
-                        # Show the load/unload dialog in the main thread
-                        self._show_load_unload_dialog()
-                    else:
-                        QMessageBox.information(self, "Success", "Load/unload procedure completed successfully!")
-                        # Return to high_vacuum as specified in YAML
-                        self.set_system_status('high_vacuum')
-                        self.update_safety_state()
-                        QTimer.singleShot(100, lambda: self._clear_current_procedure())
-                else:
-                    if message and message != "GATE_OPEN_WAITING_USER":
-                        QMessageBox.warning(self, "Procedure Failed", f"Load/unload procedure failed: {message}")
-                    else:
-                        QMessageBox.warning(self, "Procedure Failed", "Load/unload procedure failed. Check console for details.")
-                    self.set_system_status(self.previous_system_status)
-                    self._clear_current_procedure()
-
-            worker = ProcedureWorker(load_unload_procedure, arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-            worker.signals.finished.connect(on_finished)
-            if hasattr(self, 'threadpool') and self.threadpool is not None:
-                self.threadpool.start(worker)
+        def custom_load_unload_success_handler(message: str):
+            """Custom handler for load/unload special case."""
+            if message == "GATE_OPEN_WAITING_USER":
+                # Show the load/unload dialog in the main thread
+                self._show_load_unload_dialog()
             else:
-                result = load_unload_procedure(arduino=self.arduino, safety=self.safety_controller, relay_map=self.relay_map)
-                on_finished(builtins.bool(result), '' if result is True else str(result))
-        except ImportError:
-            QMessageBox.critical(self, "Error", "Auto procedures module not found.")
-            self.set_system_status(self.previous_system_status)
-            self._clear_current_procedure()
+                # Normal success
+                QMessageBox.information(self, "Success", "Load/unload procedure completed successfully!")
+                self.set_system_status('high_vacuum')
+                self.update_safety_state()
+                QTimer.singleShot(100, lambda: self._clear_current_procedure())
+        
+        self._run_procedure('load_unload_procedure', 'pushButton_5', 
+                           'load_unload', 'high_vacuum',
+                           custom_success_handler=custom_load_unload_success_handler)
 
     def _show_load_unload_dialog(self) -> None:
         """Show the load/unload dialog in the main thread and complete the procedure."""
@@ -2460,10 +2642,7 @@ class AutoControlWindow(QMainWindow):
                 self._complete_load_unload_procedure()
             else:
                 # User cancelled - turn off light and warn about gate valve being open
-                try:
-                    from .auto_procedures import set_relay_safe
-                except ImportError:
-                    from auto_procedures import set_relay_safe
+                set_relay_safe = self._import_from_auto_procedures('set_relay_safe')
                 
                 # Turn off chamber light
                 print("💡 Turning off chamber light (cancelled)...")
@@ -2485,10 +2664,7 @@ class AutoControlWindow(QMainWindow):
         except Exception as e:
             # Turn off chamber light on error
             try:
-                try:
-                    from .auto_procedures import set_relay_safe
-                except ImportError:
-                    from auto_procedures import set_relay_safe
+                set_relay_safe = self._import_from_auto_procedures('set_relay_safe')
                 
                 print("💡 Turning off chamber light (error)...")
                 set_relay_safe('btnLightBulb', False, self.arduino, self.safety_controller, self.relay_map)
@@ -2506,27 +2682,59 @@ class AutoControlWindow(QMainWindow):
 
     def _complete_load_unload_procedure(self) -> None:
         """Complete the load/unload procedure by closing the gate valve."""
+        gate_closed = False
+        light_turned_off = False
+        
         try:
             # Import the procedure function to close the gate valve
-            try:
-                from .auto_procedures import set_relay_safe
-            except ImportError:
-                from auto_procedures import set_relay_safe
+            set_relay_safe = _import_from_auto_procedures('set_relay_safe')
             
             # Update safety state before closing valve
             self.update_safety_state()
             
-            # Close load-lock gate valve with safety checks
+            # CRITICAL SAFETY CHECK: Verify arm is in home position before closing gate valve
+            print("🔍 Verifying load-lock arm is in home position before closing gate valve...")
+            arm_home = False
+            try:
+                digital_inputs = self.arduino.get_digital_inputs()
+                if digital_inputs and len(digital_inputs) > 1:
+                    arm_home = bool(digital_inputs[1])  # digital_inputs[1] = arm home interlock
+                    if arm_home:
+                        print("✅ Load-lock arm verified in home position")
+                    else:
+                        print("❌ CRITICAL: Load-lock arm NOT in home position!")
+                else:
+                    print("⚠️ Warning: Could not read digital inputs")
+            except Exception as e:
+                print(f"⚠️ Warning: Error reading arm position: {e}")
+            
+            if not arm_home:
+                # CRITICAL: Cannot close gate valve if arm not home
+                QMessageBox.critical(
+                    self,
+                    "CRITICAL SAFETY: Arm Not Home",
+                    "Cannot close load-lock gate valve!\n\n"
+                    "The load-lock arm is NOT in home position.\n\n"
+                    "WARNING: Gate valve remains OPEN until arm is returned to home position.\n\n"
+                    "Please return the arm to home position and try closing the gate valve manually."
+                )
+                self.set_system_status('error')
+                self._clear_current_procedure()
+                return
+            
+            # ARM IS HOME - Safe to close gate valve
             print("Completing load/unload procedure - closing gate valve...")
             if set_relay_safe('btnValveLoadLockGate', False, self.arduino, self.safety_controller, self.relay_map):
-                print("Load-lock gate valve closed successfully")
+                print("✅ Load-lock gate valve closed successfully")
+                gate_closed = True
                 
                 # Turn off chamber light after load/unload complete
                 print("💡 Turning off chamber light...")
                 if set_relay_safe('btnLightBulb', False, self.arduino, self.safety_controller, self.relay_map):
                     print("✅ Chamber light turned off")
+                    light_turned_off = True
                 else:
-                    print("Warning: Failed to turn off chamber light (non-critical)")
+                    print("⚠️ Warning: Failed to turn off chamber light (non-critical)")
                 
                 QMessageBox.information(self, "Success", "Load/unload procedure completed successfully!")
                 # Return to high_vacuum as specified in YAML
@@ -2534,22 +2742,87 @@ class AutoControlWindow(QMainWindow):
                 self.update_safety_state()
                 QTimer.singleShot(100, lambda: self._clear_current_procedure())
             else:
-                QMessageBox.warning(
+                print("❌ CRITICAL: Failed to close load-lock gate valve!")
+                QMessageBox.critical(
                     self,
-                    "Valve Close Failed",
-                    "Failed to close load-lock gate valve.\n"
-                    "Please check safety conditions and close manually if needed."
+                    "CRITICAL: Valve Close Failed",
+                    "Failed to close load-lock gate valve!\n\n"
+                    "WARNING: Gate valve remains OPEN!\n\n"
+                    "Please manually close the gate valve immediately."
                 )
-                self.set_system_status(self.previous_system_status)
+                self.set_system_status('error')
                 self._clear_current_procedure()
                 
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"❌ CRITICAL ERROR in load/unload completion:\n{error_details}")
+            
+            # EMERGENCY: Try to close gate valve with direct relay command
+            # BUT ONLY IF ARM IS IN HOME POSITION
+            if not gate_closed:
+                print("🚨 EMERGENCY: Checking arm position before attempting gate valve close...")
+                
+                # CRITICAL SAFETY CHECK: Verify arm home position
+                arm_home = False
+                try:
+                    digital_inputs = self.arduino.get_digital_inputs()
+                    if digital_inputs and len(digital_inputs) > 1:
+                        arm_home = bool(digital_inputs[1])
+                        if arm_home:
+                            print("✅ ARM IS HOME - Safe to attempt emergency gate valve close")
+                        else:
+                            print("❌ CRITICAL: ARM NOT HOME - Cannot close gate valve!")
+                except Exception as e2:
+                    print(f"⚠️ Could not verify arm position: {e2}")
+                
+                if arm_home:
+                    # ARM IS HOME - Safe to attempt emergency close
+                    try:
+                        gate_valve_relay = self.relay_map.get('btnValveLoadLockGate')
+                        if gate_valve_relay and self.arduino and self.arduino.is_connected:
+                            self.arduino.set_relay(gate_valve_relay, False)
+                            self.safety_controller.relay_states['btnValveLoadLockGate'] = False
+                            print("✅ Emergency gate valve close successful")
+                            gate_closed = True
+                    except Exception as e3:
+                        print(f"❌ Emergency gate valve close failed: {e3}")
+                else:
+                    print("🚨 SAFETY OVERRIDE PREVENTED: Gate valve NOT closed because arm not in home position")
+            
+            # Try to turn off light
+            if not light_turned_off:
+                try:
+                    light_relay = self.relay_map.get('btnLightBulb')
+                    if light_relay and self.arduino and self.arduino.is_connected:
+                        self.arduino.set_relay(light_relay, False)
+                        print("✅ Chamber light turned off")
+                except Exception:
+                    pass  # Light is non-critical
+            
+            # Show error to user
+            error_msg = f"Error completing load/unload procedure: {str(e)}\n\n"
+            if gate_closed:
+                error_msg += "Gate valve was closed successfully via emergency command."
+            else:
+                error_msg += "CRITICAL: Gate valve remains OPEN!\n\n"
+                # Check if it's because arm not home
+                try:
+                    digital_inputs = self.arduino.get_digital_inputs()
+                    if digital_inputs and len(digital_inputs) > 1 and not bool(digital_inputs[1]):
+                        error_msg += "SAFETY: Gate valve cannot close because load-lock arm is not in home position.\n\n"
+                        error_msg += "Please return arm to home position and close gate valve manually."
+                    else:
+                        error_msg += "Please close manually immediately!"
+                except Exception:
+                    error_msg += "Please close manually immediately!"
+            
             QMessageBox.critical(
                 self,
-                "Completion Error",
-                f"Error completing load/unload procedure: {str(e)}"
+                "Load/Unload Completion Error",
+                error_msg
             )
-            self.set_system_status(self.previous_system_status)
+            self.set_system_status('error' if not gate_closed else 'high_vacuum')
             self._clear_current_procedure()
 
     # --- Polling ---
@@ -2747,10 +3020,7 @@ class AutoControlWindow(QMainWindow):
             return
         
         # Import the procedure
-        try:
-            from .auto_procedures import quick_reset_to_standby
-        except ImportError:
-            from auto_procedures import quick_reset_to_standby
+        quick_reset_to_standby = self._import_from_auto_procedures('quick_reset_to_standby')
         
         # Check if another procedure is running
         if self.current_procedure is not None:
@@ -2767,10 +3037,7 @@ class AutoControlWindow(QMainWindow):
                 return
             
             # Cancel the running procedure
-            try:
-                from .auto_procedures import cancel_running_procedures
-            except ImportError:
-                from auto_procedures import cancel_running_procedures
+            cancel_running_procedures = self._import_from_auto_procedures('cancel_running_procedures')
             
             cancel_running_procedures()
             self.current_procedure = None
@@ -3281,7 +3548,21 @@ def run() -> int:
     print("👤 DEBUG: *** STEP 3: User Authentication ***")
     login_dialog = LoginDialog()
     
-    if login_dialog.exec() != LoginDialog.Accepted:
+    # Execute login dialog (blocks until user authenticates or cancels)
+    dialog_result = login_dialog.exec()
+    
+    # CRITICAL: Cleanup RFID thread immediately after dialog completes
+    # This ensures thread stops regardless of how dialog closed
+    print("🧹 DEBUG: Cleaning up RFID thread after login dialog closed...")
+    if hasattr(login_dialog, '_cleanup_rfid'):
+        try:
+            login_dialog._cleanup_rfid()
+            print("✅ DEBUG: RFID thread cleanup completed")
+        except Exception as e:
+            print(f"⚠️ DEBUG: Error during RFID cleanup: {e}")
+    
+    # Check if login was successful
+    if dialog_result != LoginDialog.Accepted:
         print("❌ Login cancelled - exiting application")
         return 0
     

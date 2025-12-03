@@ -17,14 +17,8 @@ try:
     from ..security.user_account_manager import UserAccountManager
     from ..rfid import RFIDReaderThread, RFIDConfig
 except ImportError:
-    try:
-        from security.user_account_manager import UserAccountManager
-        from rfid import RFIDReaderThread, RFIDConfig
-    except ImportError:
-        import sys
-        sys.path.append(str(Path(__file__).parent.parent))
-        from security.user_account_manager import UserAccountManager
-        from rfid import RFIDReaderThread, RFIDConfig
+    from security.user_account_manager import UserAccountManager
+    from rfid import RFIDReaderThread, RFIDConfig
 
 
 class LoginDialog(QDialog):
@@ -750,8 +744,9 @@ class LoginDialog(QDialog):
         super().closeEvent(event)
 
     def accept(self):
-        """Override accept to ensure RFID thread is stopped."""
-        self._cleanup_rfid()
+        """Override accept - cleanup will happen after dialog closes."""
+        # Don't cleanup here - let the dialog close naturally
+        # Cleanup will be done by the caller after exec() returns
         super().accept()
 
     def reject(self):
@@ -762,7 +757,12 @@ class LoginDialog(QDialog):
     def _cleanup_rfid(self):
         """Stop and clean up RFID thread."""
         if self.rfid_thread:
-            print("DEBUG: Stopping RFID thread...")
+            if not self.rfid_thread.isRunning():
+                print("ℹ️ DEBUG: RFID thread already stopped, clearing reference")
+                self.rfid_thread = None
+                return
+            
+            print("🛑 DEBUG: Stopping RFID thread...")
             # Disconnect signals to prevent further GUI updates during shutdown
             try:
                 self.rfid_thread.card_detected.disconnect()
@@ -779,9 +779,11 @@ class LoginDialog(QDialog):
             
             # If still running, terminate (last resort)
             if self.rfid_thread.isRunning():
-                print("WARNING: RFID thread did not stop gracefully, terminating...")
+                print("⚠️ WARNING: RFID thread did not stop gracefully, terminating...")
                 self.rfid_thread.terminate()
                 self.rfid_thread.wait(1000)
                 
             self.rfid_thread = None
-            print("DEBUG: RFID thread stopped and cleared.")
+            print("✅ DEBUG: RFID thread stopped and cleared.")
+        else:
+            print("ℹ️ DEBUG: No RFID thread to clean up.")

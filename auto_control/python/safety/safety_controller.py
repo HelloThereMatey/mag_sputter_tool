@@ -317,6 +317,67 @@ class SafetyController:
         
         return SafetyResult(True, "No emergency conditions detected")
     
+    def check_procedure_safety(self, procedure_name: str) -> SafetyResult:
+        """Check if an automatic procedure can safely start.
+        
+        Evaluates all safety_checks conditions defined in the YAML config
+        for the specified procedure.
+        
+        Args:
+            procedure_name: Name of the procedure (e.g., 'pump_procedure')
+            
+        Returns:
+            SafetyResult with allowed status and message
+        """
+        # Get procedure configuration
+        procedures_config = self.safety_config.get('automatic_procedures', {})
+        if procedure_name not in procedures_config:
+            return SafetyResult(False, f"Procedure '{procedure_name}' not found in safety configuration")
+        
+        procedure_config = procedures_config[procedure_name]
+        safety_checks = procedure_config.get('safety_checks', [])
+        
+        # If no safety checks defined, allow by default
+        if not safety_checks:
+            return SafetyResult(True, "No safety checks defined for this procedure")
+        
+        # Check each safety condition
+        for condition in safety_checks:
+            if not self._evaluate_condition(condition, suppress_debug=True):
+                # Build a more user-friendly error message
+                error_msg = self._format_condition_error(condition)
+                return SafetyResult(
+                    False, 
+                    f"Procedure '{procedure_name}' safety check failed: {error_msg}"
+                )
+        
+        return SafetyResult(True, "All procedure safety checks passed")
+    
+    def _format_condition_error(self, condition: str) -> str:
+        """Format a condition string into a user-friendly error message."""
+        # Map common condition patterns to readable messages
+        if 'digital_inputs[0]' in condition:
+            return "Water flow interlock not satisfied"
+        elif 'digital_inputs[1]' in condition:
+            return "Load-lock arm not in home position"
+        elif 'digital_inputs[2]' in condition:
+            return "Chamber door not closed"
+        elif 'digital_inputs[3]' in condition:
+            return "Spare interlock not satisfied"
+        elif 'ai_volts[1]' in condition and 'chamber_high_vacuum' in condition:
+            return "Chamber pressure too high (not at high vacuum)"
+        elif 'ai_volts[1]' in condition and 'chamber_medium_vacuum' in condition:
+            return "Chamber pressure too high (not at medium vacuum)"
+        elif 'btnPumpTurbo' in condition:
+            return "Turbo pump state incorrect"
+        elif 'btnValveBacking' in condition:
+            return "Backing valve state incorrect"
+        elif 'btnValveTurboGate' in condition:
+            return "Turbo gate valve state incorrect"
+        else:
+            # Return the raw condition if we can't parse it
+            return condition
+    
     def _evaluate_condition(self, condition: str, suppress_debug: bool = True) -> bool:
         """
         Evaluate a safety condition string.

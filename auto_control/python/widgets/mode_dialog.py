@@ -12,18 +12,9 @@ try:
     from ..security.password_manager import SecurePasswordManager
     from .password_setup_dialog import PasswordSetupDialog
 except ImportError:
-    try:
-        from security.password_manager import SecurePasswordManager
-        from widgets.password_setup_dialog import PasswordSetupDialog
-    except ImportError:
-        import sys
-        from pathlib import Path
-        # Add paths for script execution
-        current_dir = Path(__file__).parent
-        sys.path.insert(0, str(current_dir.parent))
-        sys.path.insert(0, str(current_dir))
-        from security.password_manager import SecurePasswordManager
-        from password_setup_dialog import PasswordSetupDialog
+    from security.password_manager import SecurePasswordManager
+    from widgets.password_setup_dialog import PasswordSetupDialog
+
 
 
 class ModeSelectionDialog(QDialog):

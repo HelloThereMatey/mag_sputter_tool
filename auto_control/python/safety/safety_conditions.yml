@@ -87,7 +87,8 @@ button_safety_conditions:
         - "digital_inputs[0] == True"                          # Water flow OK
         - "digital_inputs[2] == True"                          # Door closed OK
         - "relay_state['btnPumpScroll'] == True"               # Scroll pump running
-    forbidden_conditions: []
+    forbidden_conditions:
+      - "relay_state['btnValveRough'] == True"    # No open rough valve to turbo when backing valve open
     confirmation_required: false
     error_message: "Cannot open backing valve: scroll pump not running, water flow issue, or door not closed"
     
@@ -102,8 +103,7 @@ button_safety_conditions:
         - "digital_inputs[2] == True"                                   # Door closed OK
         - "relay_state['btnPumpScroll'] == True"                       # Scroll pump running
     forbidden_conditions:
-      - "relay_state['btnPumpTurbo'] == True"                        # Turbo pump active
-      - "relay_state['btnValveBacking'] == True"    # No backing valve to turbo open when rough valve open
+      - "relay_state['btnPumpTurbo'] == True"                        # Turbo pump active   # No backing valve to turbo open when rough valve open
     confirmation_required: false
     error_message: "Cannot open rough valve: scroll pump not running or turbo pump still on"
     
@@ -393,6 +393,7 @@ automatic_procedures:
     safety_checks:
       - "digital_inputs[0] == True"   # Door closed
       - "digital_inputs[1] == True"   # Water flow 
+      - "digital_inputs[2] == True"   # Rod in safe position
     sets_system_state: "loadlock_venting"
     completion_state: "previous"     # Returns to previous state
     

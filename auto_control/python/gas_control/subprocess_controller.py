@@ -192,15 +192,33 @@ class GasFlowController:
         ports = list_ports.comports()
         candidates = []
         
-        # Prioritize USB serial devices
+        # Device type patterns to exclude from scanning (HID devices, mice, keyboards, etc.)
+        hid_exclusion_patterns = ['mouse', 'keyboard', 'hid', 'input', 'touchpad', 'trackpad', 
+                                  'receiver', 'dongle', 'bluetooth', 'bt', 'wireless']
+        
+        # Prioritize USB serial devices, but exclude HID devices
         for p in ports:
             desc = p.description.lower()
+            manufacturer = (p.manufacturer or '').lower()
+            
+            # Skip HID/input devices that might be mouse/keyboard
+            if any(pattern in desc or pattern in manufacturer for pattern in hid_exclusion_patterns):
+                self.logger.info(f"Skipping HID/input device: {p.device} ({p.description})")
+                continue
+                
             if "usb" in desc or "serial" in desc:
                 candidates.append(p.device)
         
-        # Add remaining ports
+        # Add remaining ports (also excluding HID devices)
         for p in ports:
             if p.device not in candidates:
+                desc = p.description.lower()
+                manufacturer = (p.manufacturer or '').lower()
+                
+                # Skip HID/input devices
+                if any(pattern in desc or pattern in manufacturer for pattern in hid_exclusion_patterns):
+                    continue
+                    
                 candidates.append(p.device)
                 
         for port in candidates:

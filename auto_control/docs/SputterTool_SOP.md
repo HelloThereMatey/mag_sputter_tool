@@ -490,6 +490,7 @@ Ensure that:
    - Stand-by mode has all vacuum components off and valves closed.
    - **Close the GUI** and associated terminal to logout your user account.
    - Leave system like this unless next user requests to leave pumping. Next user will open GUI and login anew.
+   - Leave sample stage inside load-lock for next user.
 
 ---
 # Other Information
