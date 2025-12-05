@@ -6,6 +6,7 @@ ensuring all safety conditions are met before performing actions.
 """
 
 import time
+import traceback
 from typing import Dict, List, Optional, Callable
 from pathlib import Path
 import builtins
@@ -194,6 +195,86 @@ def set_relay_safe(name: str, value: bool, arduino: ArduinoController,
     except Exception as e:
         print(f"❌ Exception setting relay {name}: {e}")
         return False
+
+def attempt_arduino_reconnection(arduino: ArduinoController, max_attempts: int = 3) -> bool:
+    """Attempt to reconnect to Arduino after communication failure.
+    
+    This function mimics the GUI's reconnection logic:
+    1. Force disconnect to clean up threads and queues
+    2. Clear all communication state
+    3. Attempt auto_connect which will restart everything fresh
+    
+    Args:
+        arduino: ArduinoController instance
+        max_attempts: Maximum number of reconnection attempts
+        
+    Returns:
+        True if reconnection successful, False otherwise
+    """
+    if arduino is None:
+        print("❌ Cannot reconnect: Arduino controller is None")
+        return False
+    
+    print(f"🔄 Arduino communication lost - attempting reconnection...")
+    
+    for attempt in range(1, max_attempts + 1):
+        print(f"🔄 Reconnection attempt {attempt}/{max_attempts}...")
+        
+        try:
+            # CRITICAL: Force full disconnect first to clean up state
+            # This stops the communication thread, closes serial port, and clears queues
+            if arduino.is_connected:
+                print("🔌 Forcing disconnect to clean up communication state...")
+                arduino.disconnect()
+                time.sleep(0.5)  # Give time for thread to fully stop
+            
+            # Additional safety: Clear queues to remove any stale commands/responses
+            print("🧹 Clearing command/response queues...")
+            try:
+                arduino.clear_queues()
+                # Log queue state for diagnosis
+                print(f"   Command queue size after clear: {arduino.command_queue.qsize()}")
+                print(f"   Response queue size after clear: {arduino.response_queue.qsize()}")
+            except Exception as e:
+                print(f"⚠️ Error clearing queues: {e}")
+            
+            # Now try to reconnect fresh - this will restart the communication thread
+            print("🔌 Attempting fresh auto-connect...")
+            if arduino.auto_connect():
+                print(f"✅ Arduino reconnection successful on attempt {attempt}")
+                
+                # Verify connection with test command
+                time.sleep(0.5)
+                result = arduino.send_command("GET_RELAY_STATES", timeout=3.0)
+                if result and result != "TIMEOUT" and result != "ERROR":
+                    print(f"✅ Arduino communication verified - connection fully restored")
+                    return True
+                else:
+                    print(f"⚠️ Reconnection succeeded but communication test failed - trying again")
+                    # Disconnect and retry
+                    arduino.disconnect()
+                    time.sleep(0.5)
+            else:
+                print(f"⚠️ Reconnection attempt {attempt} failed")
+                
+        except Exception as e:
+            print(f"❌ Error during reconnection attempt {attempt}: {e}")
+            import traceback
+            traceback.print_exc()
+            # Try to force disconnect even after exception
+            try:
+                arduino.disconnect()
+            except Exception:
+                pass
+        
+        # Wait before next attempt (exponential backoff)
+        if attempt < max_attempts:
+            wait_time = attempt * 2.0  # 2s, 4s, 6s...
+            print(f"⏳ Waiting {wait_time}s before next attempt...")
+            time.sleep(wait_time)
+    
+    print(f"❌ Failed to reconnect Arduino after {max_attempts} attempts")
+    return False
 
 def wait_for_analog_condition(
     arduino: ArduinoController,
@@ -1311,6 +1392,9 @@ def turbo_standby_spin_control(arduino: ArduinoController,
     
     start_time = time.time()
     pump_state = False  # Track current pump state
+    last_connection_check = time.time()  # Track periodic connection health checks
+    consecutive_failures = 0  # Track consecutive operation failures
+    max_consecutive_failures = 5  # Force reconnection after this many failures
     
     print(f"Target voltage: {target_voltage:.2f}V (±{tolerance:.2f}V tolerance)")
     print(f"Will run for maximum {max_run_time} seconds")
@@ -1325,15 +1409,80 @@ def turbo_standby_spin_control(arduino: ArduinoController,
         if is_procedure_cancelled():
             print("🛑 Turbo standby spin control cancelled by user")
             break
+        
+        # Periodic connection health check (every 30 seconds)
+        # This catches disconnections proactively instead of waiting for operation failure
+        if time.time() - last_connection_check > 30:
+            # Check both connection flag AND thread health
+            thread_alive = hasattr(arduino, 'communication_thread') and \
+                           arduino.communication_thread is not None and \
+                           arduino.communication_thread.is_alive()
+            
+            # Check queue depths for signs of communication deadlock
+            cmd_queue_size = arduino.command_queue.qsize() if hasattr(arduino, 'command_queue') else 0
+            resp_queue_size = arduino.response_queue.qsize() if hasattr(arduino, 'response_queue') else 0
+            
+            # Log queue state if abnormal
+            if cmd_queue_size > 10 or resp_queue_size > 10:
+                print(f"⚠️ Abnormal queue depths detected: cmd={cmd_queue_size}, resp={resp_queue_size}")
+                print(f"   This indicates communication deadlock - forcing reconnection")
+                if attempt_arduino_reconnection(arduino, max_attempts=2):
+                    print("✅ Arduino reconnection successful after queue deadlock - continuing standby control")
+                else:
+                    print("❌ Arduino reconnection failed - standby control cannot continue")
+                    return False
+            
+            if not arduino.is_connected or not thread_alive:
+                if not thread_alive:
+                    print("🔌 Arduino communication thread has died - attempting reconnection...")
+                else:
+                    print("🔌 Arduino disconnected (detected via periodic health check) - attempting reconnection...")
+                
+                if attempt_arduino_reconnection(arduino, max_attempts=2):
+                    print("✅ Arduino reconnection successful - continuing standby control")
+                else:
+                    print("❌ Arduino reconnection failed - standby control cannot continue")
+                    return False
+            last_connection_check = time.time()
             
         try:
             # Read current turbo speed voltage
             voltages = arduino.get_analog_voltages()
             if voltages is None or len(voltages) <= 3:
-                print("Failed to read turbo speed voltage")
+                consecutive_failures += 1
+                print(f"Failed to read turbo speed voltage (consecutive failures: {consecutive_failures}/{max_consecutive_failures})")
+                
+                # Check if we've had too many consecutive failures
+                if consecutive_failures >= max_consecutive_failures:
+                    print(f"❌ Too many consecutive failures ({consecutive_failures}) - forcing reconnection even if connection appears healthy")
+                    if attempt_arduino_reconnection(arduino, max_attempts=2):
+                        print("✅ Arduino reconnection successful after consecutive failures - continuing standby control")
+                        consecutive_failures = 0  # Reset counter
+                        time.sleep(0.5)
+                        continue
+                    else:
+                        print("❌ Arduino reconnection failed - standby control cannot continue")
+                        return False
+                
+                # Check if Arduino is disconnected - attempt reconnection
+                if not arduino.is_connected:
+                    print("🔌 Arduino appears disconnected during voltage read - attempting reconnection...")
+                    if attempt_arduino_reconnection(arduino, max_attempts=2):
+                        print("✅ Arduino reconnection successful - continuing standby control")
+                        consecutive_failures = 0  # Reset counter
+                        # Don't continue - try reading again immediately
+                        time.sleep(0.5)
+                        continue
+                    else:
+                        print("❌ Arduino reconnection failed - standby control cannot continue")
+                        return False
+                
                 time.sleep(poll_interval)
                 continue
                 
+            # Success - reset failure counter
+            consecutive_failures = 0
+            
             current_speed_voltage = float(voltages[3])  # ai_volts[3] is turbo speed
             # Convert voltage to percentage using scaling factors from safety_conditions.yml
             # turbo_spin scaling_factor: 25.0, offset: -12.5
@@ -1356,11 +1505,39 @@ def turbo_standby_spin_control(arduino: ArduinoController,
                 action = "ON" if should_pump_on else "OFF"
                 #print(f"Speed: {current_speed_percent:.1f}% ({current_speed_voltage:.2f}V) - Turning pump {action}")
                 
-                if not set_relay_safe('btnPumpTurbo', should_pump_on, arduino, safety, relay_map, suppress_logging=True):
-                    print(f"Failed to turn turbo pump {action}")
-                    return False
-                    
-                pump_state = should_pump_on
+                # Try to set relay with retry logic for resilience
+                retry_count = 0
+                max_retries = 3
+                success = False
+                
+                while retry_count < max_retries and not success:
+                    if set_relay_safe('btnPumpTurbo', should_pump_on, arduino, safety, relay_map, suppress_logging=True):
+                        success = True
+                        pump_state = should_pump_on
+                    else:
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            print(f"⚠️ Failed to turn turbo pump {action} (attempt {retry_count}/{max_retries}), retrying...")
+                            time.sleep(1.0)  # 1 second delay before retry for better stability
+                        else:
+                            print(f"❌ Failed to turn turbo pump {action} after {max_retries} attempts")
+                            # Check if Arduino is still connected - if not, try reconnection
+                            if not arduino.is_connected:
+                                print(f"🔌 Arduino appears disconnected - attempting reconnection...")
+                                if attempt_arduino_reconnection(arduino, max_attempts=2):
+                                    print(f"✅ Reconnection successful - retrying turbo pump {action}...")
+                                    # Try one more time after successful reconnection
+                                    if set_relay_safe('btnPumpTurbo', should_pump_on, arduino, safety, relay_map, suppress_logging=True):
+                                        success = True
+                                        pump_state = should_pump_on
+                                        print(f"✅ Turbo pump {action} succeeded after reconnection")
+                                    else:
+                                        print(f"⚠️ Turbo pump {action} still failed after reconnection")
+                                else:
+                                    print(f"❌ Arduino reconnection failed - continuing with degraded operation")
+                            # Log error but continue - don't fail entire procedure for transient communication issues
+                            # Only fail if we can't communicate with Arduino at all (checked elsewhere)
+                            print(f"⚠️ Continuing standby control despite relay failure (may be transient)")
             else:
                 # Just log current status occasionally
                 if int(time.time() - start_time) % 30 == 0:  # Every 30 seconds

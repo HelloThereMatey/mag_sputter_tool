@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 from typing import Optional, Dict
 
@@ -169,7 +170,13 @@ class AutoControlWindow(QMainWindow):
         print("🔌 DEBUG: Assigning Arduino controller...")
         if arduino is None:
             print("🔌 DEBUG: No Arduino provided, creating new ArduinoController instance")
-            self.arduino = ArduinoController()
+            # Pass hardcoded port from config if available
+            arduino_port = self.cfg.serial.arduino_port
+            if arduino_port:
+                print(f"🔌 DEBUG: Using configured Arduino port: {arduino_port}")
+            else:
+                print("🔌 DEBUG: No configured port, will use auto-detection")
+            self.arduino = ArduinoController(config_port=arduino_port)
         else:
             print("🔌 DEBUG: Using pre-initialized Arduino controller from run()")
             self.arduino = arduino
@@ -180,16 +187,14 @@ class AutoControlWindow(QMainWindow):
         self.safety_controller = SafetyController()
         print("⚠️ DEBUG: SafetyController created")
 
-        # Gas Flow Controller (MFC) - Initialize in background to prevent GUI freezing
-        print("🌀 DEBUG: Scheduling GasFlowController initialization in background...")
+        # Gas Flow Controller (MFC) - Initialize ONLY when sputter mode is entered
+        print("🌀 DEBUG: GasFlowController will be initialized on-demand (sputter mode only)")
         self.gas_controller = None
         self._gas_controller_initializing = False
         
-        if hasattr(self.cfg, 'gas_control') and self.cfg.gas_control:
-            # Schedule background initialization after GUI is ready
-            QTimer.singleShot(500, self._init_gas_controller_background)
-        else:
-            print("⚠️ DEBUG: No gas_control configuration found in sput.yml")
+        # NOTE: Gas controller is NOT initialized automatically on startup
+        # It will be initialized by _ensure_gas_controller_running() when entering sputter mode
+        # This prevents serial port contention with Arduino during startup
 
         # Initialize safety state tracking
         self.last_analog_inputs = [0.0, 0.0, 0.0, 0.0]
@@ -226,6 +231,17 @@ class AutoControlWindow(QMainWindow):
         # Cache for MFC readings to prevent blocking GUI
         self.mfc_readings_cache = {}
         self.mfc_update_in_progress = False
+        
+        # Arduino connection health tracking
+        self.arduino_consecutive_failures = 0
+        self.arduino_reconnection_in_progress = False
+        self.max_consecutive_failures = 3  # Trigger reconnection after 3 failures
+        
+        # Gas flow state for restoration after reconnection
+        self.saved_gas_flow_state = {}  # Store MFC setpoints for recovery
+        
+        # Gas flow state for restoration after reconnection
+        self.saved_gas_flow_state = {}  # Store MFC setpoints for recovery
 
         # Light bulb auto-off timer - turns off chamber light after 300 seconds
         self.light_timer = QTimer(self)
@@ -244,7 +260,7 @@ class AutoControlWindow(QMainWindow):
         self._wire_mode_button()
         self._wire_special_buttons()
         self._wire_auto_procedure_buttons()
-        self._wire_mfc_controls()  # Wire MFC layout click handlers
+        # Note: _wire_mfc_controls() is called after gas controller initialization completes
 
         # Connect system state display label
         print("DEBUG: Looking for QLabel 'label_5'...")
@@ -282,8 +298,9 @@ class AutoControlWindow(QMainWindow):
         self._update_user_label()  # Display logged-in username
         print("DEBUG: Initial UI state set")
 
-        # Auto-open logbook after GUI loads so user can update targets
-        QTimer.singleShot(500, self.open_logbook)
+        # Auto-open logbook after GUI loads and Arduino connects
+        # Delayed to 2000ms to ensure Arduino connection completes first
+        QTimer.singleShot(2000, self.open_logbook)
 
         # Check if Arduino is already connected from run(), otherwise setup auto-connect
         if self.arduino is not None and self.arduino.is_connected:
@@ -291,7 +308,8 @@ class AutoControlWindow(QMainWindow):
             self.on_connected()
         else:
             print("DEBUG: Arduino not connected yet, setting up auto-connect timer...")
-            QTimer.singleShot(300, self.auto_connect)  # Re-enabled after fixing AttributeError issues
+            # Increased priority - connect Arduino first before other operations
+            QTimer.singleShot(100, self.auto_connect)  # Changed from 300ms to 100ms for faster connection
             print("DEBUG: Auto-connect timer ENABLED")
 
         # Add Tools menu action for plotter
@@ -425,7 +443,8 @@ class AutoControlWindow(QMainWindow):
                     gas_controller = GasFlowController(
                         self.parent.cfg.gas_control, 
                         self.parent.safety_controller, 
-                        excluded_ports=excluded
+                        excluded_ports=excluded,
+                        arduino_controller=self.parent.arduino
                     )
                     
                     self.signals.finished.emit(True, "Gas controller initialized")
@@ -449,9 +468,14 @@ class AutoControlWindow(QMainWindow):
         
         if success:
             print(f"✅ Gas controller initialization complete: {message}")
+            # Wire MFC controls now that gas controller is ready
+            try:
+                self._wire_mfc_controls()
+            except Exception as e:
+                print(f"⚠️ Could not wire MFC controls: {e}")
             # Update UI if needed
             try:
-                self._update_mfc_display()
+                self.update_mfc_displays()
             except Exception as e:
                 print(f"⚠️ Could not update MFC display: {e}")
         else:
@@ -873,7 +897,7 @@ class AutoControlWindow(QMainWindow):
                         print(f"DEBUG: Ion gauge is ON but system state is '{self.system_status}' (not high_vacuum) - turning off ion gauge for safety")
                         
                         # Import the toggle function from auto_procedures
-                        toggle_ion_gauge = self._import_from_auto_procedures('toggle_ion_gauge')
+                        toggle_ion_gauge = _import_from_auto_procedures('toggle_ion_gauge')
                         
                         # Turn off ion gauge safely
                         if toggle_ion_gauge(False, self.arduino, self.safety_controller, self.relay_map):
@@ -1222,9 +1246,16 @@ class AutoControlWindow(QMainWindow):
         print("🔌 DEBUG: on_connected() - Arduino connection established")
         print("🔌 DEBUG: No relay operations should occur during initialization")
         self._set_controls_enabled(True)
-        # Start timers (no verbose per-connection debug)
+        # Start timers
         self.status_timer.start()
-        self.input_timer.start()
+        
+        # Delay input timer start to ensure communication thread is ready
+        # Arduino may need a moment after connection to be fully responsive
+        print("⏰ DEBUG: Delaying input timer start by 1 second to ensure Arduino ready...")
+        QTimer.singleShot(1000, lambda: (
+            self.input_timer.start(),
+            print("✅ DEBUG: Input timer started")
+        ))
         
         # Gas controller will start conditionally only during sputter mode
         # This saves CPU resources when not actively controlling gas flow
@@ -1244,10 +1275,195 @@ class AutoControlWindow(QMainWindow):
             except Exception as e:
                 print(f"DEBUG: ❌ Error stopping gas controller: {e}")
     
+    def _save_gas_flow_state(self) -> None:
+        """Save current gas flow settings for restoration after reconnection."""
+        try:
+            if self.gas_controller and hasattr(self.gas_controller, '_last_readings'):
+                self.saved_gas_flow_state = {}
+                for channel_name, reading in self.gas_controller._last_readings.items():
+                    if hasattr(reading, 'setpoint') and reading.setpoint > 0:
+                        self.saved_gas_flow_state[channel_name] = reading.setpoint
+                        print(f"  💾 Saved {channel_name}: {reading.setpoint} sccm")
+                
+                if self.saved_gas_flow_state:
+                    print(f"  ✅ Saved {len(self.saved_gas_flow_state)} gas flow setpoint(s)")
+                else:
+                    print("  📭 No active gas flows to save")
+            else:
+                print("  ⚠️ Gas controller not available to save state")
+        except Exception as e:
+            print(f"  ❌ Error saving gas flow state: {e}")
+    
+    def _restore_gas_flow_state(self) -> None:
+        """Restore gas flow settings after reconnection."""
+        try:
+            if not self.saved_gas_flow_state:
+                print("  📭 No saved gas flow state to restore")
+                return
+            
+            if not self.gas_controller:
+                print("  ⚠️ Cannot restore gas flow - controller not initialized")
+                return
+            
+            print(f"  🔄 Restoring {len(self.saved_gas_flow_state)} gas flow setpoint(s)...")
+            
+            for channel_name, setpoint in self.saved_gas_flow_state.items():
+                try:
+                    # Restore the setpoint
+                    self.gas_controller.set_flow_rate(channel_name, setpoint)
+                    print(f"    ✅ Restored {channel_name}: {setpoint} sccm")
+                    time.sleep(0.3)  # Small delay between commands
+                except Exception as e:
+                    print(f"    ❌ Failed to restore {channel_name}: {e}")
+            
+            print("  ✅ Gas flow state restoration complete")
+            
+            # Clear saved state after restoration
+            self.saved_gas_flow_state = {}
+            
+        except Exception as e:
+            print(f"  ❌ Error restoring gas flow state: {e}")
+    
+    def attempt_arduino_reconnection(self) -> bool:
+        """Attempt to reconnect to Arduino after detecting communication failures.
+        
+        Returns:
+            True if reconnection successful, False otherwise
+        """
+        if self.arduino_reconnection_in_progress:
+            print("🔄 Arduino reconnection already in progress, skipping...")
+            return False
+        
+        self.arduino_reconnection_in_progress = True
+        print("\\n" + "="*70)
+        print("🔄 ARDUINO COMMUNICATION FAILURE - AUTOMATIC RECONNECTION")
+        print("="*70)
+        
+        # Step 1: Save current gas flow state
+        print("📦 Step 1: Saving current gas flow state...")
+        self._save_gas_flow_state()
+        
+        try:
+            # Step 2: Stop timers during reconnection
+            timers_to_restart = []
+            if self.status_timer.isActive():
+                self.status_timer.stop()
+                timers_to_restart.append('status')
+            if self.input_timer.isActive():
+                self.input_timer.stop()
+                timers_to_restart.append('input')
+            
+            # Attempt reconnection
+            max_attempts = 3
+            for attempt in range(1, max_attempts + 1):
+                print(f"🔄 Reconnection attempt {attempt}/{max_attempts}...")
+                
+                try:
+                    # Disconnect first
+                    if self.arduino.is_connected:
+                        print("🔌 Disconnecting from Arduino...")
+                        self.arduino.disconnect()
+                        time.sleep(0.5)
+                    
+                    # Try to reconnect
+                    print("🔌 Attempting auto-connect...")
+                    if self.arduino.auto_connect():
+                        print(f"✅ Arduino reconnection successful on attempt {attempt}")
+                        
+                        # Verify connection with test command
+                        time.sleep(0.5)
+                        test_result = self.arduino.send_command("GET_RELAY_STATES", timeout=3.0)
+                        if test_result and test_result != "TIMEOUT" and test_result != "ERROR":
+                            print(f"✅ Arduino communication verified")
+                            
+                            # Reset failure counter
+                            self.arduino_consecutive_failures = 0
+                            
+                            # Restart timers
+                            if 'status' in timers_to_restart:
+                                self.status_timer.start()
+                            if 'input' in timers_to_restart:
+                                QTimer.singleShot(1000, lambda: self.input_timer.start())
+                            
+                            # Restore gas flow state
+                            print("🔄 Step 4: Restoring gas flow state...")
+                            QTimer.singleShot(1500, self._restore_gas_flow_state)
+                            
+                            print("="*70)
+                            print("✅ RECONNECTION COMPLETE - SYSTEM OPERATIONAL")
+                            print("="*70 + "\n")
+                            
+                            # Show success message to user
+                            QMessageBox.information(
+                                self,
+                                "Arduino Reconnected",
+                                "Arduino connection has been restored.\n\nGas flow settings are being restored...\n\nSystem operation can continue."
+                            )
+                            
+                            return True
+                        else:
+                            print(f"⚠️ Reconnection succeeded but communication test failed")
+                    else:
+                        print(f"⚠️ Reconnection attempt {attempt} failed")
+                        
+                except Exception as e:
+                    print(f"❌ Error during reconnection attempt {attempt}: {e}")
+                
+                # Wait before next attempt
+                if attempt < max_attempts:
+                    wait_time = attempt * 2.0
+                    print(f"⏳ Waiting {wait_time}s before next attempt...")
+                    time.sleep(wait_time)
+            
+            # All attempts failed
+            print(f"❌ Failed to reconnect Arduino after {max_attempts} attempts")
+            QMessageBox.critical(
+                self,
+                "Arduino Connection Lost",
+                f"Failed to reconnect to Arduino after {max_attempts} attempts.\n\n"
+                "System is now in error state. Please check:\n"
+                "1. Arduino USB connection\n"
+                "2. Arduino power\n"
+                "3. USB cable quality\n\n"
+                "You may need to restart the application."
+            )
+            return False
+            
+        finally:
+            self.arduino_reconnection_in_progress = False
+    
     def _ensure_gas_controller_running(self) -> bool:
         """Ensure gas controller is running, start if needed. Returns True if running."""
+        # If gas controller not initialized yet, initialize it synchronously
         if not self.gas_controller:
-            return False
+            print("🌀 Gas controller not initialized - initializing now for sputter mode...")
+            try:
+                # Exclude Arduino port if connected
+                excluded = []
+                if self.arduino and self.arduino.is_connected and self.arduino.serial_port:
+                    excluded.append(self.arduino.serial_port.port)
+                    print(f"🌀 Excluding Arduino port {self.arduino.serial_port.port} from MFC scan")
+                
+                # Create gas controller synchronously (we need it NOW for sputter mode)
+                self.gas_controller = GasFlowController(
+                    self.cfg.gas_control, 
+                    self.safety_controller, 
+                    excluded_ports=excluded,
+                    arduino_controller=self.arduino
+                )
+                print("✅ Gas controller initialized successfully")
+                
+                # Wire MFC controls now that gas controller is ready
+                try:
+                    self._wire_mfc_controls()
+                except Exception as e:
+                    print(f"⚠️ Could not wire MFC controls: {e}")
+                
+            except Exception as e:
+                print(f"❌ Failed to initialize gas controller: {e}")
+                import traceback
+                traceback.print_exc()
+                return False
         
         try:
             # Check if already running (subprocess controller has _process attribute)
@@ -1270,6 +1486,8 @@ class AutoControlWindow(QMainWindow):
             
         except Exception as e:
             print(f"❌ Failed to start gas controller: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def _stop_gas_controller_if_not_needed(self) -> None:
@@ -1339,7 +1557,7 @@ class AutoControlWindow(QMainWindow):
             
             try:
                 # Import the standby procedure
-                go_to_standby = self._import_from_auto_procedures('go_to_standby')
+                go_to_standby = _import_from_auto_procedures('go_to_standby')
                 
                 def on_standby_finished(success: bool, message: str) -> None:
                     """Handle completion of standby procedure."""
@@ -1469,7 +1687,7 @@ class AutoControlWindow(QMainWindow):
         
         try:
             # Import the proper shutdown function
-            go_to_default_state = self._import_from_auto_procedures('go_to_default_state')
+            go_to_default_state = _import_from_auto_procedures('go_to_default_state')
             
             def on_finished(success: bool, message: str) -> None:
                 """Handle completion of close all procedure."""
@@ -1749,6 +1967,8 @@ class AutoControlWindow(QMainWindow):
                     try:
                         click_handler = create_click_handler(mfc_id)
                         widget.mousePressEvent = click_handler
+                        # Set cursor to pointer to indicate clickability
+                        widget.setCursor(Qt.PointingHandCursor)
                         print(f"DEBUG: Successfully wired click handler for {widget_name}")
                     except Exception as e:
                         print(f"DEBUG: Failed to wire {widget_name}: {e}")
@@ -1757,6 +1977,11 @@ class AutoControlWindow(QMainWindow):
 
     def _show_mfc_setpoint_dialog(self, mfc_id: str) -> None:
         """Show setpoint dialog for the specified MFC."""
+        print(f"🎛️ DEBUG: _show_mfc_setpoint_dialog called for {mfc_id}")
+        print(f"    System status: {self.system_status}")
+        print(f"    Gas controller: {self.gas_controller}")
+        print(f"    Gas controller running: {hasattr(self.gas_controller, '_process') and self.gas_controller._process is not None if self.gas_controller else False}")
+        
         # Only allow gas flow setting when system is in sputter state
         if self.system_status != 'sputter':
             QMessageBox.information(
@@ -2642,7 +2867,7 @@ class AutoControlWindow(QMainWindow):
                 self._complete_load_unload_procedure()
             else:
                 # User cancelled - turn off light and warn about gate valve being open
-                set_relay_safe = self._import_from_auto_procedures('set_relay_safe')
+                set_relay_safe = _import_from_auto_procedures('set_relay_safe')
                 
                 # Turn off chamber light
                 print("💡 Turning off chamber light (cancelled)...")
@@ -2664,7 +2889,7 @@ class AutoControlWindow(QMainWindow):
         except Exception as e:
             # Turn off chamber light on error
             try:
-                set_relay_safe = self._import_from_auto_procedures('set_relay_safe')
+                set_relay_safe = _import_from_auto_procedures('set_relay_safe')
                 
                 print("💡 Turning off chamber light (error)...")
                 set_relay_safe('btnLightBulb', False, self.arduino, self.safety_controller, self.relay_map)
@@ -2886,6 +3111,9 @@ class AutoControlWindow(QMainWindow):
                 # Digital
                 di = self.arduino.get_digital_inputs()
                 if di is not None:
+                    # Reset failure counter on successful communication
+                    self.arduino_consecutive_failures = 0
+                    
                     # Store for safety controller (4 digital inputs: Door, Water, Rod, Spare)
                     previous_states = self.last_digital_inputs.copy()
                     self.last_digital_inputs = [bool(di[i]) if i < len(di) else False for i in range(4)]
@@ -2897,7 +3125,19 @@ class AutoControlWindow(QMainWindow):
                             indicator_state = bool(di[idx])
                             set_interlock_indicator(w, indicator_state)
                 else:
-                    # No connection or error - set all to False for safety
+                    # No connection or error - increment failure counter
+                    self.arduino_consecutive_failures += 1
+                    print(f"⚠️ Arduino communication failure ({self.arduino_consecutive_failures}/{self.max_consecutive_failures})")
+                    
+                    # Trigger automatic reconnection after threshold
+                    if self.arduino_consecutive_failures >= self.max_consecutive_failures:
+                        print(f"🔴 Maximum consecutive failures reached - triggering reconnection")
+                        # Reset counter to prevent repeated triggers
+                        self.arduino_consecutive_failures = 0
+                        # Attempt reconnection in background using QTimer to avoid blocking
+                        QTimer.singleShot(100, self.attempt_arduino_reconnection)
+                    
+                    # Set all to False for safety
                     # digital_inputs order: [water_flow, rod_home, door_close, spare]
                     self.last_digital_inputs = [False, False, False, False]
                     for idx, obj_name in enumerate(["indWater", "indRod", "indDoor"]):
@@ -3020,7 +3260,7 @@ class AutoControlWindow(QMainWindow):
             return
         
         # Import the procedure
-        quick_reset_to_standby = self._import_from_auto_procedures('quick_reset_to_standby')
+        quick_reset_to_standby = _import_from_auto_procedures('quick_reset_to_standby')
         
         # Check if another procedure is running
         if self.current_procedure is not None:
@@ -3037,7 +3277,7 @@ class AutoControlWindow(QMainWindow):
                 return
             
             # Cancel the running procedure
-            cancel_running_procedures = self._import_from_auto_procedures('cancel_running_procedures')
+            cancel_running_procedures = _import_from_auto_procedures('cancel_running_procedures')
             
             cancel_running_procedures()
             self.current_procedure = None
@@ -3500,7 +3740,18 @@ def run() -> int:
     # CRITICAL: Initialize Arduino FIRST to prevent unwanted relay operations during GUI setup
     # ========================================
     print("🔌 DEBUG: *** STEP 1: Creating ArduinoController BEFORE GUI ***")
-    arduino = ArduinoController()
+    # Load config to get Arduino port
+    from config import load_config
+    cfg = load_config()
+    arduino_port = cfg.serial.arduino_port if cfg.serial.arduino_port else None
+    
+    if arduino_port:
+        print(f"📍 Using configured Arduino port: {arduino_port}")
+    else:
+        print("⚠️  No configured Arduino port, using auto-detection")
+        print("    💡 Run detect_arduino_port.py to configure a specific port")
+    
+    arduino = ArduinoController(config_port=arduino_port)
     print("✅ DEBUG: ArduinoController instance created successfully")
     
     # Attempt Arduino connection before GUI initialization to establish communication early

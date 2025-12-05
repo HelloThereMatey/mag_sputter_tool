@@ -11,7 +11,6 @@ import subprocess
 import threading
 import time
 import json
-import logging
 import platform
 from pathlib import Path
 from dataclasses import dataclass
@@ -96,9 +95,7 @@ class GasFlowController:
         self.config = config
         self.safety_controller = safety_controller
         self.excluded_ports = excluded_ports or []
-        
-        # Initialize logging
-        self.logger = logging.getLogger(__name__)
+        self.arduino_controller = arduino_controller  # For status monitoring
         
         # Initialize state tracking
         self._last_readings: Dict[str, MFCReading] = {}
@@ -111,10 +108,11 @@ class GasFlowController:
         # Initialize MFC channels from config
         self.channels: Dict[str, MFCChannel] = {}
         
-        # Auto-detect port is DEFERRED until start() to prevent blocking GUI startup
-        # self._detect_and_update_port()
+        # NO AUTO-DETECTION: Ports must be configured explicitly in config.yml
+        # Use detect_mfc_ports.py script to scan and update configuration
         
         self._init_channels()
+        self._validate_port_configuration()
         
         # Thread management
         self._running = False
@@ -142,157 +140,49 @@ class GasFlowController:
         self._status_callbacks: List[Callable] = []
         self._error_callbacks: List[Callable] = []
     
-    def _detect_and_update_port(self) -> None:
-        """Auto-detect the correct serial port for Alicat MFCs."""
-        configured_port = self.config.get('serial_port')
+    def _validate_port_configuration(self) -> None:
+        """Validate that all enabled MFCs have proper serial port configuration.
         
-        # Get a unit ID to test with (use first available)
-        mfc_config = self.config.get('mfcs', {})
-        if not mfc_config:
-            return
-            
-        # Find a valid unit ID to test
-        test_unit_id = 'A'
-        for cfg in mfc_config.values():
-            if 'unit_id' in cfg:
-                test_unit_id = cfg['unit_id']
-                break
+        Raises warnings for invalid configurations but doesn't prevent initialization.
+        Users should run detect_mfc_ports.py to auto-configure ports.
+        """
+        invalid_ports = []
         
-        if configured_port:
-            self.logger.info(f"Checking Alicat connection on {configured_port} (Unit {test_unit_id})...")
-            
-            # 1. Try configured port first (if not excluded)
-            if configured_port not in self.excluded_ports:
-                if self._test_port(configured_port, test_unit_id):
-                    self.logger.info(f"✅ Alicat found on configured port: {configured_port}")
-                    return
-            else:
-                self.logger.info(f"ℹ️ Configured port {configured_port} is excluded (likely Arduino). Skipping.")
-                
-            self.logger.warning(f"⚠️ Alicat not found on {configured_port}. Scanning available ports...")
-        else:
-            self.logger.info("ℹ️ No serial port configured. Scanning available ports...")
-        
-        # 2. Scan available ports
-        found_port = self._scan_ports(test_unit_id)
-        
-        if found_port:
-            self.logger.info(f"✅ Found Alicat on port: {found_port}")
-            
-            # Update runtime config
-            self.config['serial_port'] = found_port
-            
-            # Update config file
-            self._update_config_file(found_port)
-        else:
-            self.logger.error("❌ Could not find Alicat MFCs on any port")
-
-    def _scan_ports(self, unit_id: str) -> Optional[str]:
-        """Scan available serial ports for Alicat device."""
-        ports = list_ports.comports()
-        candidates = []
-        
-        # Device type patterns to exclude from scanning (HID devices, mice, keyboards, etc.)
-        hid_exclusion_patterns = ['mouse', 'keyboard', 'hid', 'input', 'touchpad', 'trackpad', 
-                                  'receiver', 'dongle', 'bluetooth', 'bt', 'wireless']
-        
-        # Prioritize USB serial devices, but exclude HID devices
-        for p in ports:
-            desc = p.description.lower()
-            manufacturer = (p.manufacturer or '').lower()
-            
-            # Skip HID/input devices that might be mouse/keyboard
-            if any(pattern in desc or pattern in manufacturer for pattern in hid_exclusion_patterns):
-                self.logger.info(f"Skipping HID/input device: {p.device} ({p.description})")
+        for name, channel in self.channels.items():
+            if not channel.enabled:
                 continue
-                
-            if "usb" in desc or "serial" in desc:
-                candidates.append(p.device)
-        
-        # Add remaining ports (also excluding HID devices)
-        for p in ports:
-            if p.device not in candidates:
-                desc = p.description.lower()
-                manufacturer = (p.manufacturer or '').lower()
-                
-                # Skip HID/input devices
-                if any(pattern in desc or pattern in manufacturer for pattern in hid_exclusion_patterns):
-                    continue
-                    
-                candidates.append(p.device)
-                
-        for port in candidates:
-            if port in self.excluded_ports:
-                self.logger.info(f"Skipping excluded port {port}")
-                continue
-                
-            self.logger.info(f"Scanning {port}...")
-            if self._test_port(port, unit_id):
-                return port
-                
-        return None
-
-    def _test_port(self, port: str, unit_id: str) -> bool:
-        """Test if an Alicat unit responds on a port."""
-        try:
-            # Run alicat CLI command to check state
-            # alicat <port> --unit <id> (no args returns state)
-            cmd = ['alicat', port, '--unit', unit_id]
             
-            # Run with short timeout
-            result = subprocess.run(
-                cmd, 
-                capture_output=True, 
-                text=True, 
-                timeout=2.0
+            # Check for placeholder/invalid port values
+            if (not channel.serial_port or 
+                channel.serial_port == 'serial_port' or
+                channel.serial_port.strip() == ''):
+                invalid_ports.append(f"{name} (Unit {channel.unit_id})")
+                channel.enabled = False  # Disable channel with invalid port
+                print(
+                    f"❌ {name} (Unit {channel.unit_id}): Invalid serial port configuration '{channel.serial_port}'"
+                )
+        
+        if invalid_ports:
+            print(
+                f"\n⚠️  SERIAL PORT CONFIGURATION ERROR ⚠️\n"
+                f"The following MFCs have invalid/unconfigured serial ports:\n"
+                f"  {', '.join(invalid_ports)}\n\n"
+                f"To fix this, run the port detection script:\n"
+                f"  python gas_control/detect_mfc_ports.py\n\n"
+                f"Or manually edit gas_control/config.yml and set correct serial ports.\n"
+                f"These channels have been disabled until ports are configured."
             )
-            
-            if result.returncode == 0:
-                return True
-            return False
-        except Exception:
-            return False
 
-    def _update_config_file(self, new_port: str) -> None:
-        """Update the config.yml file with the new port."""
-        try:
-            config_path = Path(__file__).parent / 'config.yml'
-            if not config_path.exists():
-                self.logger.warning(f"Config file not found at {config_path}")
-                return
-                
-            content = config_path.read_text()
-            
-            lines = content.splitlines()
-            new_lines = []
-            updated = False
-            
-            for line in lines:
-                if 'serial_port:' in line and not updated:
-                    # Check if this is likely the global setting (indentation)
-                    if line.strip().startswith('serial_port:'):
-                        new_lines.append(f"  serial_port: '{new_port}'  # Auto-detected")
-                        updated = True
-                        continue
-                new_lines.append(line)
-            
-            if updated:
-                config_path.write_text('\n'.join(new_lines) + '\n')
-                self.logger.info(f"Updated config.yml with new port: {new_port}")
-            else:
-                self.logger.warning("Could not find serial_port key in config.yml to update")
-                
-        except Exception as e:
-            self.logger.error(f"Failed to update config file: {e}")
+    # Port detection methods removed - use detect_mfc_ports.py script instead
+    # This prevents GUI freezing and mouse conflicts during initialization
 
     def _init_channels(self) -> None:
         """Initialize MFC channels from configuration."""
         mfc_config = self.config.get('mfcs', {})
-        self.logger.info(f"Subprocess GasFlowController initializing with MFC config: {mfc_config}")
         
         global_port = self.config.get('serial_port')
         if not global_port:
-            self.logger.error("❌ No serial port configured for MFCs. Gas control will be disabled.")
+            print("❌ No serial port configured for MFCs. Gas control will be disabled.")
             global_port = "COM_MISSING"
         
         for name, channel_config in mfc_config.items():
@@ -314,7 +204,6 @@ class GasFlowController:
             self._setpoints[name] = 0.0
             self._consecutive_errors[name] = 0  # Track consecutive errors per channel
             
-        self.logger.info(f"Initialized {len(self.channels)} MFC channels: {list(self.channels.keys())}")
     
     def _execute_cli_command(self, channel_name: str, command_args: List[str], retries: int = None) -> Optional[Dict[str, Any]]:
         """Execute a CLI command with error handling and retries.
@@ -328,7 +217,7 @@ class GasFlowController:
             Dictionary with command result or None if failed
         """
         if channel_name not in self.channels:
-            self.logger.error(f"Unknown MFC channel: {channel_name}")
+            print(f"Unknown MFC channel: {channel_name}")
             return None
             
         channel = self.channels[channel_name]
@@ -348,7 +237,6 @@ class GasFlowController:
                 time_since_last = current_time - self._last_command_time
                 if time_since_last < self.command_spacing:
                     delay_needed = self.command_spacing - time_since_last
-                    self.logger.debug(f"Enforcing command spacing: waiting {delay_needed:.3f}s")
                     time.sleep(delay_needed)
                 
                 self._last_command_time = time.time()
@@ -357,8 +245,6 @@ class GasFlowController:
                 # Add --timeout parameter to CLI command for better reliability
                 #if '--timeout' not in full_command:
                    # full_command.extend(['--timeout', '2.0'])  # 2 second timeout at CLI level
-                
-                self.logger.debug(f"Executing CLI command: {' '.join(full_command)}")
                 
                 # Execute the CLI command
                 result = subprocess.run(
@@ -388,7 +274,6 @@ class GasFlowController:
                         channel.last_error = None
                         self._consecutive_errors[channel_name] = 0  # Reset error count on success
                         
-                        self.logger.debug(f"CLI command for {channel_name} completed in {response_time:.1f}ms")
                         return {
                             'success': True,
                             'data': data,
@@ -396,13 +281,10 @@ class GasFlowController:
                         }
                         
                     except (json.JSONDecodeError, ValueError) as e:
-                        self.logger.error(f"Failed to parse CLI output for {channel_name}: {e}")
-                        self.logger.debug(f"Raw stdout: {repr(result.stdout)}")
-                        self.logger.debug(f"Raw stderr: {repr(result.stderr)}")
+                        print(f"Failed to parse CLI output for {channel_name}: {e}")
                         
                         # If JSON parse fails but command succeeded, it might be a serial issue - retry
                         if attempt < retries:
-                            self.logger.info(f"Retrying {channel_name} due to parse error (attempt {attempt + 1})")
                             time.sleep(0.5)  # Longer delay for serial recovery
                             continue
                         
@@ -415,13 +297,11 @@ class GasFlowController:
                     # Check for specific serial communication errors
                     if any(err in error_msg for err in ["UnicodeDecodeError", "codec can't decode", 
                                                        "ValueError", "invalid literal", "Unexpected register value"]):
-                        self.logger.warning(f"Serial communication error for {channel_name} (attempt {attempt + 1}): {error_msg}")
                         if attempt < retries:
                             # Longer delay for serial recovery
                             time.sleep(1.0)
                             continue
                     else:
-                        self.logger.warning(f"CLI command failed for {channel_name} (attempt {attempt + 1}): {error_msg}")
                         if attempt < retries:
                             time.sleep(0.2)
                             continue
@@ -433,20 +313,19 @@ class GasFlowController:
                         
                         # Temporarily disable channel if too many consecutive errors
                         if self._consecutive_errors[channel_name] >= self.max_consecutive_errors:
-                            self.logger.error(f"Disabling {channel_name} due to {self._consecutive_errors[channel_name]} consecutive errors")
+                            print(f"Disabling {channel_name} due to {self._consecutive_errors[channel_name]} consecutive errors")
                             channel.enabled = False
                         
             except subprocess.TimeoutExpired:
                 error_msg = f"CLI command timeout after {self.cli_timeout}s"
-                self.logger.warning(f"{error_msg} for {channel_name} (attempt {attempt + 1})")
                 
                 if attempt == retries:  # Last attempt
                     channel.connection_status = "error"
                     channel.last_error = error_msg
+                    print(f"All retry attempts exhausted for {channel_name}")
                     
             except Exception as e:
                 error_msg = f"CLI command exception: {e}"
-                self.logger.error(f"{error_msg} for {channel_name} (attempt {attempt + 1})")
                 
                 if attempt == retries:  # Last attempt
                     channel.connection_status = "error"
@@ -463,7 +342,6 @@ class GasFlowController:
         # Check if channel is temporarily disabled due to errors
         if (channel_name in self._consecutive_errors and 
             self._consecutive_errors[channel_name] >= self.max_consecutive_errors):
-            self.logger.debug(f"Skipping {channel_name} - too many consecutive errors")
             return None
             
         result = self._execute_cli_command(channel_name, [])
@@ -495,12 +373,12 @@ class GasFlowController:
         """Set flow rate for an MFC using CLI."""
         # Safety checks
         if channel_name not in self.channels:
-            self.logger.error(f"Unknown channel: {channel_name}")
+            print(f"Unknown channel: {channel_name}")
             return False
             
         max_flow = self.channels[channel_name].max_flow
         if flow_rate > max_flow:
-            self.logger.error(f"Flow rate {flow_rate} exceeds maximum {max_flow} for {channel_name}")
+            print(f"Flow rate {flow_rate} exceeds maximum {max_flow} for {channel_name}")
             return False
         
         # Safety system integration
@@ -520,9 +398,7 @@ class GasFlowController:
             actual_setpoint = data.get('setpoint', 0.0)
             
             if abs(actual_setpoint - flow_rate) > 0.1:
-                self.logger.warning(f"Setpoint verification failed for {channel_name}: requested {flow_rate}, got {actual_setpoint}")
-            else:
-                self.logger.info(f"Set {channel_name} flow rate to {flow_rate} sccm")
+                print(f"Setpoint verification failed for {channel_name}: requested {flow_rate}, got {actual_setpoint}")
             
             return True
         
@@ -535,7 +411,6 @@ class GasFlowController:
         if result and result['success']:
             # Update gas type cache
             self.channels[channel_name].gas_type = gas_type
-            self.logger.info(f"Set {channel_name} gas type to {gas_type}")
             return True
         
         return False
@@ -543,24 +418,20 @@ class GasFlowController:
     def start(self) -> bool:
         """Start the subprocess-based gas flow controller."""
         if self._running:
-            self.logger.warning("Gas flow controller already running")
+            print("Gas flow controller already running")
             return True
             
         try:
-            # Re-verify port connection before starting thread
-            # This handles cases where the device was off during init but is on now
-            current_port = self.config.get('serial_port')
+            # Check if any channels are enabled and properly configured
+            enabled_channels = [name for name, ch in self.channels.items() if ch.enabled]
             
-            # Only attempt detection if we don't have a port or if the port is clearly invalid
-            if not current_port or current_port == 'serial_port':
-                 self.logger.info("No port configured. Attempting detection...")
-                 self._detect_and_update_port()
+            if not enabled_channels:
+                print(
+                    "Cannot start: No enabled MFC channels with valid port configuration.\n"
+                    "Run 'python gas_control/detect_mfc_ports.py' to configure ports."
+                )
+                return False
             
-            # If we still don't have a port, we can't start
-            if not self.config.get('serial_port'):
-                 self.logger.error("Cannot start: No valid serial port found for MFCs")
-                 return False
-
             self._running = True
             self._control_thread = threading.Thread(target=self._control_loop, daemon=True)
             self._control_thread.start()
@@ -569,11 +440,10 @@ class GasFlowController:
             # The control loop will handle connection establishment naturally
             # self._test_initial_connectivity()
             
-            self.logger.info("Subprocess gas flow controller started successfully")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to start subprocess gas flow controller: {e}")
+            print(f"Failed to start subprocess gas flow controller: {e}")
             self._running = False
             return False
     
@@ -582,7 +452,6 @@ class GasFlowController:
         if not self._running:
             return
             
-        self.logger.info("Stopping subprocess gas flow controller...")
         self._running = False
         
         # Send stop command
@@ -591,21 +460,39 @@ class GasFlowController:
         # Wait for control thread
         if self._control_thread and self._control_thread.is_alive():
             self._control_thread.join(timeout=3.0)
-            
-        self.logger.info("Subprocess gas flow controller stopped")
     
     def _control_loop(self) -> None:
         """Main control loop for handling commands and periodic readings."""
-        self.logger.info("Subprocess gas flow control loop started")
         
         last_read_time = time.time()
+        last_stats_log = time.time()
+        last_arduino_check = time.time()  # For 30-second arduino status prints
+        commands_processed = 0
         
         try:
             while self._running:
                 current_time = time.time()
                 
                 # Process commands from queue
-                self._process_commands()
+                cmd_count = self._process_commands()
+                commands_processed += cmd_count
+                
+                # Log stats every 5 seconds
+                if current_time - last_stats_log >= 5.0:
+                    commands_processed = 0
+                    last_stats_log = current_time
+                
+                # Print Arduino status every 30 seconds for debugging disconnection issues
+                if current_time - last_arduino_check >= 30.0:
+                    if self.arduino_controller:
+                        arduino_connected = self.arduino_controller.is_connected
+                        arduino_port = self.arduino_controller.serial_port.port if self.arduino_controller.serial_port else "None"
+                        cmd_queue_size = self.arduino_controller.command_queue.qsize() if hasattr(self.arduino_controller, 'command_queue') else "N/A"
+                        resp_queue_size = self.arduino_controller.response_queue.qsize() if hasattr(self.arduino_controller, 'response_queue') else "N/A"
+                        print(f"🔍 [GasFlowController Debug] Arduino Status: connected={arduino_connected}, port={arduino_port}, cmd_queue={cmd_queue_size}, resp_queue={resp_queue_size}")
+                    else:
+                        print("🔍 [GasFlowController Debug] Arduino controller reference not available")
+                    last_arduino_check = current_time
                 
                 # Periodic reading of all MFCs
                 if (self.auto_read_enabled and 
@@ -618,9 +505,9 @@ class GasFlowController:
                 time.sleep(0.1)
                 
         except Exception as e:
-            self.logger.error(f"Error in subprocess gas flow control loop: {e}")
+            print(f"Error in subprocess gas flow control loop: {e}")
         finally:
-            self.logger.info("Subprocess gas flow control loop ended")
+            print("Subprocess gas flow control loop ended")
     
     def reset_channel_errors(self, channel_name: str = None) -> None:
         """Reset error counts for a channel or all channels.
@@ -631,11 +518,10 @@ class GasFlowController:
         if channel_name:
             if channel_name in self._consecutive_errors:
                 self._consecutive_errors[channel_name] = 0
-                if channel_name in self.channels:
-                    self.channels[channel_name].enabled = True
-                    self.channels[channel_name].connection_status = "disconnected"
-                    self.channels[channel_name].last_error = None
-                    self.logger.info(f"Reset errors and re-enabled channel {channel_name}")
+                if name in self.channels:
+                    self.channels[name].enabled = True
+                    self.channels[name].connection_status = "disconnected"
+                    self.channels[name].last_error = None
         else:
             # Reset all channels
             for name in self._consecutive_errors:
@@ -644,11 +530,9 @@ class GasFlowController:
                     self.channels[name].enabled = True
                     self.channels[name].connection_status = "disconnected" 
                     self.channels[name].last_error = None
-            self.logger.info("Reset errors for all channels")
     
     def _test_initial_connectivity(self) -> None:
         """Test initial connectivity to all enabled MFCs."""
-        self.logger.info("Testing initial MFC connectivity...")
         
         # Disable auto-reading during initial test to prevent conflicts
         original_auto_read = self.auto_read_enabled
@@ -659,25 +543,17 @@ class GasFlowController:
                 if not channel.enabled:
                     continue
                     
-                self.logger.info(f"Testing connectivity to {channel_name}...")
-                
                 # Add extra delay before first command to let serial port settle
                 time.sleep(1.0)
                 
                 reading = self._cli_get_reading(channel_name)
                 
                 if reading:
-                    self.logger.info(f"✅ {channel_name} connected - Gas: {reading.gas}, Flow: {reading.mass_flow}")
+                    pass
                 else:
-                    self.logger.warning(f"❌ {channel_name} connection failed")
                     # For initial connectivity failures, try once more after a longer delay
-                    self.logger.info(f"Retrying {channel_name} after 2s delay...")
                     time.sleep(2.0)
                     reading = self._cli_get_reading(channel_name)
-                    if reading:
-                        self.logger.info(f"✅ {channel_name} connected on retry - Gas: {reading.gas}, Flow: {reading.mass_flow}")
-                    else:
-                        self.logger.warning(f"❌ {channel_name} still failed on retry")
                 
                 # Add delay between channel tests
                 time.sleep(0.5)
@@ -693,19 +569,23 @@ class GasFlowController:
                 
             try:
                 reading = self._cli_get_reading(channel_name)
-                if reading:
-                    self.logger.debug(f"Read {channel_name}: {reading.mass_flow} sccm")
                     
             except Exception as e:
-                self.logger.error(f"Error reading MFC {channel_name}: {e}")
+                pass
     
-    def _process_commands(self) -> None:
-        """Process commands from the command queue."""
+    def _process_commands(self) -> int:
+        """Process commands from the command queue.
+        
+        Returns:
+            Number of commands processed
+        """
+        commands_processed = 0
         try:
             while not self._command_queue.empty():
                 try:
                     command_id, command, args = self._command_queue.get_nowait()
                     result = self._execute_command(command, args)
+                    commands_processed += 1
                     
                     # Return result if someone is waiting
                     if command_id in self._result_queues:
@@ -714,12 +594,13 @@ class GasFlowController:
                 except Empty:
                     break
                 except Exception as e:
-                    self.logger.error(f"Error processing command: {e}")
                     if command_id in self._result_queues:
                         self._result_queues[command_id].put(f"Error: {e}")
                         
         except Exception as e:
-            self.logger.error(f"Error in command processing: {e}")
+            print(f"Error in command processing: {e}")
+        
+        return commands_processed
     
     def _execute_command(self, command: str, args: Dict[str, Any]) -> Any:
         """Execute a command using CLI operations."""
@@ -750,11 +631,11 @@ class GasFlowController:
                 return True
                 
             else:
-                self.logger.error(f"Unknown command: {command}")
+                print(f"Unknown command: {command}")
                 return None
                 
         except Exception as e:
-            self.logger.error(f"Error executing command {command}: {e}")
+            print(f"Error executing command {command}: {e}")
             return None
     
     def _send_command(self, command: str, args: Dict[str, Any], wait_for_result: bool = False) -> Any:
@@ -772,14 +653,13 @@ class GasFlowController:
                 del self._result_queues[command_id]
                 
                 if isinstance(result, str) and result.startswith("Error:"):
-                    self.logger.error(f"Command failed: {result}")
                     return None
                 
                 return result
             except Exception as e:
                 if command_id in self._result_queues:
                     del self._result_queues[command_id]
-                self.logger.error(f"Command timeout or error: {e}")
+                print(f"Command timeout or error: {e}")
                 return None
         
         return None
@@ -803,7 +683,7 @@ class GasFlowController:
             }, wait_for_result=True)
             return bool(result)
         except Exception as e:
-            self.logger.error(f"Failed to set flow rate: {e}")
+            print(f"Failed to set flow rate: {e}")
             return False
     
     def set_gas_type(self, channel: str, gas_type: str) -> bool:
@@ -823,7 +703,7 @@ class GasFlowController:
             }, wait_for_result=True)
             return bool(result)
         except Exception as e:
-            self.logger.error(f"Failed to set gas type: {e}")
+            print(f"Failed to set gas type: {e}")
             return False
     
     def stop_flow(self, channel: str) -> bool:
@@ -836,7 +716,7 @@ class GasFlowController:
             result = self._send_command('stop_all', {}, wait_for_result=True)
             return bool(result)
         except Exception as e:
-            self.logger.error(f"Failed to stop all flows: {e}")
+            print(f"Failed to stop all flows: {e}")
             return False
     
     def get_reading(self, channel: str) -> Optional[MFCReading]:
@@ -848,7 +728,7 @@ class GasFlowController:
             }, wait_for_result=True)
             return result if isinstance(result, MFCReading) else None
         except Exception as e:
-            self.logger.error(f"Failed to get reading: {e}")
+            print(f"Failed to get reading: {e}")
             return None
     
     def get_all_readings(self) -> Dict[str, MFCReading]:

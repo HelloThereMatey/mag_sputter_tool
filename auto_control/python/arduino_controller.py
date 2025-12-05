@@ -24,7 +24,14 @@ class ArduinoController:
     """
     NUM_RELAYS = 23  # Updated from 21 to 23
     
-    def __init__(self):
+    def __init__(self, config_port: Optional[str] = None):
+        """
+        Initialize Arduino controller.
+        
+        Args:
+            config_port: Hardcoded port from configuration (preferred method).
+                        If None, will use auto-detection (legacy method).
+        """
         self.serial_port: Optional[serial.Serial] = None
         self.is_connected = False
         self.command_queue = queue.Queue()
@@ -33,6 +40,9 @@ class ArduinoController:
         self.stop_thread = False
         self.relay_states = [False] * self.NUM_RELAYS  # Track relay states locally
         self.connection_lock = threading.Lock()
+        
+        # Configuration
+        self.config_port = config_port  # Hardcoded port from config file
         
         # Serial communication settings
         self.baud_rate = 9600  # Standard Arduino baudrate
@@ -188,8 +198,8 @@ class ArduinoController:
             test_serial = serial.Serial(
                 port=state["port"],
                 baudrate=self.baud_rate,
-                timeout=2.0,
-                write_timeout=2.0,
+                timeout=3.0,
+                write_timeout=3.0,
                 dsrdtr=False,
                 rtscts=False
             )
@@ -266,8 +276,8 @@ class ArduinoController:
             test_serial = serial.Serial(
                 port=port,
                 baudrate=9600,
-                timeout=2.0,  # Increased timeout to match full detection
-                write_timeout=2.0,
+                timeout=3.0,  # Increased timeout for better reliability
+                write_timeout=3.0,
                 dsrdtr=False,  # Disable DTR to prevent Arduino reset
                 rtscts=False   # Disable RTS/CTS
             )
@@ -395,7 +405,7 @@ class ArduinoController:
     def auto_connect(self) -> bool:
         """
         Automatically find and connect to Arduino.
-        Uses soft reconnection to avoid Arduino reset when possible.
+        Uses hardcoded port from config if available, otherwise falls back to detection.
         
         Returns:
             True if connection successful, False otherwise
@@ -406,33 +416,39 @@ class ArduinoController:
             print("ℹ️  Already connected to Arduino")
             return True
         
-        # Step 1: Skip soft reconnection for now - ANY serial connection triggers Arduino reset
-        # Even with DTR/RTS disabled, opening the serial port causes Arduino to reset and run setup()
-        # This triggers valve closure and safety checks, defeating the purpose of soft reconnection
-        # Step 1: Check for existing Arduino connection from previous session
-        # Temporarily disable connection reuse - hardware always resets Arduino
-        # Check for saved state info (for restoration after connection)
+        # Step 1: Try hardcoded config port first (PREFERRED METHOD)
+        if self.config_port:
+            print(f"📍 Using hardcoded port from config: {self.config_port}")
+            success = self.connect(self.config_port)
+            if success:
+                print(f"✅ Connected to Arduino on configured port {self.config_port}")
+                self.save_port_to_cache(self.config_port)
+                return True
+            else:
+                print(f"⚠️  Configured port {self.config_port} failed")
+                print("    💡 Run detect_arduino_port.py to update configuration")
+                print("    Falling back to auto-detection...")
         
+        # Step 2: Try cached port (soft reconnection)
         state = self.load_connection_state()
-        # Step 2: Smart port detection - try preferred port first if available
         preferred_port = state["port"] if state and state.get("port") else None
         
         if preferred_port:
-            print(f"🎯 Trying preferred port {preferred_port} first...")
-            # Try the known port directly - much faster than full detection
+            print(f"🎯 Trying cached port {preferred_port}...")
             success = self.connect(preferred_port)
             if success:
-                print(f"✅ Connected quickly to preferred port {preferred_port}!")
+                print(f"✅ Connected to cached port {preferred_port}")
                 self.save_port_to_cache(preferred_port)
                 return True
             else:
-                print(f"⚠️  Preferred port {preferred_port} failed, falling back to full detection")
+                print(f"⚠️  Cached port {preferred_port} failed, performing full detection")
         
-        # Fallback: Full port detection (may trigger Arduino reset)  
+        # Step 3: Full port detection (slowest, last resort)
         print("🔍 Performing full Arduino port detection...")
         port = self.find_arduino_port_with_test()
         if port is None:
             print("❌ Auto-connect failed: No Arduino found")
+            print("    💡 Run detect_arduino_port.py to configure the correct port")
             return False
         
         # Connect to the found port and cache it
@@ -468,8 +484,8 @@ class ArduinoController:
                 test_serial = serial.Serial(
                     port=port.device,
                     baudrate=9600,
-                    timeout=2.0,
-                    write_timeout=2.0
+                    timeout=3.0,
+                    write_timeout=3.0
                 )
                 
                 # Wait briefly and check for ARDUINO_READY
@@ -782,6 +798,9 @@ class ArduinoController:
     def _communication_worker(self):
         """Background thread worker for handling serial communication."""
         last_heartbeat = time.time()
+        last_stats_log = time.time()
+        commands_processed = 0
+        
         while not self.stop_thread and self.is_connected:
             try:
                 # Process outgoing commands if any
@@ -791,24 +810,31 @@ class ArduinoController:
                     
                     if isinstance(item, tuple) and len(item) == 2:
                         cmd_id, command = item
+                        start_time = time.time()
                         response = self.send_command_direct(command)
+                        elapsed = time.time() - start_time
                         self.response_queue.put((cmd_id, response))
+                        commands_processed += 1
                     else:
                         # Legacy support for direct string commands (if any)
                         command = item
                         response = self.send_command_direct(command)
                         self.response_queue.put(response)
+                        commands_processed += 1
                         
                 except queue.Empty:
                     pass
 
-                # Periodic heartbeat to indicate comm thread is alive (low-volume)
+                # Periodic heartbeat to indicate comm thread is alive
                 if time.time() - last_heartbeat >= 600.0:
-                    try:
-                        print("[comm thread] heartbeat: connected", flush=True)
-                    except Exception:
-                        pass
                     last_heartbeat = time.time()
+                
+                # Log detailed stats every 5 seconds for monitoring
+                if time.time() - last_stats_log >= 5.0:
+                    cmd_size = self.command_queue.qsize()
+                    resp_size = self.response_queue.qsize()
+                    commands_processed = 0  # Reset counter
+                    last_stats_log = time.time()
 
             except Exception as e:
                 print(f"Communication thread error: {e}", flush=True)
@@ -826,13 +852,16 @@ class ArduinoController:
             Response string from Arduino
         """
         if not self.is_connected or not self.serial_port:
+            print(f"Not connected or no serial port for command '{command}'")
             return "ERROR"
             
         try:
             # Send command
             command_bytes = f"{command}\n".encode()
+            write_start = time.time()
             self.serial_port.write(command_bytes)
             self.serial_port.flush()
+            write_elapsed = time.time() - write_start
 
             # Determine expected prefix for this command
             expected_prefix = None
@@ -848,10 +877,13 @@ class ArduinoController:
 
             # Read lines until we find the expected response or time out
             start = time.time()
+            lines_read = 0
+            
             while time.time() - start < timeout:
                 if self.serial_port.in_waiting > 0:
                     try:
                         line = self.serial_port.readline().decode().strip()
+                        lines_read += 1
                     except UnicodeDecodeError:
                         # skip non-text
                         continue
@@ -887,13 +919,13 @@ class ArduinoController:
             self.is_connected = False
             return "ERROR"
             
-    def send_command(self, command: str, timeout: float = 2.0) -> str:
+    def send_command(self, command: str, timeout: float = 5.0) -> str:
         """
         Send command via queue system (thread-safe) with ID matching.
         
         Args:
             command: Command string to send
-            timeout: Maximum time to wait for response
+            timeout: Maximum time to wait for response (default 5.0s)
             
         Returns:
             Response string from Arduino
@@ -903,6 +935,12 @@ class ArduinoController:
 
         # Generate unique ID for this command
         cmd_id = str(uuid.uuid4())
+        
+        # Log queue state before sending
+        cmd_queue_size = self.command_queue.qsize()
+        resp_queue_size = self.response_queue.qsize()
+        if cmd_queue_size > 5 or resp_queue_size > 5:
+            print(f"⚠️ Queue depths before command: cmd={cmd_queue_size}, resp={resp_queue_size}", flush=True)
 
         # Clear old responses (optional, but good for hygiene)
         # self.clear_response_queue() 
@@ -925,6 +963,7 @@ class ArduinoController:
                     else:
                         # Not our response (stale or from another thread), ignore or put back?
                         # For now, just ignore stale responses
+                        print(f"⚠️ Discarded stale response: expected {cmd_id[:8]}, got {resp_id[:8]}", flush=True)
                         continue
                 else:
                     # Legacy response (string), assume it's ours if we are single threaded?
@@ -932,6 +971,9 @@ class ArduinoController:
                     return item
                     
             except queue.Empty:
+                # Log timeout details
+                elapsed = time.time() - start_time
+                print(f"⏱️ Command timeout: '{command}' after {elapsed:.2f}s, queue sizes: cmd={self.command_queue.qsize()}, resp={self.response_queue.qsize()}", flush=True)
                 return "TIMEOUT"
                 
         return "TIMEOUT"
@@ -1037,7 +1079,10 @@ class ArduinoController:
             List of digital input states (True=HIGH, False=LOW), or None if error
         """
         command = "GET_DIGITAL_INPUTS"
+        start_time = time.time()
         response = self.send_command(command)
+        elapsed = time.time() - start_time
+        
         if response.startswith("DIGITAL_INPUTS:"):
             try:
                 states_str = response.split(":", 1)[1]
@@ -1047,10 +1092,10 @@ class ArduinoController:
                 print(f"❌ Error parsing digital inputs: {e}")
                 return None
         elif response == "ERROR":
-            print("❌ Arduino firmware doesn't support GET_DIGITAL_INPUTS command")
+            print(f"❌ Arduino firmware doesn't support GET_DIGITAL_INPUTS command")
             return None
         elif response == "TIMEOUT":
-            print("⏱️ Timeout waiting for digital inputs response")
+            print(f"⏱️ Timeout waiting for digital inputs response (after {elapsed:.3f}s)")
             return None
         else:
             print(f"⚠️ Unexpected response for digital inputs: '{response}'")
@@ -1078,11 +1123,17 @@ class ArduinoController:
         Returns:
             List of analog input voltages (0-5V), or None if error
         """
+        start_time = time.time()
         raw_values = self.get_analog_inputs()
+        elapsed = time.time() - start_time
+        
         if raw_values is not None:
             # Convert ADC values (0-1023) to voltages (0-5V)
-            return [value * 5.0 / 1023.0 for value in raw_values]
-        return None
+            voltages = [value * 5.0 / 1023.0 for value in raw_values]
+            return voltages
+        else:
+            print(f"Failed to read analog voltages after {elapsed:.3f}s")
+            return None
         
     def get_available_ports(self) -> List[Tuple[str, str]]:
         """

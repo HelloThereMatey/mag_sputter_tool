@@ -618,9 +618,24 @@ class LoginDialog(QDialog):
     # ==================== RFID Integration ====================
     
     def _start_rfid_reader(self) -> None:
-        """Start RFID reader thread in background."""
+        """Start RFID reader thread in background with configured port."""
         try:
-            self.rfid_thread = RFIDReaderThread()
+            # Load config to get RFID port
+            try:
+                from ..config import load_config
+            except ImportError:
+                from config import load_config
+            
+            cfg = load_config()
+            rfid_port = cfg.serial.rfid_port if cfg.serial.rfid_port else None
+            
+            if rfid_port:
+                print(f"📍 Using configured RFID port: {rfid_port}")
+                self.rfid_thread = RFIDReaderThread(port=rfid_port)
+            else:
+                print("⚠️  No configured RFID port, using auto-detection")
+                print("    💡 Run detect_rfid_port.py to configure a specific port")
+                self.rfid_thread = RFIDReaderThread()  # Will auto-detect
             
             # Connect signals
             self.rfid_thread.card_detected.connect(self._on_rfid_card_detected)

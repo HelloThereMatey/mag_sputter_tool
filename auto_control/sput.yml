@@ -23,6 +23,15 @@ dependencies:
 # Runtime app configuration for auto_control backend
 serial:
   baud: 9600
+  # Hardcoded serial port for Arduino Mega 2560
+  # Use detect_arduino_port.py script to find the correct port
+  arduino_port: '/dev/ttyACM0'  # Windows: COMx, Linux: /dev/ttyACMx or /dev/ttyUSBx
+  
+  # Hardcoded serial port for RFID reader (Raspberry Pi Pico)
+  # Use detect_rfid_port.py script to find the correct port
+  rfid_port: '/dev/ttyACM1'  # Windows: COMx, Linux: /dev/ttyACMx
+  
+  # Fallback: preferred_ports used if hardcoded ports fail (deprecated - prefer hardcoded)
   preferred_ports: [/dev/ttyACM0, /dev/ttyUSB3]
 
 relays:

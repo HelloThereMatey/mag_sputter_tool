@@ -9,7 +9,9 @@ from typing import Dict, List, Optional
 @dataclass
 class SerialConfig:
     baud: int = 9600
-    preferred_ports: List[str] = None
+    arduino_port: Optional[str] = None  # Hardcoded Arduino port
+    rfid_port: Optional[str] = None  # Hardcoded RFID port
+    preferred_ports: List[str] = None  # Fallback ports (deprecated)
 
 
 @dataclass
@@ -40,6 +42,8 @@ def load_config(path: Optional[str] = None) -> AppConfig:
     serial = data.get("serial", {})
     serial_cfg = SerialConfig(
         baud=int(serial.get("baud", 9600)),
+        arduino_port=serial.get("arduino_port"),
+        rfid_port=serial.get("rfid_port"),
         preferred_ports=list(serial.get("preferred_ports", []) or []),
     )
 
