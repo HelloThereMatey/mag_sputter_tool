@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Optional, Dict
 
 from PyQt5 import uic
-from PyQt5.QtCore import QTimer, Qt, QRunnable, QThreadPool, pyqtSignal, QObject, QEvent
-from PyQt5.QtWidgets import QMainWindow, QWidget, QMessageBox, QApplication
+from PyQt5.QtCore import QTimer, Qt, QRunnable, QThreadPool, pyqtSignal, QObject, QEvent, QRect
+from PyQt5.QtWidgets import QMainWindow, QWidget, QMessageBox, QApplication, QDesktopWidget
 import builtins
 # Support both package and script execution
 try:
@@ -358,6 +358,14 @@ class AutoControlWindow(QMainWindow):
             self.ion_gauge_auto_toggle_action.triggered.connect(self._on_ion_gauge_auto_toggle_changed)
             self.ion_gauge_auto_toggle_action.setStatusTip("Enable/disable automatic ion gauge toggle safety logic")
             
+            # Add manual Arduino reconnection menu item
+            reconnect_action = tools_menu.addAction('Reconnect Arduino')
+            reconnect_action.triggered.connect(self.manual_arduino_reconnection)
+            reconnect_action.setStatusTip("Manually trigger Arduino reconnection and restore gas flow state")
+            
+            # Add separator before system state
+            tools_menu.addSeparator()
+            
             # Add system state management action
             try:
                 # Import the dialog from widgets package if available
@@ -443,8 +451,7 @@ class AutoControlWindow(QMainWindow):
                     gas_controller = GasFlowController(
                         self.parent.cfg.gas_control, 
                         self.parent.safety_controller, 
-                        excluded_ports=excluded,
-                        arduino_controller=self.parent.arduino
+                        excluded_ports=excluded
                     )
                     
                     self.signals.finished.emit(True, "Gas controller initialized")
@@ -1448,8 +1455,7 @@ class AutoControlWindow(QMainWindow):
                 self.gas_controller = GasFlowController(
                     self.cfg.gas_control, 
                     self.safety_controller, 
-                    excluded_ports=excluded,
-                    arduino_controller=self.arduino
+                    excluded_ports=excluded
                 )
                 print("✅ Gas controller initialized successfully")
                 
@@ -3415,6 +3421,22 @@ class AutoControlWindow(QMainWindow):
             
             self._plotter_window = PlotterWindow(self.get_analog_voltages, parent=self)
             self._plotter_window.destroyed.connect(lambda *_: setattr(self, '_plotter_window', None))
+            
+            # Position plotter window on HDMI-A-1
+            try:
+                app = QApplication.instance()
+                if app:
+                    from PyQt5.QtCore import QRect
+                    # Get HDMI-A-1 geometry
+                    screens = app.screens()
+                    if len(screens) > 0:
+                        screen_geom = screens[0].geometry()  # First screen
+                        self._plotter_window.move(screen_geom.x(), screen_geom.y())
+                        self._plotter_window.resize(screen_geom.width(), screen_geom.height())
+                        print(f"📊 Plotter positioned on HDMI-A-1 at ({screen_geom.x()}, {screen_geom.y()})")
+            except Exception as e:
+                print(f"⚠️ Could not position plotter on HDMI-A-1: {e}")
+            
             self._plotter_window.show()
 
         else:
@@ -3502,6 +3524,21 @@ class AutoControlWindow(QMainWindow):
         print("📔 Creating new logbook window")
         self._logbook_window = LogbookWidget(parent=self, current_user=self.current_user)
         self._logbook_window.destroyed.connect(lambda: self._on_logbook_window_destroyed())
+        
+        # Position logbook window on HDMI-A-1
+        try:
+            app = QApplication.instance()
+            if app:
+                # Get HDMI-A-1 geometry
+                screens = app.screens()
+                if len(screens) > 0:
+                    screen_geom = screens[0].geometry()  # First screen
+                    self._logbook_window.move(screen_geom.x(), screen_geom.y())
+                    self._logbook_window.resize(screen_geom.width(), screen_geom.height())
+                    print(f"📔 Logbook positioned on HDMI-A-1 at ({screen_geom.x()}, {screen_geom.y()})")
+        except Exception as e:
+            print(f"⚠️ Could not position logbook on HDMI-A-1: {e}")
+        
         self._logbook_window.show()
     
     def _on_logbook_window_destroyed(self):
@@ -3530,6 +3567,23 @@ class AutoControlWindow(QMainWindow):
         # Show status in a temporary status bar message if available
         if hasattr(self, 'statusbar') and self.statusbar():
             self.statusbar().showMessage(status_msg, 3000)  # Show for 3 seconds
+    
+    def manual_arduino_reconnection(self) -> None:
+        """Manually trigger Arduino reconnection (called from Tools menu)."""
+        reply = QMessageBox.question(
+            self,
+            "Manual Arduino Reconnection",
+            "This will disconnect and reconnect to the Arduino.\n\n"
+            "Current gas flow settings will be preserved and restored.\n\n"
+            "Continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            print("🔧 Manual Arduino reconnection requested by user")
+            # Use QTimer to avoid blocking the menu
+            QTimer.singleShot(100, self.attempt_arduino_reconnection)
 
     def _setup_procedure_menu(self, procedure_menu) -> None:
         """Set up the Run Procedure menu with all available auto procedures."""
@@ -3737,6 +3791,79 @@ def run() -> int:
     signal.signal(signal.SIGINT, signal_handler)
     
     # ========================================
+    # Multi-Monitor Helper Functions
+    # ========================================
+    def get_screen_geometry(app: QApplication, screen_name: str = "HDMI-A-1") -> QRect:
+        """Get geometry of a specific screen by name.
+        
+        Args:
+            app: QApplication instance
+            screen_name: Name of screen (e.g., "HDMI-A-1", "HDMI-A-2")
+            
+        Returns:
+            QRect with screen geometry, or primary screen if not found
+        """
+        try:
+            # Try to get screen by name (requires Qt 5.10+)
+            screens = app.screens()
+            for screen in screens:
+                if screen.name() == screen_name:
+                    return screen.geometry()
+        except:
+            pass
+        
+        # Fallback: Try numeric index (HDMI-A-1 → index 0, HDMI-A-2 → index 1)
+        try:
+            if "HDMI-A-1" in screen_name:
+                index = 0
+            elif "HDMI-A-2" in screen_name:
+                index = 1
+            else:
+                index = 0
+            
+            screens = app.screens()
+            if index < len(screens):
+                return screens[index].geometry()
+        except:
+            pass
+        
+        # Final fallback: use primary screen
+        return app.primaryScreen().geometry()
+    
+    def position_window_on_screen(window: QWidget, app: QApplication, screen_name: str = "HDMI-A-1", 
+                                  fullscreen: bool = False, centered: bool = False) -> None:
+        """Position a window on a specific screen.
+        
+        Args:
+            window: Window to position
+            app: QApplication instance
+            screen_name: Target screen name (e.g., "HDMI-A-1")
+            fullscreen: If True, maximize to fill screen
+            centered: If True, center on screen (only if not fullscreen)
+        """
+        screen_geom = get_screen_geometry(app, screen_name)
+        print(f"🖥️ Screen '{screen_name}' geometry: {screen_geom.x()}, {screen_geom.y()}, {screen_geom.width()}x{screen_geom.height()}")
+        
+        if fullscreen:
+            # Move to screen and maximize
+            window.move(screen_geom.x(), screen_geom.y())
+            window.resize(screen_geom.width(), screen_geom.height())
+            window.showMaximized()
+            print(f"✅ Window positioned fullscreen on '{screen_name}'")
+        elif centered:
+            # Center on screen
+            window_width = window.width()
+            window_height = window.height()
+            center_x = screen_geom.x() + (screen_geom.width() - window_width) // 2
+            center_y = screen_geom.y() + (screen_geom.height() - window_height) // 2
+            window.move(center_x, center_y)
+            print(f"✅ Window centered on '{screen_name}' at ({center_x}, {center_y})")
+        else:
+            # Just position at top-left of screen
+            window.move(screen_geom.x(), screen_geom.y())
+            print(f"✅ Window positioned at top-left of '{screen_name}'")
+    
+    # ========================================
     # CRITICAL: Initialize Arduino FIRST to prevent unwanted relay operations during GUI setup
     # ========================================
     print("🔌 DEBUG: *** STEP 1: Creating ArduinoController BEFORE GUI ***")
@@ -3799,6 +3926,10 @@ def run() -> int:
     print("👤 DEBUG: *** STEP 3: User Authentication ***")
     login_dialog = LoginDialog()
     
+    # Position login dialog at center of HDMI-A-2
+    position_window_on_screen(login_dialog, app, screen_name="HDMI-A-2", centered=True)
+    login_dialog.show()
+    
     # Execute login dialog (blocks until user authenticates or cancels)
     dialog_result = login_dialog.exec()
     
@@ -3826,55 +3957,10 @@ def run() -> int:
     win = AutoControlWindow(arduino=arduino, current_user=current_user, master_password=master_password)
     win.setWindowTitle("Sputter Auto Control")
 
-    # Initial guess for client area size. We'll correct outer size after showing
-    # because window frame/titlebar sizes are platform-dependent.
-    win.resize(1280, 800)
-    print("DEBUG: Showing window...")
-    win.show()
+    # Position main window fullscreen on HDMI-A-2
+    position_window_on_screen(win, app, screen_name="HDMI-A-2", fullscreen=True)
 
-    # Process events so the window system reports real geometry values
-    print("DEBUG: Processing initial events...")
+    # Process events so positioning takes effect
     app.processEvents()
-    print("DEBUG: Initial events processed, window should be visible")
-    
-    # Force window to be visible and on top
-    print("DEBUG: Raising and activating window...")
-    win.raise_()
-    win.activateWindow()
-    win.show()
-    print("DEBUG: Window raised and activated")
-    
-    # Additional window management for Linux/Wayland
-    print("DEBUG: Setting window properties...")
-    win.setWindowState(win.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
-    win.repaint()
-    print("DEBUG: Window properties set")
-    
-    # Test GUI responsiveness
-    print("DEBUG: Testing GUI responsiveness...")
-    QTimer.singleShot(1000, lambda: print("DEBUG: 1 second timer fired - GUI is responsive"))
-    QTimer.singleShot(5000, lambda: print("DEBUG: 5 second timer fired - GUI still responsive"))
-
-    try:
-        # Desired total outer size (including title bar + frame + menubar)
-        desired_outer_height = 800
-
-        # frameGeometry is the outer rectangle (includes title bar & window frame)
-        # geometry is the client area inside the window frame. Their difference
-        # is the decoration height (title bar + frame thickness).
-        decoration_height = win.frameGeometry().height() - win.geometry().height()
-        print("Decoration height of window: ", decoration_height)
-
-        # Compute the inner/client height needed so the outer height equals desired
-        inner_height = max(100, desired_outer_height - decoration_height)
-        print("Final height of window: ", decoration_height)
-
-        # Resize the top-level window's client area so outer height ~= desired_outer_height
-        print("Resizing window to 760 pixels in height to account for menubar..")
-        win.resize(1280, 760)
-    except Exception:
-        # Best-effort only; if anything fails just continue with the shown size
-        print("Exception occurred on measuring widow height for re-adjustment....")
-        pass
 
     return app.exec()

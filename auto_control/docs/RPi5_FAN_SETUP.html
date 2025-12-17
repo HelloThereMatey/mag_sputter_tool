@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPi5 Fan Control Setup Guide</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #d32f2f;
+            border-bottom: 3px solid #d32f2f;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #1976d2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            color: #388e3c;
+        }
+        
+        .step {
+            background-color: #fff;
+            border-left: 4px solid #1976d2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .file-block {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #4caf50;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #155724;
+        }
+        
+        .warning {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #721c24;
+        }
+        
+        .explanation {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d32f2f;
+        }
+        
+        .toc {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .toc a {
+            color: #1976d2;
+            text-decoration: none;
+            display: block;
+            margin: 5px 0;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌀 Raspberry Pi 5 Fan Control Setup Guide</h1>
+    
+    <div class="toc">
+        <strong>Quick Navigation:</strong>
+        <a href="#step1">Step 1: Edit Device Tree Configuration</a>
+        <a href="#step2">Step 2: Reboot</a>
+        <a href="#step3">Step 3: Verify Fan Control</a>
+        <a href="#step4">Step 4: Check raspi-config</a>
+        <a href="#manual">Alternative: Manual PWM Control</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#permanent">Permanent Fan Speed Setup</a>
+    </div>
+
+    <h2>Enable Fan Control in Raspberry Pi OS</h2>
+    
+    <p>The Raspberry Pi OS has built-in fan control in <code>raspi-config</code>, but it requires the proper device tree overlay to be enabled.</p>
+
+    <div class="step" id="step1">
+        <h3>Step 1: Edit the Device Tree Configuration</h3>
+        
+        <p>Open the boot configuration file:</p>
+        <div class="code-block">sudo nano /boot/firmware/config.txt</div>
+        
+        <p>Add these lines at the end of the file:</p>
+        <div class="file-block"># Enable PWM fan on GPIO 18 (RPi5 fan header)
+dtoverlay=pwmfan,gpiopin=18,temp=55000</div>
+        
+        <div class="explanation">
+            <strong>Explanation:</strong>
+            <ul>
+                <li><code>dtoverlay=pwmfan</code> → Enables the PWM fan device tree overlay</li>
+                <li><code>gpiopin=18</code> → Uses GPIO 18 (the RPi5 fan header PWM pin)</li>
+                <li><code>temp=55000</code> → Fan starts at 55°C (in millidegrees Celsius)</li>
+            </ul>
+        </div>
+        
+        <p>Save and exit: Press <code>Ctrl+X</code>, then <code>Y</code>, then <code>Enter</code></p>
+    </div>
+
+    <div class="step" id="step2">
+        <h3>Step 2: Reboot</h3>
+        
+        <p>Reboot the Raspberry Pi for the changes to take effect:</p>
+        <div class="code-block">sudo reboot</div>
+        
+        <p>Wait for the RPi to restart and reconnect via SSH.</p>
+    </div>
+
+    <div class="step" id="step3">
+        <h3>Step 3: Verify Fan Control is Enabled</h3>
+        
+        <p>Check if the fan sysfs interface appeared:</p>
+        <div class="code-block">ls -la /sys/class/pwm/pwmchip*/
+ls -la /sys/class/hwmon/hwmon*/</div>
+        
+        <p>Look for pwmfan entries:</p>
+        <div class="code-block">find /sys -name "*pwmfan*" 2>/dev/null</div>
+        
+        <div class="success">
+            ✅ If you see pwmfan entries, the device tree overlay loaded successfully!
+        </div>
+    </div>
+
+    <div class="step" id="step4">
+        <h3>Step 4: Check raspi-config</h3>
+        
+        <p>After reboot, the fan option should appear in <code>raspi-config</code>:</p>
+        <div class="code-block">sudo raspi-config</div>
+        
+        <p>Navigate to:</p>
+        <ol>
+            <li><strong>Performance Options</strong></li>
+            <li><strong>Fan</strong></li>
+        </ol>
+        
+        <p>You should now see options to:</p>
+        <ul>
+            <li>Enable/disable automatic fan control</li>
+            <li>Set temperature thresholds</li>
+        </ul>
+        
+        <div class="note">
+            💡 Once enabled, the OS will automatically control the fan based on CPU temperature!
+        </div>
+    </div>
+
+    <hr>
+
+    <h2 id="manual">Alternative: Manual PWM Control via sysfs</h2>
+    
+    <p>If raspi-config still doesn't show the option, you can control the fan manually:</p>
+    
+    <div class="code-block"># Find the pwm device
+ls /sys/class/pwm/
+
+# Export and control it directly
+echo 0 > /sys/class/pwm/pwmchip0/export
+echo 1000000 > /sys/class/pwm/pwmchip0/pwm0/period
+echo 1000000 > /sys/class/pwm/pwmchip0/pwm0/duty_cycle  # 100% speed
+echo 1 > /sys/class/pwm/pwmchip0/pwm0/enable</div>
+    
+    <div class="explanation">
+        <strong>What this does:</strong>
+        <ul>
+            <li>Exports PWM control to userspace</li>
+            <li>Sets PWM period to 1,000,000 nanoseconds (1 kHz)</li>
+            <li>Sets duty cycle to 1,000,000 (100% = full speed)</li>
+            <li>Enables the PWM output</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    
+    <p>If fan control still doesn't work:</p>
+    
+    <div class="step">
+        <h3>Check Device Tree is Loaded</h3>
+        <div class="code-block">dtc -I fs /sys/firmware/devicetree/base | grep -i fan</div>
+    </div>
+    
+    <div class="step">
+        <h3>Check for Errors in Boot Log</h3>
+        <div class="code-block">dmesg | grep -i pwm
+dmesg | grep -i fan</div>
+    </div>
+    
+    <div class="step">
+        <h3>Try Alternative GPIO Pin</h3>
+        <p>Some RPi5 boards use GPIO 17 instead of GPIO 18:</p>
+        <ol>
+            <li>Edit <code>/boot/firmware/config.txt</code></li>
+            <li>Change <code>gpiopin=18</code> to <code>gpiopin=17</code></li>
+            <li>Reboot</li>
+        </ol>
+    </div>
+    
+    <div class="warning">
+        ⚠️ If neither GPIO 17 nor 18 works, verify your fan header is correctly connected to the RPi5 "FAN" port!
+    </div>
+
+    <hr>
+
+    <h2 id="permanent">Permanent Fan Speed (If raspi-config Not Available)</h2>
+    
+    <p>Create a systemd service to run the fan control script at boot:</p>
+    
+    <div class="step">
+        <h3>Create systemd Service File</h3>
+        <div class="code-block">sudo nano /etc/systemd/system/fan-control.service</div>
+        
+        <p>Paste the following content:</p>
+        <div class="file-block">[Unit]
+Description=RPi5 Fan Control
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/sput/Documents/sputter_control/auto_control/python/fanRun.py
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target</div>
+        
+        <p>Save and exit: Press <code>Ctrl+X</code>, then <code>Y</code>, then <code>Enter</code></p>
+    </div>
+    
+    <div class="step">
+        <h3>Enable and Start the Service</h3>
+        <div class="code-block">sudo systemctl daemon-reload
+sudo systemctl enable fan-control.service
+sudo systemctl start fan-control.service</div>
+        
+        <p>Check the service status:</p>
+        <div class="code-block">sudo systemctl status fan-control.service</div>
+        
+        <div class="success">
+            ✅ The fan will now start automatically on every boot!
+        </div>
+    </div>
+
+    <hr>
+
+    <h2>Quick Reference</h2>
+    
+    <div class="note">
+        <strong>Fan Header Pin Layout:</strong>
+        <ul>
+            <li>Pin 1: GND (black wire)</li>
+            <li>Pin 2: 5V (red wire)</li>
+            <li>Pin 3: PWM signal (yellow/white wire) → GPIO 18</li>
+            <li>Pin 4: Tachometer/feedback (blue wire, optional)</li>
+        </ul>
+    </div>
+    
+    <div class="note">
+        <strong>Useful Commands:</strong>
+        <div class="code-block"># Check CPU temperature
+vcgencmd measure_temp
+
+# Check if fan is spinning (tachometer feedback)
+cat /sys/class/hwmon/hwmon0/fan1_input
+
+# Restart fan control service
+sudo systemctl restart fan-control.service
+
+# View service logs
+sudo journalctl -u fan-control.service -f</div>
+    </div>
+
+    <div class="footer">
+        <p>Last updated: December 10, 2025</p>
+        <p>For Raspberry Pi 5 with PWM fan header</p>
+        <p>Part of the Sputter Control System</p>
+    </div>
+
+</body>
+</html>

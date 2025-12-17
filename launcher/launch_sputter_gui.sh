@@ -219,6 +219,19 @@ main() {
     pwd
     sleep 1
     
+    # Position terminal window on HDMI-A-1 if running under X11/Wayland
+    # This positions the launcher terminal on the first monitor
+    if command -v wmctrl &> /dev/null; then
+        echo "Positioning terminal window on HDMI-A-1..."
+        # Get window ID of current terminal
+        TERMINAL_WID=$(xdotool getactivewindow 2>/dev/null || echo "")
+        if [ -n "$TERMINAL_WID" ]; then
+            # Try to move to first monitor (position at x=0, y=0)
+            wmctrl -i -r "$TERMINAL_WID" -b add,maximized_vert,maximized_horz &> /dev/null || true
+            echo "Terminal window positioned"
+        fi
+    fi
+    
     if [ -f "main.py" ]; then
         python main.py
     else

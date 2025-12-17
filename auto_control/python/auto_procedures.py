@@ -1404,6 +1404,18 @@ def turbo_standby_spin_control(arduino: ArduinoController,
         print("Failed to ensure turbo pump starts OFF")
         return False
     
+    # CRITICAL: Ensure roughing valve is CLOSED during sputter mode
+    # An open roughing valve during sputter will destroy the vacuum and expose turbo pump to gas
+    print("🔐 Safety check: Ensuring roughing valve is CLOSED for sputter mode...")
+    if safety.relay_states.get('btnValveRough', False):
+        print("⚠️ WARNING: Roughing valve was OPEN! Closing immediately...")
+        if not set_relay_safe('btnValveRough', False, arduino, safety, relay_map):
+            print("❌ CRITICAL: Failed to close roughing valve - aborting sputter procedure!")
+            return False
+        print("✅ Roughing valve now closed")
+    else:
+        print("✅ Roughing valve confirmed CLOSED")
+    
     while time.time() - start_time < max_run_time:
         # Check for cancellation signal
         if is_procedure_cancelled():

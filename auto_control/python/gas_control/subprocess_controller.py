@@ -84,13 +84,14 @@ class GasFlowController:
     - Same API as the original async controller
     """
     
-    def __init__(self, config: Dict[str, Any], safety_controller: Optional[object] = None, excluded_ports: List[str] = None):
+    def __init__(self, config: Dict[str, Any], safety_controller: Optional[object] = None, excluded_ports: List[str] = None, arduino_controller: Optional[object] = None):
         """Initialize the subprocess-based gas flow controller.
         
         Args:
             config: Configuration dictionary from sput.yml gas_control section
             safety_controller: Optional SafetyController for safety integration
             excluded_ports: List of serial ports to exclude from scanning (e.g. Arduino port)
+            arduino_controller: Optional Arduino controller reference for status monitoring
         """
         self.config = config
         self.safety_controller = safety_controller
@@ -484,14 +485,17 @@ class GasFlowController:
                 
                 # Print Arduino status every 30 seconds for debugging disconnection issues
                 if current_time - last_arduino_check >= 30.0:
-                    if self.arduino_controller:
-                        arduino_connected = self.arduino_controller.is_connected
-                        arduino_port = self.arduino_controller.serial_port.port if self.arduino_controller.serial_port else "None"
-                        cmd_queue_size = self.arduino_controller.command_queue.qsize() if hasattr(self.arduino_controller, 'command_queue') else "N/A"
-                        resp_queue_size = self.arduino_controller.response_queue.qsize() if hasattr(self.arduino_controller, 'response_queue') else "N/A"
-                        print(f"🔍 [GasFlowController Debug] Arduino Status: connected={arduino_connected}, port={arduino_port}, cmd_queue={cmd_queue_size}, resp_queue={resp_queue_size}")
-                    else:
-                        print("🔍 [GasFlowController Debug] Arduino controller reference not available")
+                    try:
+                        if self.arduino_controller:
+                            arduino_connected = self.arduino_controller.is_connected
+                            arduino_port = self.arduino_controller.serial_port.port if self.arduino_controller.serial_port else "None"
+                            cmd_queue_size = self.arduino_controller.command_queue.qsize() if hasattr(self.arduino_controller, 'command_queue') else "N/A"
+                            resp_queue_size = self.arduino_controller.response_queue.qsize() if hasattr(self.arduino_controller, 'response_queue') else "N/A"
+                            print(f"🔍 [GasFlowController Debug] Arduino Status: connected={arduino_connected}, port={arduino_port}, cmd_queue={cmd_queue_size}, resp_queue={resp_queue_size}")
+                        else:
+                            print("🔍 [GasFlowController Debug] Arduino controller reference not available")
+                    except Exception as e:
+                        print(f"⚠️ [GasFlowController Debug] Error checking Arduino status: {e}")
                     last_arduino_check = current_time
                 
                 # Periodic reading of all MFCs

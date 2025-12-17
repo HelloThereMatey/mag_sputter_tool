@@ -51,6 +51,13 @@ code, pre {font-size: 13px}
 
 ---
 
+
+##### **Notes**
+
+The login for the Raspberry Pi 5 is:
+- Username: `sput`
+- Password: `mag`
+
 ## System Overview
 
 The sputter system uses a custom software running on low-cost hardware. A raspberry Pi 5 runs the software (written in python) and interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components. User interface is a custom GUI via a touchscreen, bluetooth keyboard & mouse.
@@ -631,6 +638,21 @@ To avoid this eventuality, **Practice with the chamber vented and door open** un
 ## 🔧 Troubleshooting
 
 ### Common Issues and Solutions
+
+#### Lost connection to bluetooth keyboard
+
+**Symptoms:** Keyboard stops responding, cannot type. A red X is shown next to "bluetooth keyboard" in the list of bluetooth devices in bluetooth menu at bottom right of taskbar.
+
+- Run the fix bluetooth script by double-clicking the "Fix Bluetooth" icon on the desktop.
+
+#### The screens layouts have been re-arranged
+
+**Symptoms:** The touchscreen has the taskbar at left and the mouse goes from right edge onto the left screen.
+
+- Go to "Screen configuration" under "preferences" from the Rpi OS start menu (raspberry pi icon at left on taskbar).
+- Drag the touchscreen display (HDMI-A-1) to be at left of the larger display (HDMI-A-2).
+- Then go to "appearance settings" under "preferences" from the Rpi OS start menu.
+- Go to "task bar" tab and choose screen to be "HDMI-A-2".
 
 #### Chamber Won't Pump Down
 
