@@ -58,6 +58,20 @@ The login for the Raspberry Pi 5 is:
 - Username: `sput`
 - Password: `mag`
 
+**The screen configuration may reset itself after reboot or even during normal operation. If this happens:**
+
+- Double-click the script file on the desktop called "setup_screen_config.sh" to re-apply the correct screen layout.
+- This should put large screen on right as primary and small touchscreen on left. The task-bar should be at bottom on right screen.
+- If taskbar remains on left screen, you can set it's position to the other screen using the "appearance settings" menu.
+- Alternatively, the taskbar can be hidden/brought back by double-clicking the "toggle panel autohide" icon on the desktop.
+
+**The bluetooth keyboard may lose connection occasionally. To reset it:**
+
+- Use bluetoth icon at lower right on taskbar and click "remove" on 'bluetooth keyboard' device.
+- If you get an error message reboot system and then try again.
+- Press delete on the other keyboard to bring up the shutdown menu or use RPi OS start menu.
+- After device removed, re-pair it using the connect button on the keyboard and finding & connecting to device via the bluetooth menu on RPi5.
+
 ## System Overview
 
 The sputter system uses a custom software running on low-cost hardware. A raspberry Pi 5 runs the software (written in python) and interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components. User interface is a custom GUI via a touchscreen, bluetooth keyboard & mouse.

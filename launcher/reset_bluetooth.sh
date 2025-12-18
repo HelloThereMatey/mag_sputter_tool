@@ -1,15 +1,14 @@
 #!/bin/bash
-
 # Bluetooth Reset and Reconnection Script
 # Usage: ./bluetooth_reset.sh [MAC_ADDRESS]
 # Example: ./bluetooth_reset.sh AA:BB:CC:DD:EE:FF
 
-set -e  # Exit on any error
+set -e
 
 MAC_ADDRESS="${1:-}"
 
 if [ -z "$MAC_ADDRESS" ]; then
-    echo "❌ Usage: $0 <MAC_ADDRESS>"
+    echo "Usage: $0 <MAC_ADDRESS>"
     echo "Example: $0 AA:BB:CC:DD:EE:FF"
     exit 1
 fi
