@@ -1247,6 +1247,9 @@ class AutoControlWindow(QMainWindow):
                 btn.blockSignals(True)
                 btn.setChecked(not checked)
                 btn.blockSignals(False)
+                btn.style().unpolish(btn)
+                btn.style().polish(btn)
+                btn.update()
             else:
                 # Immediately update safety state after successful relay operation
                 self.update_safety_state()
@@ -1267,6 +1270,9 @@ class AutoControlWindow(QMainWindow):
             btn.blockSignals(True)
             btn.setChecked(not checked)
             btn.blockSignals(False)
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+            btn.update()
 
     def _auto_turn_off_light(self) -> None:
         """Automatically turn off the chamber light after timeout."""
@@ -2586,12 +2592,18 @@ class AutoControlWindow(QMainWindow):
                                 btn.setChecked(bool(ion_on))
                                 btn.blockSignals(False)
                                 btn.setText("Ion\nGauge:\nON" if ion_on else "Ion\nGauge:\nOFF")
+                                btn.style().unpolish(btn)
+                                btn.style().polish(btn)
+                                btn.update()
                             except Exception:
                                 # Fallback to showing unknown state
                                 btn.blockSignals(True)
                                 btn.setChecked(False)
                                 btn.blockSignals(False)
                                 btn.setText("Ion\nGauge:\n---")
+                                btn.style().unpolish(btn)
+                                btn.style().polish(btn)
+                                btn.update()
                         else:
                             current = btn.isChecked()
                             desired = bool(states[idx])
@@ -2599,6 +2611,10 @@ class AutoControlWindow(QMainWindow):
                                 btn.blockSignals(True)
                                 btn.setChecked(desired)
                                 btn.blockSignals(False)
+                                # Force style update for Wayland/Linux
+                                btn.style().unpolish(btn)
+                                btn.style().polish(btn)
+                                btn.update()
             except Exception as e:
                 print(f"DEBUG: Error refreshing status: {e}")
         else:
@@ -2701,6 +2717,9 @@ class AutoControlWindow(QMainWindow):
                             self.btnIonGauge.setChecked(bool(ion_on))
                             self.btnIonGauge.blockSignals(False)
                             self.btnIonGauge.setText("Ion\nGauge:\nON" if ion_on else "Ion\nGauge:\nOFF")
+                            self.btnIonGauge.style().unpolish(self.btnIonGauge)
+                            self.btnIonGauge.style().polish(self.btnIonGauge)
+                            self.btnIonGauge.update()
                     except Exception:
                         pass
                 else:
@@ -3267,11 +3286,11 @@ def run() -> int:
             print(f"DEBUG: ❌ Arduino connection failed before GUI: {e}")
 
     print("DEBUG: Starting QApplication...")
-    # Force X11 backend on Linux to avoid Wayland issues
+    # Force wayland backend on Linux
     import os
     if sys.platform.startswith('linux'):
-        os.environ['QT_QPA_PLATFORM'] = 'xcb'
-        print("DEBUG: Forced X11 backend for Linux")
+        os.environ['QT_QPA_PLATFORM'] = 'wayland'
+        print("DEBUG: Forced Wayland backend for Linux")
     
     app = QApplication(sys.argv)
     

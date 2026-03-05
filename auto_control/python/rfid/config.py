@@ -39,6 +39,9 @@ class RFIDConfig:
             time.sleep(0.1)
             ser.dtr = True
             
+            # Send a newline or arbitrary string to prompt an output (some implementations require this)
+            ser.write(b'\n')
+            
             # Wait for ready message
             start_time = time.time()
             while time.time() - start_time < 3.0:

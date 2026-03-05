@@ -1,0 +1,3 @@
+Date,User Name,Gun 1 Target,Gun 2 Target,Notes
+2026-03-05 13:17:18,admin,?,?,"Still need to get the touchscreen setup, waiting on DP-HDMI converter"
+2026-03-05 13:16:50,admin,?,?,Setup control on a PC running ubuntu 25.10 instead of the RPi5. Hould end up being more reliable.

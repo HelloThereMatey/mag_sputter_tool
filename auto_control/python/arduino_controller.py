@@ -28,7 +28,9 @@ class ArduinoController:
         self.serial_port: Optional[serial.Serial] = None
         self.is_connected = False
         self.command_queue = queue.Queue()
-        self.response_queue = queue.Queue()
+        self.response_queue = queue.Queue() # Kept for legacy
+        self.pending_responses = {}
+        self.pending_lock = threading.Lock()
         self.communication_thread = None
         self.stop_thread = False
         self.relay_states = [False] * self.NUM_RELAYS  # Track relay states locally
@@ -792,7 +794,11 @@ class ArduinoController:
                     if isinstance(item, tuple) and len(item) == 2:
                         cmd_id, command = item
                         response = self.send_command_direct(command)
-                        self.response_queue.put((cmd_id, response))
+                        with self.pending_lock:
+                            if cmd_id in self.pending_responses:
+                                self.pending_responses[cmd_id].put(response)
+                            else:
+                                pass # Timed out or abandoned
                     else:
                         # Legacy support for direct string commands (if any)
                         command = item
@@ -903,38 +909,24 @@ class ArduinoController:
 
         # Generate unique ID for this command
         cmd_id = str(uuid.uuid4())
-
-        # Clear old responses (optional, but good for hygiene)
-        # self.clear_response_queue() 
+        
+        my_queue = queue.Queue()
+        with self.pending_lock:
+            self.pending_responses[cmd_id] = my_queue
 
         # Send command with ID
         self.command_queue.put((cmd_id, command))
 
         # Wait for matching response
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            try:
-                # Wait for ANY response
-                item = self.response_queue.get(timeout=timeout - (time.time() - start_time))
-                
-                # Check if it matches our ID
-                if isinstance(item, tuple) and len(item) == 2:
-                    resp_id, response = item
-                    if resp_id == cmd_id:
-                        return response
-                    else:
-                        # Not our response (stale or from another thread), ignore or put back?
-                        # For now, just ignore stale responses
-                        continue
-                else:
-                    # Legacy response (string), assume it's ours if we are single threaded?
-                    # Or just return it
-                    return item
-                    
-            except queue.Empty:
-                return "TIMEOUT"
-                
-        return "TIMEOUT"
+        try:
+            response = my_queue.get(timeout=timeout)
+            return response
+        except queue.Empty:
+            return "TIMEOUT"
+        finally:
+            with self.pending_lock:
+                if cmd_id in self.pending_responses:
+                    del self.pending_responses[cmd_id]
 
     def set_relay(self, relay_number: int, state: bool, suppress_logging: bool = False) -> bool:
         """

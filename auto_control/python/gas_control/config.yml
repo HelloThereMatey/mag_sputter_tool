@@ -13,7 +13,7 @@ gas_control:
   mfcs:
     Ar:  # Argon MFC (Gas Valve 1)
       unit_id: 'A'  # Alicat unit ID
-      serial_port: serial_port  # Windows: COMx, Linux: /dev/ttyUSBx
+  serial_port: '/dev/ttyUSB0'  # Auto-detected
       baudrate: 19200  # Optional: Serial baud rate (default: 19200)
       max_flow: 200.0  # Maximum flow rate in sccm
       gas_type: 'Ar'  # Gas type for Alicat (must match Alicat gas list)

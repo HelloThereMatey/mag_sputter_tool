@@ -23,7 +23,7 @@ dependencies:
 # Runtime app configuration for auto_control backend
 serial:
   baud: 9600
-  preferred_ports: [/dev/ttyACM0, /dev/ttyUSB3]
+  preferred_ports: [/dev/ttyACM0]
 
 relays:
   btnPumpScroll: 44

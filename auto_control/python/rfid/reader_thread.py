@@ -142,6 +142,9 @@ class RFIDReaderThread(QThread):
                 time.sleep(0.1)
                 self.serial_conn.dtr = True
                 
+                # Send a newline to prompt the device if it's already running
+                self.serial_conn.write(b'\n')
+                
             except serial.SerialException as e:
                 self.error_occurred.emit(f"❌ Cannot connect to {self.port}: {e}")
                 self.port = None  # Clear port so it will re-detect next time
