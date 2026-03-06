@@ -99,20 +99,12 @@ The sputter system uses a custom software running on low-cost hardware. A raspbe
    - Double-click to launch the Python-based control application.
    - This will launch a terminal window that should be positioned on the large screen. This window shows running messages that details the system operation and is useful for debug.
    - A **user account login** window will show first prior to displaying the GUI.
-   - **Login** with your user account if already have one. Simply hold your UTS ID card to the card reader. It should read your card, login your account & launch GUI.
-
-   <figure style="display:flex;gap:1px;align-items:flex-start">
-      <div style="flex:1;margin:0">
-         <img src="pics/rfid.jpg" alt="Image 1" style="width:100%;height:auto;display:block;border:0">
-         <figcaption style="text-align:center;font-size:13px;margin-top:6px"> RFID card reader (blue square). Hold your UTS ID card to this to login or enrol card. </figcaption>
-      </div>
-   </figure>
+   - **Login** with your username and password to launch the GUI.
 
    - Or create new account:
       - Click "Create Account".
       - Create username.
       - Create & confirm password.
-      - Enrol your UTS ID card to go with account. Each account needs a unique ID card.
       - Account will login and GUI launch.
    - Main control window will then open. Drag this window onto the small screen (touch-screen) and double click the top title bar to expand the GUI window to fill the small screen.
    - You can use touch on the small screen to activate buttons on the GUI or keep using mouse.
