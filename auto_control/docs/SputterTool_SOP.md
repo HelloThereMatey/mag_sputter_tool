@@ -53,7 +53,7 @@ code, pre {font-size: 13px}
 
 ## System Overview
 
-The sputter system uses a custom software running on low-cost hardware. A raspberry Pi 5 runs the software (written in python) and interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components. User interface is a custom GUI via a touchscreen, bluetooth keyboard & mouse.
+The sputter system uses a custom software running on an Ubuntu PC. The control software (written in python) interfaces via serial connection with an Arduino Mega running custom firmware (C++). The arduino operates relays that control valves, pressure gauges and vacuum pumps and other system components. User interface is a custom GUI via a touchscreen, keyboard & mouse.
 
 **NOTE:** The bluetooth keyboard requires about 4s to wake-up and reconnect after you press a button. It then stays awake. It will go back to sleep after 10 mins of no input.
 
@@ -83,30 +83,29 @@ The sputter system uses a custom software running on low-cost hardware. A raspbe
       </div>
    </figure>
 
-- ✅ Raspberry Pi has booted to desktop.
-   - When the power for the system is switched on, the RPi5 will auto-boot. Both screens should turn on.
-   - If it does not boot, the RPi5 can be turned on by the power button on its case.
-   - If the touch-screen is blank but the larger screen shows content after booting, unplugging & re-plugging the HDMI out from the RPi to the small screen should fix this.
+- ✅ Ubuntu PC has booted to desktop.
+   - When the power for the system is switched on, the system will auto-boot. Both screens should turn on.
+   - If it does not boot, the system can be turned on by the power button or through BIOS settings.
+   - If the touch-screen is blank but the larger screen shows content after booting, unplugging & re-plugging the HDMI cable to the small screen should fix this.
 - ✅ Arduino controller is connected via USB. This should be the case.
 - ⚠️ If control program is already running, skip to step 3
 
 ### Launching the Control Application
 
-***Note that the bluetooth keyboard will need a 5 seconds to wake up and connect after you push some buttons on it before input from it will show up on computer. It also needs to be charged occaisonally.***
-
 1. **Start the Application**
    - Locate the **Sputter Control** desktop icon. It has a sun image icon :sunny:.
    - Double-click to launch the Python-based control application.
-   - This will launch a terminal window that should be positioned on the large screen. This window shows running messages that details the system operation and is useful for debug.
-   - A **user account login** window will show first prior to displaying the GUI.
+   - This will launch a terminal window. Drag this to the right-hand screen. This window shows running messages that detail system operation and is useful for debugging.
+   - A **user account login** window will then open.
+   - Drag this back to the left screen (touch-screen).
    - **Login** with your username and password to launch the GUI.
 
    - Or create new account:
       - Click "Create Account".
       - Create username.
       - Create & confirm password.
-      - Account will login and GUI launch.
-   - Main control window will then open. Drag this window onto the small screen (touch-screen) and double click the top title bar to expand the GUI window to fill the small screen.
+      - Account will login and GUI window will launch.
+   - Main control window (GUI) will then open. This should be on the left-hand screen and fill the screen. A logbook window will also open. Drag this onto the right-hand screen with the terminal window.
    - You can use touch on the small screen to activate buttons on the GUI or keep using mouse.
 
 2. **Check System State Display**
@@ -138,11 +137,11 @@ These automated procedure buttons (as well as the shutter buttons, Ion gauge & c
 
 #### BOOT TROUBLESHOOTING
 
-If the GUI displays with red indications for all three interlocks and the valve buttons display greyed out, it is likely that the arduino has failed to connect to RPi5.
+If the GUI displays with red indications for all three interlocks and the valve buttons display greyed out, it is likely that the arduino has failed to connect to the Ubuntu PC.
 
 **Verify Arduino Connection**
 
-- Check USB cable between arduino & RPi5. Ensure that the arduino shows LED on indicator.
+- Check USB cable between Arduino and the Ubuntu PC. Ensure that the arduino shows LED on indicator.
 - Remove and replace USB cable to reset the connection.
 
 ---
@@ -698,7 +697,7 @@ To avoid this eventuality, **Practice with the chamber vented and door open** un
 
 **Solutions:**
 1. **Close and restart application.** This can be done at any time if a software error is encountered.
-2. Reboot the raspberry Pi if problem persists
+2. Reboot the Ubuntu PC if problem persists
 3. Contact staff for assistance
 
 #### Memory/Performance Issues (Plotter Window)
