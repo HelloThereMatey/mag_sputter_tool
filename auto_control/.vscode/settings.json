@@ -1,5 +1,15 @@
 {
     "python.analysis.autoImportCompletions": true,
     "python-envs.defaultEnvManager": "ms-python.python:conda",
-    "python-envs.defaultPackageManager": "ms-python.python:conda"
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "terminal.integrated.profiles.linux": {
+        "bash (interactive)": {
+            "path": "bash",
+            "args": [
+                "-i"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash (interactive)",
+    "python.terminal.activateEnvironment": true
 }

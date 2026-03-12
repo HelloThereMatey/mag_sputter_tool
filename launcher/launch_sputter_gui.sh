@@ -4,6 +4,37 @@
 
 set -e  # Exit on any error
 
+# Always show final status and keep terminal open when launched interactively.
+on_exit() {
+  status=$?
+  echo ""
+  if [ "$status" -ne 0 ]; then
+    echo "=== Error occurred (exit code: $status) ==="
+  else
+    echo "=== Application finished ==="
+  fi
+
+  if [ -t 0 ]; then
+    echo "Press Enter to close..."
+    read -r
+  fi
+}
+
+trap on_exit EXIT
+
+# Resolve a usable Python command on systems where `python` may not exist.
+resolve_python_cmd() {
+  if command -v python >/dev/null 2>&1; then
+    echo "python"
+  elif command -v python3 >/dev/null 2>&1; then
+    echo "python3"
+  else
+    echo ""
+  fi
+}
+
+PYTHON_CMD=""
+
 # Change to the script directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -32,9 +63,16 @@ init_conda() {
         CONDA_BASE=$(conda info --base 2>/dev/null || echo "")
     fi
     
-    # Fallback paths for Pi
+    # Fallback paths for common Linux installs (including Miniforge/Mambaforge).
     if [ -z "$CONDA_BASE" ]; then
-        for path in "$HOME/miniconda3" "$HOME/Documents/miniconda3" "$HOME/anaconda3" "/opt/conda" "/usr/local/conda"; do
+      for path in \
+        "$HOME/miniforge3" \
+        "$HOME/mambaforge" \
+        "$HOME/miniconda3" \
+        "$HOME/Documents/miniconda3" \
+        "$HOME/anaconda3" \
+        "/opt/conda" \
+        "/usr/local/conda"; do
             if [ -d "$path" ]; then
                 CONDA_BASE="$path" 
                 break
@@ -80,6 +118,12 @@ activate_sput_env() {
 
 # Main execution
 main() {
+    # Match interactive shell behavior so conda init from .bashrc is available.
+    if [ -f "$HOME/.bashrc" ]; then
+      # shellcheck disable=SC1090
+      source "$HOME/.bashrc"
+    fi
+
     # Initialize conda
     if ! init_conda; then
         echo "Failed to initialize conda. Trying with system Python..."
@@ -94,9 +138,18 @@ main() {
     
     sleep 2
 
+    # Resolve Python after environment activation so we use env-local interpreter.
+    PYTHON_CMD="$(resolve_python_cmd)"
+
+    if [ -z "$PYTHON_CMD" ]; then
+      echo "Error: Neither python nor python3 was found in PATH"
+      return 1
+    fi
+
     # Show Python info
-    echo "Python path: $(which python)"
-    echo "Python version: $(python --version 2>&1)"
+    echo "Python command: $PYTHON_CMD"
+    echo "Python path: $(command -v "$PYTHON_CMD")"
+    echo "Python version: $($PYTHON_CMD --version 2>&1)"
     echo "Current environment: ${CONDA_DEFAULT_ENV:-system}"
     
     # Hide taskbar if not already hidden
@@ -215,12 +268,12 @@ main() {
     echo "=== Starting Sputter Control GUI ==="
     cd ..
     cd auto_control/python
-    echo "Directoy set to: "
+    echo "Directory set to: "
     pwd
     sleep 1
     
     if [ -f "main.py" ]; then
-        python main.py
+      "$PYTHON_CMD" main.py
     else
         echo "Error: main.py not found in python directory"
         echo "Current directory: $(pwd)"
@@ -234,15 +287,3 @@ trap 'echo "Script interrupted"; exit 1' INT TERM
 # Run main function
 main
 
-# Keep terminal open if there's an error
-if [ $? -ne 0 ]; then
-    echo ""
-    echo "=== Error occurred ==="
-    echo "Press Enter to close..."
-    read
-else
-    echo ""
-    echo "=== Application finished ==="
-    echo "Press Enter to close..."
-    read
-fi

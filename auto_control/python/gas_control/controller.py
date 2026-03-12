@@ -500,18 +500,29 @@ class GasFlowController:
         self._command_queue.put((command_id, command, args))
         
         if wait_for_result:
+            enabled_channels = sum(1 for ch in self.channels.values() if ch.enabled)
+            if enabled_channels <= 0:
+                enabled_channels = 1
+            wait_timeout = 15.0 if command != 'stop_all' else max(15.0, 5.0 * enabled_channels)
+
             try:
-                result = result_queue.get(timeout=15.0)  # Reasonable timeout for separate serial port
+                result = result_queue.get(timeout=wait_timeout)
                 del self._result_queues[command_id]
                 
                 if isinstance(result, str) and result.startswith("Error:"):
                     raise RuntimeError(result[6:])  # Remove "Error:" prefix
                 
                 return result
+            except Empty:
+                if command_id in self._result_queues:
+                    del self._result_queues[command_id]
+                raise RuntimeError(
+                    f"Command '{command}' timed out after {wait_timeout:.1f}s (channels={enabled_channels})"
+                )
             except Exception as e:
                 if command_id in self._result_queues:
                     del self._result_queues[command_id]
-                raise RuntimeError(f"Command timeout or error: {e}")
+                raise RuntimeError(f"Command '{command}' failed: {e}")
         
         return None
     

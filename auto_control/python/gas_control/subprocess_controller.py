@@ -749,8 +749,17 @@ class GasFlowController:
         self._command_queue.put((command_id, command, args))
         
         if wait_for_result:
+            enabled_channels = sum(1 for ch in self.channels.values() if ch.enabled)
+            if enabled_channels <= 0:
+                enabled_channels = 1
+
+            channel_multiplier = enabled_channels if command == 'stop_all' else 1
+            per_attempt_budget = self.cli_timeout + max(self.command_spacing, 0.0) + 1.0
+            command_budget = channel_multiplier * (self.max_retries + 1) * per_attempt_budget
+            wait_timeout = max(10.0, command_budget + 5.0)
+
             try:
-                result = self._result_queues[command_id].get(timeout=10.0)  # Reasonable timeout
+                result = self._result_queues[command_id].get(timeout=wait_timeout)
                 del self._result_queues[command_id]
                 
                 if isinstance(result, str) and result.startswith("Error:"):
@@ -758,10 +767,18 @@ class GasFlowController:
                     return None
                 
                 return result
+            except Empty:
+                if command_id in self._result_queues:
+                    del self._result_queues[command_id]
+                self.logger.error(
+                    f"Command '{command}' timed out after {wait_timeout:.1f}s "
+                    f"(cli_timeout={self.cli_timeout}, retries={self.max_retries}, channels={enabled_channels})"
+                )
+                return None
             except Exception as e:
                 if command_id in self._result_queues:
                     del self._result_queues[command_id]
-                self.logger.error(f"Command timeout or error: {e}")
+                self.logger.error(f"Command '{command}' failed with exception: {e}")
                 return None
         
         return None

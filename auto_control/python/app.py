@@ -75,6 +75,10 @@ class ProcedureWorker(QRunnable):
 
 
 class AutoControlWindow(QMainWindow):
+    # Physical display targets (Ubuntu display numbering is 1-based for users).
+    MAIN_GUI_SCREEN = 2      # Place the sputter control main window here.
+    AUX_WINDOWS_SCREEN = 1   # Place all auxiliary windows/dialogs here.
+
     def __init__(self, parent: Optional[QWidget] = None, arduino: ArduinoController = None, current_user: Dict = None, master_password: str = None) -> None:
         print("🐛 DEBUG: *** AutoControlWindow.__init__ started ***")
         print(f"🐛 DEBUG: Arduino parameter received: {arduino is not None}")
@@ -819,6 +823,49 @@ class AutoControlWindow(QMainWindow):
         # Update button operability based on mode
         self._update_auto_procedure_button_states()
 
+    def _get_target_screen(self, screen_number: int):
+        """Return a valid QScreen for a 1-based screen number, with safe fallback."""
+        screens = QApplication.screens()
+        if not screens:
+            return None
+
+        idx = max(0, min(len(screens) - 1, int(screen_number) - 1))
+        return screens[idx]
+
+    def _place_window_on_screen(self, window: QWidget, screen_number: int, maximize: bool = False) -> None:
+        """Move/size a top-level window on a specific screen."""
+        if window is None:
+            return
+
+        screen = self._get_target_screen(screen_number)
+        if screen is None:
+            return
+
+        try:
+            geo = screen.availableGeometry()
+
+            # Ensure the backing native window is associated with the target screen.
+            if window.windowHandle() is not None:
+                window.windowHandle().setScreen(screen)
+
+            if maximize:
+                window.setGeometry(geo)
+                window.move(geo.topLeft())
+                window.showMaximized()
+                return
+
+            # Center on target screen while keeping current size clamped to available area.
+            w = window.width() if window.width() > 0 else min(900, geo.width())
+            h = window.height() if window.height() > 0 else min(700, geo.height())
+            w = min(w, geo.width())
+            h = min(h, geo.height())
+
+            x = geo.x() + (geo.width() - w) // 2
+            y = geo.y() + (geo.height() - h) // 2
+            window.setGeometry(x, y, w, h)
+        except Exception as e:
+            print(f"⚠️ Could not place window on screen {screen_number}: {e}")
+
     def _update_system_state_display(self) -> None:
         """Update the system state display in the System State group box."""
         print(f"🖥️ DEBUG: _update_system_state_display called with system_status='{self.system_status}'")
@@ -1155,6 +1202,7 @@ class AutoControlWindow(QMainWindow):
         user_level = self.current_user.get('admin_level', 1) if self.current_user else 1
         
         dialog = ModeSelectionDialog(self.current_mode, self, user_level=user_level)
+        self._place_window_on_screen(dialog, self.AUX_WINDOWS_SCREEN)
         
         if dialog.exec() == ModeSelectionDialog.DialogCode.Accepted:
             new_mode = dialog.get_selected_mode()
@@ -2927,6 +2975,7 @@ class AutoControlWindow(QMainWindow):
             
             self._plotter_window = PlotterWindow(self.get_analog_voltages, parent=self)
             self._plotter_window.destroyed.connect(lambda *_: setattr(self, '_plotter_window', None))
+            self._place_window_on_screen(self._plotter_window, self.AUX_WINDOWS_SCREEN)
             self._plotter_window.show()
 
         else:
@@ -2972,6 +3021,7 @@ class AutoControlWindow(QMainWindow):
         
         # Show dialog to select file
         dialog = AnalogRecorderDialog(self)
+        self._place_window_on_screen(dialog, self.AUX_WINDOWS_SCREEN)
         if dialog.exec() == AnalogRecorderDialog.DialogCode.Accepted:
             file_path = dialog.get_file_path()
             if file_path:
@@ -2985,6 +3035,7 @@ class AutoControlWindow(QMainWindow):
                 # Also connect destroyed as backup
                 self._recorder_window.destroyed.connect(self._on_recorder_window_destroyed)
                 
+                self._place_window_on_screen(self._recorder_window, self.AUX_WINDOWS_SCREEN)
                 self._recorder_window.show()
                 print("✅ Recorder window created and shown")
     
@@ -3014,6 +3065,7 @@ class AutoControlWindow(QMainWindow):
         print("📔 Creating new logbook window")
         self._logbook_window = LogbookWidget(parent=self, current_user=self.current_user)
         self._logbook_window.destroyed.connect(lambda: self._on_logbook_window_destroyed())
+        self._place_window_on_screen(self._logbook_window, self.AUX_WINDOWS_SCREEN)
         self._logbook_window.show()
     
     def _on_logbook_window_destroyed(self):
@@ -3210,6 +3262,7 @@ class AutoControlWindow(QMainWindow):
                 from widgets.other_dialogs import SetSystemStateDialog
 
             dlg = SetSystemStateDialog(self.system_status, getattr(self, 'safety_controller', None), parent=self)
+            self._place_window_on_screen(dlg, self.AUX_WINDOWS_SCREEN)
             if dlg.exec() == dlg.Accepted:
                 new_state = dlg.get_selected_state()
                 if new_state and new_state != self.system_status:
@@ -3223,6 +3276,7 @@ class AutoControlWindow(QMainWindow):
         """Show the About dialog with software information."""
         try:
             about_dlg = AboutDialog(parent=self)
+            self._place_window_on_screen(about_dlg, self.AUX_WINDOWS_SCREEN)
             about_dlg.exec()
         except Exception as e:
             print(f"❌ Error showing About dialog: {e}")
@@ -3238,6 +3292,44 @@ class AutoControlWindow(QMainWindow):
 def run() -> int:    
     """Run the Auto Control application."""
     import signal
+
+    def get_target_screen(app_obj: QApplication, screen_number: int):
+        """Get a valid screen from a 1-based number; fallback to an available screen."""
+        screens = app_obj.screens()
+        if not screens:
+            return None
+        idx = max(0, min(len(screens) - 1, int(screen_number) - 1))
+        return screens[idx]
+
+    def place_window_on_screen(app_obj: QApplication, window: QWidget, screen_number: int, maximize: bool = False) -> None:
+        """Move/resize a top-level window to a requested screen."""
+        screen = get_target_screen(app_obj, screen_number)
+        if screen is None:
+            return
+
+        geo = screen.availableGeometry()
+        try:
+            if window.windowHandle() is not None:
+                window.windowHandle().setScreen(screen)
+        except Exception:
+            pass
+
+        if maximize:
+            # Wayland: maximize is compositor-controlled; request maximize after show.
+            # Geometry/move are best-effort hints for non-Wayland backends.
+            window.setGeometry(geo)
+            window.move(geo.topLeft())
+            window.show()
+            window.showMaximized()
+            return
+
+        w = window.width() if window.width() > 0 else min(900, geo.width())
+        h = window.height() if window.height() > 0 else min(700, geo.height())
+        w = min(w, geo.width())
+        h = min(h, geo.height())
+        x = geo.x() + (geo.width() - w) // 2
+        y = geo.y() + (geo.height() - h) // 2
+        window.setGeometry(x, y, w, h)
     
     # Setup signal handler for graceful shutdown on Ctrl+C
     def signal_handler(signum, frame):
@@ -3299,6 +3391,7 @@ def run() -> int:
     # ========================================
     print("👤 DEBUG: *** STEP 3: User Authentication ***")
     login_dialog = LoginDialog()
+    place_window_on_screen(app, login_dialog, AutoControlWindow.AUX_WINDOWS_SCREEN)
     
     if login_dialog.exec() != LoginDialog.Accepted:
         print("❌ Login cancelled - exiting application")
@@ -3315,53 +3408,23 @@ def run() -> int:
 
     # Initial guess for client area size. We'll correct outer size after showing
     # because window frame/titlebar sizes are platform-dependent.
-    win.resize(1280, 800)
+    #win.resize(1280, 800)
+
     print("DEBUG: Showing window...")
     win.show()
 
-    # Process events so the window system reports real geometry values
-    print("DEBUG: Processing initial events...")
-    app.processEvents()
-    print("DEBUG: Initial events processed, window should be visible")
-    
-    # Force window to be visible and on top
-    print("DEBUG: Raising and activating window...")
-    win.raise_()
-    win.activateWindow()
-    win.show()
-    print("DEBUG: Window raised and activated")
-    
-    # Additional window management for Linux/Wayland
-    print("DEBUG: Setting window properties...")
-    win.setWindowState(win.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
-    win.repaint()
-    print("DEBUG: Window properties set")
+    # Under GNOME Wayland, deferred maximize requests are more reliable than
+    # forcing multiple immediate window-state transitions.
+    print("DEBUG: Scheduling Wayland-friendly placement/maximize...")
+    QTimer.singleShot(0, lambda: place_window_on_screen(app, win, AutoControlWindow.MAIN_GUI_SCREEN, maximize=True))
+    QTimer.singleShot(120, lambda: (win.raise_(), win.activateWindow()))
     
     # Test GUI responsiveness
     print("DEBUG: Testing GUI responsiveness...")
     QTimer.singleShot(1000, lambda: print("DEBUG: 1 second timer fired - GUI is responsive"))
     QTimer.singleShot(5000, lambda: print("DEBUG: 5 second timer fired - GUI still responsive"))
 
-    try:
-        # Desired total outer size (including title bar + frame + menubar)
-        desired_outer_height = 800
-
-        # frameGeometry is the outer rectangle (includes title bar & window frame)
-        # geometry is the client area inside the window frame. Their difference
-        # is the decoration height (title bar + frame thickness).
-        decoration_height = win.frameGeometry().height() - win.geometry().height()
-        print("Decoration height of window: ", decoration_height)
-
-        # Compute the inner/client height needed so the outer height equals desired
-        inner_height = max(100, desired_outer_height - decoration_height)
-        print("Final height of window: ", decoration_height)
-
-        # Resize the top-level window's client area so outer height ~= desired_outer_height
-        print("Resizing window to 760 pixels in height to account for menubar..")
-        win.resize(1280, 760)
-    except Exception:
-        # Best-effort only; if anything fails just continue with the shown size
-        print("Exception occurred on measuring widow height for re-adjustment....")
-        pass
+    # Re-assert once for compositors that ignore the first placement hint.
+    QTimer.singleShot(350, lambda: place_window_on_screen(app, win, AutoControlWindow.MAIN_GUI_SCREEN, maximize=True))
 
     return app.exec()
